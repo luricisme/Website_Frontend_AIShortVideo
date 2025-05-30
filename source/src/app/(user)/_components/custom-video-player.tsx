@@ -6,46 +6,237 @@ import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
 interface CustomVideoPlayerProps {
     src: string;
     className?: string;
+    autoPlay?: boolean;
+    muted?: boolean;
+    isVisible?: boolean;
 }
 
-export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerProps) {
+export default function CustomVideoPlayer({
+    src,
+    className,
+    autoPlay = false,
+    muted = false,
+    isVisible = false,
+}: CustomVideoPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const progressBarRef = useRef<HTMLDivElement>(null);
     const volumeSliderRef = useRef<HTMLDivElement>(null);
+    const attemptedPlayRef = useRef(false);
+    const userInteractedRef = useRef(false);
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(1);
-    const [isMuted, setIsMuted] = useState(false);
+    const [isMuted, setIsMuted] = useState(muted);
+    const [userPrefersMuted, setUserPrefersMuted] = useState(muted);
     const [showVolumeSlider, setShowVolumeSlider] = useState(false);
     const [showPlayButton, setShowPlayButton] = useState(false);
     const [isHoveringProgress, setIsHoveringProgress] = useState(false);
     const [isHoveringVolume, setIsHoveringVolume] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [isDraggingVolume, setIsDraggingVolume] = useState(false);
+    const [videoError, setVideoError] = useState(false);
+    const [firstPlayAttempt, setFirstPlayAttempt] = useState(true);
+
+    // Xử lý khi trạng thái hiển thị thay đổi
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        if (isVisible) {
+            // Khi video hiển thị và tự động phát
+            if (autoPlay) {
+                attemptedPlayRef.current = true;
+
+                // Lần đầu tiên thử phát video phải tắt tiếng do chính sách trình duyệt
+                if (firstPlayAttempt) {
+                    video.muted = true;
+                    setIsMuted(true);
+                } else {
+                    // Những lần sau, sử dụng tùy chọn âm thanh của người dùng
+                    video.muted = userPrefersMuted;
+                    setIsMuted(userPrefersMuted);
+                }
+
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            setIsPlaying(true);
+                            setVideoError(false);
+
+                            // Nếu đây là lần đầu phát thành công, đánh dấu để các lần sau có thể có âm thanh
+                            if (firstPlayAttempt) {
+                                setFirstPlayAttempt(false);
+
+                                // Nếu người dùng muốn có âm thanh, bật lại sau khi đã phát thành công
+                                if (!userPrefersMuted && userInteractedRef.current) {
+                                    setTimeout(() => {
+                                        if (videoRef.current) {
+                                            videoRef.current.muted = false;
+                                            setIsMuted(false);
+                                        }
+                                    }, 500);
+                                }
+                            }
+                        })
+                        .catch((error) => {
+                            console.warn("Không thể tự động phát video:", error);
+                            setVideoError(true);
+                            setIsPlaying(false);
+                        });
+                }
+            }
+        } else {
+            // Khi video không còn hiển thị, tạm dừng nó
+            video.pause();
+            setIsPlaying(false);
+        }
+    }, [isVisible, autoPlay, userPrefersMuted, firstPlayAttempt]);
+
+    // Xử lý thay đổi src
+    useEffect(() => {
+        // Reset state khi src thay đổi
+        setCurrentTime(0);
+        setIsPlaying(false);
+        attemptedPlayRef.current = false;
+
+        // Khi src mới được thiết lập và video hiển thị, thử phát nó
+        if (isVisible && autoPlay && videoRef.current) {
+            setTimeout(() => {
+                if (videoRef.current) {
+                    // Lần phát đầu tiên mỗi video phải tắt tiếng
+                    if (firstPlayAttempt) {
+                        videoRef.current.muted = true;
+                        setIsMuted(true);
+                    } else {
+                        // Sử dụng tùy chọn âm thanh của người dùng cho các lần sau
+                        videoRef.current.muted = userPrefersMuted;
+                        setIsMuted(userPrefersMuted);
+                    }
+
+                    videoRef.current
+                        .play()
+                        .then(() => {
+                            setIsPlaying(true);
+                            setVideoError(false);
+
+                            // Nếu đây là lần đầu phát và thành công, bật lại âm thanh nếu người dùng đã tương tác
+                            if (firstPlayAttempt) {
+                                setFirstPlayAttempt(false);
+
+                                // Nếu người dùng muốn có âm thanh, bật lại sau khi đã phát thành công
+                                if (!userPrefersMuted && userInteractedRef.current) {
+                                    setTimeout(() => {
+                                        if (videoRef.current) {
+                                            videoRef.current.muted = false;
+                                            setIsMuted(false);
+                                        }
+                                    }, 500);
+                                }
+                            }
+                        })
+                        .catch((error) => {
+                            console.warn("Không thể tự động phát video:", error);
+                            setVideoError(true);
+                            setIsPlaying(false);
+                        });
+                }
+            }, 100);
+        }
+    }, [src, isVisible, autoPlay, userPrefersMuted, firstPlayAttempt]);
+
+    // Ghi nhận sự kiện người dùng tương tác với trang
+    useEffect(() => {
+        const handleUserInteraction = () => {
+            userInteractedRef.current = true;
+
+            // Sau khi người dùng tương tác, nếu họ không muốn tắt tiếng, bật âm thanh
+            if (!userPrefersMuted && videoRef.current && isPlaying) {
+                videoRef.current.muted = false;
+                setIsMuted(false);
+            }
+
+            // Xóa các listener sau khi đã ghi nhận tương tác
+            document.removeEventListener("click", handleUserInteraction);
+            document.removeEventListener("touchstart", handleUserInteraction);
+            document.removeEventListener("keydown", handleUserInteraction);
+        };
+
+        // Thêm listener để ghi nhận tương tác
+        document.addEventListener("click", handleUserInteraction);
+        document.addEventListener("touchstart", handleUserInteraction);
+        document.addEventListener("keydown", handleUserInteraction);
+
+        return () => {
+            document.removeEventListener("click", handleUserInteraction);
+            document.removeEventListener("touchstart", handleUserInteraction);
+            document.removeEventListener("keydown", handleUserInteraction);
+        };
+    }, [isPlaying, userPrefersMuted]);
 
     // Toggle play/pause
     const togglePlay = () => {
         if (videoRef.current) {
+            userInteractedRef.current = true; // Đã có tương tác của người dùng
+
             if (isPlaying) {
                 videoRef.current.pause();
-                setShowPlayButton(true);
-                setTimeout(() => setShowPlayButton(false), 800);
+                setIsPlaying(false);
             } else {
-                videoRef.current.play();
-                setShowPlayButton(true);
-                setTimeout(() => setShowPlayButton(false), 800);
+                // Nếu đang ở lần phát đầu tiên, phải tắt tiếng để đảm bảo phát được
+                if (firstPlayAttempt) {
+                    videoRef.current.muted = true;
+                    setIsMuted(true);
+                } else {
+                    // Nếu không phải lần đầu, sử dụng tùy chọn người dùng
+                    videoRef.current.muted = userPrefersMuted;
+                    setIsMuted(userPrefersMuted);
+                }
+
+                videoRef.current
+                    .play()
+                    .then(() => {
+                        setIsPlaying(true);
+                        setVideoError(false);
+
+                        // Sau khi phát thành công và không phải lần đầu, có thể bật lại âm thanh
+                        if (firstPlayAttempt) {
+                            setFirstPlayAttempt(false);
+
+                            // Nếu người dùng muốn có âm thanh, bật lại sau khi đã phát thành công
+                            if (!userPrefersMuted) {
+                                setTimeout(() => {
+                                    if (videoRef.current) {
+                                        videoRef.current.muted = false;
+                                        setIsMuted(false);
+                                    }
+                                }, 500);
+                            }
+                        }
+                    })
+                    .catch((error) => {
+                        console.warn("Không thể phát video:", error);
+                        setVideoError(true);
+                    });
             }
+
+            setShowPlayButton(true);
+            setTimeout(() => setShowPlayButton(false), 800);
         }
     };
 
     // Toggle mute
     const toggleMute = () => {
         if (videoRef.current) {
+            userInteractedRef.current = true; // Đã có tương tác của người dùng
+
             if (isMuted) {
                 videoRef.current.muted = false;
                 setIsMuted(false);
+                setUserPrefersMuted(false); // Lưu tùy chọn không tắt tiếng
+
                 // Restore previous volume if it was 0
                 if (volume === 0) {
                     setVolume(0.5);
@@ -54,6 +245,7 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
             } else {
                 videoRef.current.muted = true;
                 setIsMuted(true);
+                setUserPrefersMuted(true); // Lưu tùy chọn tắt tiếng
             }
         }
     };
@@ -61,6 +253,8 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
     // Handle fullscreen
     const toggleFullscreen = () => {
         if (videoRef.current) {
+            userInteractedRef.current = true; // Đã có tương tác của người dùng
+
             if (document.fullscreenElement) {
                 document.exitFullscreen();
             } else {
@@ -71,6 +265,8 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
 
     // Handle progress bar click
     const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        userInteractedRef.current = true; // Đã có tương tác của người dùng
+
         if (progressBarRef.current && videoRef.current && duration > 0) {
             const rect = progressBarRef.current.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
@@ -84,6 +280,8 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
     // Handle progress bar drag
     const handleProgressMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
         e.preventDefault();
+        userInteractedRef.current = true; // Đã có tương tác của người dùng
+
         if (duration > 0) {
             setIsDragging(true);
             handleProgressClick(e);
@@ -109,6 +307,7 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
     const handleVolumeClick = (e: React.MouseEvent<HTMLDivElement>) => {
         e.preventDefault();
         e.stopPropagation();
+        userInteractedRef.current = true; // Đã có tương tác của người dùng
 
         const newVolume = calculateVolumeFromPosition(e.clientX);
         setVolume(newVolume);
@@ -119,9 +318,11 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
             // Handle mute state
             if (newVolume > 0 && isMuted) {
                 setIsMuted(false);
+                setUserPrefersMuted(false); // Lưu tùy chọn
                 videoRef.current.muted = false;
             } else if (newVolume === 0 && !isMuted) {
                 setIsMuted(true);
+                setUserPrefersMuted(true); // Lưu tùy chọn
                 videoRef.current.muted = true;
             }
         }
@@ -132,6 +333,7 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
         e.preventDefault();
         e.stopPropagation();
         setIsDraggingVolume(true);
+        userInteractedRef.current = true; // Đã có tương tác của người dùng
 
         // Set initial volume position
         const newVolume = calculateVolumeFromPosition(e.clientX);
@@ -142,9 +344,11 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
 
             if (newVolume > 0 && isMuted) {
                 setIsMuted(false);
+                setUserPrefersMuted(false); // Lưu tùy chọn
                 videoRef.current.muted = false;
             } else if (newVolume === 0 && !isMuted) {
                 setIsMuted(true);
+                setUserPrefersMuted(true); // Lưu tùy chọn
                 videoRef.current.muted = true;
             }
         }
@@ -179,6 +383,43 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
 
         const handleLoadedData = () => {
             updateDuration();
+            // Cố gắng phát lại video ngay sau khi nó được tải nếu cần
+            if (isVisible && autoPlay && !attemptedPlayRef.current) {
+                attemptedPlayRef.current = true;
+
+                // Lần đầu phát phải tắt tiếng
+                if (firstPlayAttempt) {
+                    video.muted = true;
+                    setIsMuted(true);
+                } else {
+                    // Các lần sau sử dụng tùy chọn của người dùng
+                    video.muted = userPrefersMuted;
+                    setIsMuted(userPrefersMuted);
+                }
+
+                video
+                    .play()
+                    .then(() => {
+                        setIsPlaying(true);
+                        setVideoError(false);
+
+                        // Nếu đây là lần đầu phát thành công, đánh dấu để các lần sau có thể có âm thanh
+                        if (firstPlayAttempt) {
+                            setFirstPlayAttempt(false);
+
+                            // Nếu người dùng muốn có âm thanh và đã tương tác, bật lại âm thanh
+                            if (!userPrefersMuted && userInteractedRef.current) {
+                                setTimeout(() => {
+                                    if (videoRef.current) {
+                                        videoRef.current.muted = false;
+                                        setIsMuted(false);
+                                    }
+                                }, 500);
+                            }
+                        }
+                    })
+                    .catch((err) => console.warn("Tự động phát thất bại:", err));
+            }
         };
 
         const handleCanPlay = () => {
@@ -206,6 +447,21 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
 
         const handlePause = () => setIsPlaying(false);
 
+        const handleEnded = () => {
+            // Khi video kết thúc, tự động phát lại nếu nó vẫn hiển thị
+            if (isVisible) {
+                video.currentTime = 0;
+
+                // Kiểm tra nếu người dùng muốn video có âm thanh
+                if (!userPrefersMuted && !firstPlayAttempt && userInteractedRef.current) {
+                    video.muted = false;
+                    setIsMuted(false);
+                }
+
+                video.play().catch((err) => console.warn("Phát lại tự động thất bại:", err));
+            }
+        };
+
         // Add multiple event listeners to ensure duration is captured
         video.addEventListener("loadedmetadata", handleLoadedMetadata);
         video.addEventListener("loadeddata", handleLoadedData);
@@ -214,6 +470,7 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
         video.addEventListener("timeupdate", handleTimeUpdate);
         video.addEventListener("play", handlePlay);
         video.addEventListener("pause", handlePause);
+        video.addEventListener("ended", handleEnded);
 
         // Try to get duration immediately if available
         updateDuration();
@@ -226,8 +483,9 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
             video.removeEventListener("timeupdate", handleTimeUpdate);
             video.removeEventListener("play", handlePlay);
             video.removeEventListener("pause", handlePause);
+            video.removeEventListener("ended", handleEnded);
         };
-    }, [isDragging, duration]);
+    }, [isDragging, duration, isVisible, autoPlay, userPrefersMuted, firstPlayAttempt]);
 
     // Handle mouse events for dragging progress bar
     useEffect(() => {
@@ -271,9 +529,11 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
                     // Handle mute state smoothly
                     if (newVolume > 0 && isMuted) {
                         setIsMuted(false);
+                        setUserPrefersMuted(false);
                         videoRef.current.muted = false;
                     } else if (newVolume === 0 && !isMuted) {
                         setIsMuted(true);
+                        setUserPrefersMuted(true);
                         videoRef.current.muted = true;
                     }
                 }
@@ -293,6 +553,7 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
             document.removeEventListener("mousemove", handleVolumeMouseMove);
             document.removeEventListener("mouseup", handleVolumeMouseUp);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isDraggingVolume, isMuted, volume]);
 
     // Safe progress percentage calculation
@@ -312,12 +573,24 @@ export default function CustomVideoPlayer({ src, className }: CustomVideoPlayerP
                 ref={videoRef}
                 src={src}
                 className="w-full h-full object-contain cursor-pointer"
-                autoPlay
                 onClick={togglePlay}
                 loop
                 playsInline
-                preload="metadata"
+                preload="auto" /* Thay đổi preload thành auto để nó tải sớm hơn */
+                muted={isMuted}
             />
+
+            {/* Play Button overlay khi video có lỗi hoặc chưa phát */}
+            {(!isPlaying || videoError) && (
+                <div
+                    className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
+                    onClick={togglePlay}
+                >
+                    <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
+                        <Play className="w-8 h-8 text-white ml-1" />
+                    </div>
+                </div>
+            )}
 
             {/* Top Controls */}
             <div className="absolute top-4 left-0 right-0 flex justify-between items-center px-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
