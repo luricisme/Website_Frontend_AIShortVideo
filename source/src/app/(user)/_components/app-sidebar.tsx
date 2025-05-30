@@ -57,7 +57,7 @@ export function AppSidebar() {
                                         asChild
                                         isActive={
                                             pathname === item.url ||
-                                            (pathname.startsWith(item.url) && item.url !== "#")
+                                            (pathname.startsWith(item.url) && item.url !== "/")
                                         }
                                     >
                                         <Link href={item.url}>
