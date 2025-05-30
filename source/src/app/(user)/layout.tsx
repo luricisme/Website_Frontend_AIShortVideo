@@ -10,7 +10,7 @@ export default function UserLayout({
     return (
         <SidebarProvider>
             <AppSidebar />
-            <main className="container mx-auto flex flex-col gap-[32px] min-h-screen sm:px-4 px-2">
+            <main className="container mx-auto flex flex-col min-h-screen sm:px-4 px-2">
                 <SearchBar />
                 {children}
             </main>
