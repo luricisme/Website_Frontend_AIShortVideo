@@ -1,38 +1,38 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react';
-import { User, Video, Trash2 } from 'lucide-react';
-import VideoCard from "@/app/(user)/_components/video-card";
+import React, { useState } from "react";
+import { User, Video, Trash2 } from "lucide-react";
+import VideoCard, { VideoCardProps } from "@/app/(user)/_components/video-card";
 
-type VideoProps = {
-    id: number;
-    title: string;
-    description: string;
-    thumbnail: string;
-    source: string;
-    duration: number;
-    author: {
-        name: string;
-        id: number;
-        username: string;
-        avatar: string;
-    }
-}
+// type VideoProps = {
+//     id: number;
+//     title: string;
+//     description: string;
+//     thumbnail: string;
+//     source: string;
+//     duration: number;
+//     author: {
+//         name: string;
+//         id: number;
+//         username: string;
+//         avatar: string;
+//     };
+// };
 
-export default function UserProfileApp(){
-    const [currentPage, setCurrentPage] = useState('profile');
-    const [activeTab, setActiveTab] = useState('my-videos');
+export default function UserProfileApp() {
+    const [currentPage, setCurrentPage] = useState("profile");
+    const [activeTab, setActiveTab] = useState("my-videos");
     const [userProfile, setUserProfile] = useState({
-        firstName: 'Victoria',
-        lastName: 'Johnson',
-        username: 'vjohnson',
-        bio: '✨ I create AI-generated videos',
-        instagram: 'instagram.com/vjohnson',
-        twitter: '',
-        youtube: '',
-        followers: '1.2k',
-        following: '180',
-        videos: '36'
+        firstName: "Victoria",
+        lastName: "Johnson",
+        username: "vjohnson",
+        bio: "✨ I create AI-generated videos",
+        instagram: "instagram.com/vjohnson",
+        twitter: "",
+        youtube: "",
+        followers: "1.2k",
+        following: "180",
+        videos: "36",
     });
 
     // Sample video data
@@ -136,20 +136,33 @@ export default function UserProfileApp(){
     ];
 
     const editingVideos = [
-        { id: 1, title: 'Future City Concepts', timeAgo: '28 minutes ago' },
-        { id: 2, title: 'Future City Concepts', timeAgo: '28 minutes ago' },
-        { id: 3, title: 'Future City Concepts', timeAgo: '28 minutes ago' },
-        { id: 4, title: 'Future City Concepts', timeAgo: '28 minutes ago' }
+        { id: 1, title: "Future City Concepts", timeAgo: "28 minutes ago" },
+        { id: 2, title: "Future City Concepts", timeAgo: "28 minutes ago" },
+        { id: 3, title: "Future City Concepts", timeAgo: "28 minutes ago" },
+        { id: 4, title: "Future City Concepts", timeAgo: "28 minutes ago" },
     ];
 
-    const handleProfileUpdate = (updatedProfile: React.SetStateAction<{ firstName: string; lastName: string; username: string; bio: string; instagram: string; twitter: string; youtube: string; followers: string; following: string; videos: string; }>) => {
+    const handleProfileUpdate = (
+        updatedProfile: React.SetStateAction<{
+            firstName: string;
+            lastName: string;
+            username: string;
+            bio: string;
+            instagram: string;
+            twitter: string;
+            youtube: string;
+            followers: string;
+            following: string;
+            videos: string;
+        }>
+    ) => {
         setUserProfile(updatedProfile);
-        setCurrentPage('profile');
+        setCurrentPage("profile");
     };
 
-    const VideoGrid = ({ videos }: {videos: VideoProps}) => (
+    const VideoGrid = ({ videos }: { videos: VideoCardProps[] }) => (
         <div className="grid grid-cols-4 gap-4 mt-6">
-            {videos.map((video:VideoProps) => (
+            {videos.map((video) => (
                 <VideoCard key={video.id} video={video} />
             ))}
         </div>
@@ -158,7 +171,10 @@ export default function UserProfileApp(){
     const EditingTable = () => (
         <div className="mt-6">
             {editingVideos.map((video) => (
-                <div key={video.id} className="flex items-center justify-between py-4 border-b border-zinc-800">
+                <div
+                    key={video.id}
+                    className="flex items-center justify-between py-4 border-b border-zinc-800"
+                >
                     <div className="flex items-center space-x-4">
                         <div className="w-12 h-8 bg-zinc-800 rounded flex items-center justify-center">
                             <Video className="w-4 h-4 text-zinc-400" />
@@ -186,9 +202,11 @@ export default function UserProfileApp(){
                     </div>
                     <div className="flex-1">
                         <div className="flex items-center space-x-4 mb-2">
-                            <h1 className="text-2xl font-bold">{userProfile.firstName} {userProfile.lastName}</h1>
+                            <h1 className="text-2xl font-bold">
+                                {userProfile.firstName} {userProfile.lastName}
+                            </h1>
                             <button
-                                onClick={() => setCurrentPage('edit')}
+                                onClick={() => setCurrentPage("edit")}
                                 className="px-4 py-1.5 border border-zinc-600 rounded-lg text-sm hover:bg-zinc-800 transition-colors"
                             >
                                 Edit Profile
@@ -227,31 +245,31 @@ export default function UserProfileApp(){
                 <div className="border-b border-zinc-800 mb-6">
                     <div className="flex space-x-8">
                         <button
-                            onClick={() => setActiveTab('my-videos')}
+                            onClick={() => setActiveTab("my-videos")}
                             className={`pb-4 text-sm font-medium ${
-                                activeTab === 'my-videos'
-                                    ? 'text-white border-b-2 border-white'
-                                    : 'text-zinc-400 hover:text-white'
+                                activeTab === "my-videos"
+                                    ? "text-white border-b-2 border-white"
+                                    : "text-zinc-400 hover:text-white"
                             }`}
                         >
                             My Videos
                         </button>
                         <button
-                            onClick={() => setActiveTab('liked-videos')}
+                            onClick={() => setActiveTab("liked-videos")}
                             className={`pb-4 text-sm font-medium ${
-                                activeTab === 'liked-videos'
-                                    ? 'text-white border-b-2 border-white'
-                                    : 'text-zinc-400 hover:text-white'
+                                activeTab === "liked-videos"
+                                    ? "text-white border-b-2 border-white"
+                                    : "text-zinc-400 hover:text-white"
                             }`}
                         >
                             Liked Videos
                         </button>
                         <button
-                            onClick={() => setActiveTab('editing-videos')}
+                            onClick={() => setActiveTab("editing-videos")}
                             className={`pb-4 text-sm font-medium ${
-                                activeTab === 'editing-videos'
-                                    ? 'text-white border-b-2 border-white'
-                                    : 'text-zinc-400 hover:text-white'
+                                activeTab === "editing-videos"
+                                    ? "text-white border-b-2 border-white"
+                                    : "text-zinc-400 hover:text-white"
                             }`}
                         >
                             Editing Videos
@@ -260,9 +278,9 @@ export default function UserProfileApp(){
                 </div>
 
                 {/* Tab Content */}
-                {activeTab === 'my-videos' && <VideoGrid videos={VIDEO_LIST} />}
-                {activeTab === 'liked-videos' && <VideoGrid videos={VIDEO_LIST} />}
-                {activeTab === 'editing-videos' && <EditingTable />}
+                {activeTab === "my-videos" && <VideoGrid videos={VIDEO_LIST} />}
+                {activeTab === "liked-videos" && <VideoGrid videos={VIDEO_LIST} />}
+                {activeTab === "editing-videos" && <EditingTable />}
             </div>
         </div>
     );
@@ -271,7 +289,7 @@ export default function UserProfileApp(){
         const [formData, setFormData] = useState(userProfile);
 
         const handleInputChange = (field: string, value: string) => {
-            setFormData(prev => ({ ...prev, [field]: value }));
+            setFormData((prev) => ({ ...prev, [field]: value }));
         };
 
         const handleSave = () => {
@@ -280,7 +298,7 @@ export default function UserProfileApp(){
 
         const handleCancel = () => {
             setFormData(userProfile);
-            setCurrentPage('profile');
+            setCurrentPage("profile");
         };
 
         return (
@@ -304,20 +322,28 @@ export default function UserProfileApp(){
                             <h3 className="text-lg font-semibold mb-4">Basic information</h3>
                             <div className="grid grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">First Name</label>
+                                    <label className="block text-sm font-medium mb-2">
+                                        First Name
+                                    </label>
                                     <input
                                         type="text"
                                         value={formData.firstName}
-                                        onChange={(e) => handleInputChange('firstName', e.target.value)}
+                                        onChange={(e) =>
+                                            handleInputChange("firstName", e.target.value)
+                                        }
                                         className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:border-purple-500"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">Last Name</label>
+                                    <label className="block text-sm font-medium mb-2">
+                                        Last Name
+                                    </label>
                                     <input
                                         type="text"
                                         value={formData.lastName}
-                                        onChange={(e) => handleInputChange('lastName', e.target.value)}
+                                        onChange={(e) =>
+                                            handleInputChange("lastName", e.target.value)
+                                        }
                                         className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:border-purple-500"
                                     />
                                 </div>
@@ -327,7 +353,7 @@ export default function UserProfileApp(){
                                 <input
                                     type="text"
                                     value={formData.username}
-                                    onChange={(e) => handleInputChange('username', e.target.value)}
+                                    onChange={(e) => handleInputChange("username", e.target.value)}
                                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:border-purple-500"
                                 />
                             </div>
@@ -335,7 +361,7 @@ export default function UserProfileApp(){
                                 <label className="block text-sm font-medium mb-2">Bio</label>
                                 <textarea
                                     value={formData.bio}
-                                    onChange={(e) => handleInputChange('bio', e.target.value)}
+                                    onChange={(e) => handleInputChange("bio", e.target.value)}
                                     rows={3}
                                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:border-purple-500 resize-none"
                                 />
@@ -347,30 +373,42 @@ export default function UserProfileApp(){
                             <h3 className="text-lg font-semibold mb-4">Social network link</h3>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">Instagram</label>
+                                    <label className="block text-sm font-medium mb-2">
+                                        Instagram
+                                    </label>
                                     <input
                                         type="text"
                                         value={formData.instagram}
-                                        onChange={(e) => handleInputChange('instagram', e.target.value)}
+                                        onChange={(e) =>
+                                            handleInputChange("instagram", e.target.value)
+                                        }
                                         className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:border-purple-500"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">Twitter</label>
+                                    <label className="block text-sm font-medium mb-2">
+                                        Twitter
+                                    </label>
                                     <input
                                         type="text"
                                         value={formData.twitter}
-                                        onChange={(e) => handleInputChange('twitter', e.target.value)}
+                                        onChange={(e) =>
+                                            handleInputChange("twitter", e.target.value)
+                                        }
                                         placeholder="Enter your Twitter URL"
                                         className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:border-purple-500 placeholder-zinc-500"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">YouTube</label>
+                                    <label className="block text-sm font-medium mb-2">
+                                        YouTube
+                                    </label>
                                     <input
                                         type="text"
                                         value={formData.youtube}
-                                        onChange={(e) => handleInputChange('youtube', e.target.value)}
+                                        onChange={(e) =>
+                                            handleInputChange("youtube", e.target.value)
+                                        }
                                         placeholder="Enter your Youtube URL"
                                         className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:border-purple-500 placeholder-zinc-500"
                                     />
@@ -401,8 +439,8 @@ export default function UserProfileApp(){
 
     return (
         <div>
-            {currentPage === 'profile' && <ProfilePage />}
-            {currentPage === 'edit' && <EditProfilePage />}
+            {currentPage === "profile" && <ProfilePage />}
+            {currentPage === "edit" && <EditProfilePage />}
         </div>
     );
-};
+}

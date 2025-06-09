@@ -1,18 +1,13 @@
-"use client"
+"use client";
 
 import React, { useState } from "react";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue
+    SelectValue,
 } from "@/components/ui/select";
 import {
     Table,
@@ -20,23 +15,16 @@ import {
     TableCell,
     TableHead,
     TableHeader,
-    TableRow
+    TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-    CheckCircle,
-    Flag,
-    Search,
-    Award,
-    Eye,
-    Trash2,
-    Bell
-} from "lucide-react";
+import { CheckCircle, Flag, Search, Award, Eye, Trash2, Bell } from "lucide-react";
 
 export default function ContentManagementDashboard() {
-    const [page, setPage] = useState(1);
+    // const [page, setPage] = useState(1);
+    const [page] = useState(1);
 
     // Mock data for reported videos
     const reportedVideos = [
@@ -46,14 +34,14 @@ export default function ContentManagementDashboard() {
             creator: "James Wilson",
             reporter: {
                 name: "Victoria Johnson",
-                id: "#2438"
+                id: "#2438",
             },
             reason: "Misinformation",
             reasonDetails: "Contains inaccurate financial advice that could mislead viewers",
             status: "Pending",
             priority: "High",
             date: "Jan 15, 2025",
-            timeAgo: "1 hour ago"
+            timeAgo: "1 hour ago",
         },
         {
             id: 2,
@@ -61,14 +49,14 @@ export default function ContentManagementDashboard() {
             creator: "Emma Johnson",
             reporter: {
                 name: "Sarah Chen",
-                id: "#8742"
+                id: "#8742",
             },
             reason: "Copyright",
             reasonDetails: "Images used appear to be copyrighted without proper attribution",
             status: "Under Review",
             priority: "Medium",
             date: "May 04, 2025",
-            timeAgo: "16 hours ago"
+            timeAgo: "16 hours ago",
         },
         {
             id: 3,
@@ -83,7 +71,7 @@ export default function ContentManagementDashboard() {
             status: "Pending",
             priority: "Low",
             date: "May 02, 2025",
-            timeAgo: "3 days ago"
+            timeAgo: "3 days ago",
         },
         {
             id: 4,
@@ -91,15 +79,15 @@ export default function ContentManagementDashboard() {
             creator: "Sofia Mendez",
             reporter: {
                 name: "Nina Rodriguez",
-                id: "#9721"
+                id: "#9721",
             },
             reason: "Copyright",
             reasonDetails: "Artwork shown in video appears to be used without permission",
             status: "Resolved",
             priority: "Medium",
             date: "Apr 30, 2025",
-            timeAgo: "5 days ago"
-        }
+            timeAgo: "5 days ago",
+        },
     ];
 
     return (
@@ -110,7 +98,9 @@ export default function ContentManagementDashboard() {
                 <div className="flex items-center space-x-4">
                     <div className="relative">
                         <Bell size={25} />
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">2</span>
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                            2
+                        </span>
                     </div>
                     <div className="flex items-center">
                         <div className="h-8 w-8 bg-purple-500 rounded-full flex items-center justify-center text-white">
@@ -179,10 +169,7 @@ export default function ContentManagementDashboard() {
                                 <label className="block text-sm font-medium mb-2">Search</label>
                                 <div className="relative">
                                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                                    <Input
-                                        placeholder="Video title or reporter"
-                                        className="pl-8"
-                                    />
+                                    <Input placeholder="Video title or reporter" className="pl-8" />
                                 </div>
                             </div>
                             <div>
@@ -214,7 +201,9 @@ export default function ContentManagementDashboard() {
                                 </Select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-2">Report Type</label>
+                                <label className="block text-sm font-medium mb-2">
+                                    Report Type
+                                </label>
                                 <Select defaultValue="all">
                                     <SelectTrigger>
                                         <SelectValue placeholder="All Types" />
@@ -222,7 +211,9 @@ export default function ContentManagementDashboard() {
                                     <SelectContent>
                                         <SelectItem value="all">All Types</SelectItem>
                                         <SelectItem value="copyright">Copyright</SelectItem>
-                                        <SelectItem value="misinformation">Misinformation</SelectItem>
+                                        <SelectItem value="misinformation">
+                                            Misinformation
+                                        </SelectItem>
                                         <SelectItem value="technical">Technical Issue</SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -243,7 +234,10 @@ export default function ContentManagementDashboard() {
                             </div>
 
                             <div className="flex justify-end mt-4 pt-2">
-                                <Button variant="default" className="bg-purple-600 hover:bg-purple-700">
+                                <Button
+                                    variant="default"
+                                    className="bg-purple-600 hover:bg-purple-700"
+                                >
                                     Apply Filters
                                 </Button>
                             </div>
@@ -256,7 +250,10 @@ export default function ContentManagementDashboard() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-lg">Reported Videos</CardTitle>
-                        <Button variant="outline" className="bg-green-600 text-white hover:bg-green-700">
+                        <Button
+                            variant="outline"
+                            className="bg-green-600 text-white hover:bg-green-700"
+                        >
                             <CheckCircle className="mr-2 h-4 w-4" />
                             Bulk Approve
                         </Button>
@@ -282,7 +279,9 @@ export default function ContentManagementDashboard() {
                                                 <div className="w-12 h-12 bg-gray-200 rounded mr-3"></div>
                                                 <div>
                                                     <p className="font-medium">{video.title}</p>
-                                                    <p className="text-xs text-gray-500">Creator: {video.creator}</p>
+                                                    <p className="text-xs text-gray-500">
+                                                        Creator: {video.creator}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </TableCell>
@@ -292,47 +291,67 @@ export default function ContentManagementDashboard() {
                                                 <div>
                                                     <p className="text-sm">{video.reporter.name}</p>
                                                     {video.reporter.id ? (
-                                                        <p className="text-xs text-gray-500">User {video.reporter.id}</p>
+                                                        <p className="text-xs text-gray-500">
+                                                            User {video.reporter.id}
+                                                        </p>
                                                     ) : (
-                                                        <p className="text-xs text-gray-500">{video.reporter.count} users</p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {video.reporter.count} users
+                                                        </p>
                                                     )}
                                                 </div>
                                             </div>
                                         </TableCell>
                                         <TableCell>
                                             <div>
-                                                <Badge className={
-                                                    video.reason === "Copyright" ? "bg-yellow-100 text-yellow-800" :
-                                                        video.reason === "Misinformation" ? "bg-red-100 text-red-800" :
-                                                            "bg-blue-100 text-blue-800"
-                                                }>
+                                                <Badge
+                                                    className={
+                                                        video.reason === "Copyright"
+                                                            ? "bg-yellow-100 text-yellow-800"
+                                                            : video.reason === "Misinformation"
+                                                            ? "bg-red-100 text-red-800"
+                                                            : "bg-blue-100 text-blue-800"
+                                                    }
+                                                >
                                                     {video.reason}
                                                 </Badge>
-                                                <p className="text-xs text-gray-600 mt-1">{video.reasonDetails}</p>
+                                                <p className="text-xs text-gray-600 mt-1">
+                                                    {video.reasonDetails}
+                                                </p>
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge className={
-                                                video.status === "Pending" ? "bg-red-100 text-red-800" :
-                                                    video.status === "Under Review" ? "bg-yellow-100 text-yellow-800" :
-                                                        "bg-green-100 text-green-800"
-                                            }>
+                                            <Badge
+                                                className={
+                                                    video.status === "Pending"
+                                                        ? "bg-red-100 text-red-800"
+                                                        : video.status === "Under Review"
+                                                        ? "bg-yellow-100 text-yellow-800"
+                                                        : "bg-green-100 text-green-800"
+                                                }
+                                            >
                                                 <span className="mr-1">•</span> {video.status}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge className={
-                                                video.priority === "High" ? "bg-red-100 text-red-800" :
-                                                    video.priority === "Medium" ? "bg-yellow-100 text-yellow-800" :
-                                                        "bg-green-100 text-green-800"
-                                            }>
+                                            <Badge
+                                                className={
+                                                    video.priority === "High"
+                                                        ? "bg-red-100 text-red-800"
+                                                        : video.priority === "Medium"
+                                                        ? "bg-yellow-100 text-yellow-800"
+                                                        : "bg-green-100 text-green-800"
+                                                }
+                                            >
                                                 {video.priority}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
                                             <div>
                                                 <p className="text-sm">{video.date}</p>
-                                                <p className="text-xs text-gray-500">{video.timeAgo}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    {video.timeAgo}
+                                                </p>
                                             </div>
                                         </TableCell>
                                         <TableCell>
@@ -350,7 +369,9 @@ export default function ContentManagementDashboard() {
                             </TableBody>
                         </Table>
                         <div className="flex items-center justify-between mt-4">
-                            <p className="text-sm text-gray-500">Showing 1 to 4 of 12,345 results</p>
+                            <p className="text-sm text-gray-500">
+                                Showing 1 to 4 of 12,345 results
+                            </p>
                             <div className="flex space-x-2">
                                 <Button variant="outline" size="sm" disabled={page === 1}>
                                     Previous

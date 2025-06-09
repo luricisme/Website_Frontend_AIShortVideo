@@ -1,7 +1,7 @@
 import { Search } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 const SearchBar = () => {

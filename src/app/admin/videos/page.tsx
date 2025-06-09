@@ -1,26 +1,28 @@
-"use client"
+"use client";
 import React, { useState } from "react";
+import { Search, Edit, Eye, Trash, Bell, CheckCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
-    Search,
-    Edit,
-    Eye,
-    Trash, Bell, CheckCircle
-} from "lucide-react";
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
-import {Input} from "@/components/ui/input";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
-import {Button} from "@/components/ui/button";
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import {
     Table,
     TableBody,
     TableCell,
     TableHead,
     TableHeader,
-    TableRow
+    TableRow,
 } from "@/components/ui/table";
 
 export default function VideoManagementDashboard() {
-    const [page, setPage] = useState(1);
+    // const [page, setPage] = useState(1);
+    const [page] = useState(1);
 
     // Mock data for users
     const videos = [
@@ -31,7 +33,7 @@ export default function VideoManagementDashboard() {
             category: "Technology",
             status: "Active",
             views: "4200",
-            publish: "Jan 15, 2025"
+            publish: "Jan 15, 2025",
         },
         {
             id: 2,
@@ -40,7 +42,7 @@ export default function VideoManagementDashboard() {
             category: "Technology",
             status: "Active",
             views: "4200",
-            publish: "Jan 15, 2025"
+            publish: "Jan 15, 2025",
         },
         {
             id: 3,
@@ -49,7 +51,7 @@ export default function VideoManagementDashboard() {
             category: "Technology",
             status: "Active",
             views: "4200",
-            publish: "Jan 15, 2025"
+            publish: "Jan 15, 2025",
         },
         {
             id: 4,
@@ -58,7 +60,7 @@ export default function VideoManagementDashboard() {
             category: "Technology",
             status: "Active",
             views: "4200",
-            publish: "Jan 15, 2025"
+            publish: "Jan 15, 2025",
         },
     ];
 
@@ -70,7 +72,9 @@ export default function VideoManagementDashboard() {
                 <div className="flex items-center space-x-4">
                     <div className="relative">
                         <Bell size={25} />
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">2</span>
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                            2
+                        </span>
                     </div>
                     <div className="flex items-center">
                         <div className="h-8 w-8 bg-purple-500 rounded-full flex items-center justify-center text-white">
@@ -142,10 +146,7 @@ export default function VideoManagementDashboard() {
                                 <label className="block text-sm font-medium mb-2">Search</label>
                                 <div className="relative">
                                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                                    <Input
-                                        placeholder="Video title or reporter"
-                                        className="pl-8"
-                                    />
+                                    <Input placeholder="Video title or reporter" className="pl-8" />
                                 </div>
                             </div>
                             <div>
@@ -178,7 +179,10 @@ export default function VideoManagementDashboard() {
                             </div>
 
                             <div className="flex justify-end mt-4 pt-2">
-                                <Button variant="default" className="bg-purple-600 hover:bg-purple-700">
+                                <Button
+                                    variant="default"
+                                    className="bg-purple-600 hover:bg-purple-700"
+                                >
                                     Apply Filters
                                 </Button>
                             </div>
@@ -191,7 +195,10 @@ export default function VideoManagementDashboard() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-lg">All Videos</CardTitle>
-                        <Button variant="outline" className="bg-purple-600 text-white hover:bg-purple-700">
+                        <Button
+                            variant="outline"
+                            className="bg-purple-600 text-white hover:bg-purple-700"
+                        >
                             <CheckCircle className="me-2 h-4 w-4" />
                             Add New Videos
                         </Button>
@@ -201,27 +208,13 @@ export default function VideoManagementDashboard() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-1/4">
-                                        VIDEO
-                                    </TableHead>
-                                    <TableHead className="w-1/7">
-                                        CREATOR
-                                    </TableHead>
-                                    <TableHead className="w-1/7">
-                                        CATEGORY
-                                    </TableHead>
-                                    <TableHead className="w-1/7">
-                                        STATUS
-                                    </TableHead>
-                                    <TableHead className="w-1/7">
-                                        VIEWS
-                                    </TableHead>
-                                    <TableHead className="w-1/6">
-                                        PUBLISHED
-                                    </TableHead>
-                                    <TableHead className="w-1/9">
-                                        ACTIONS
-                                    </TableHead>
+                                    <TableHead className="w-1/4">VIDEO</TableHead>
+                                    <TableHead className="w-1/7">CREATOR</TableHead>
+                                    <TableHead className="w-1/7">CATEGORY</TableHead>
+                                    <TableHead className="w-1/7">STATUS</TableHead>
+                                    <TableHead className="w-1/7">VIEWS</TableHead>
+                                    <TableHead className="w-1/6">PUBLISHED</TableHead>
+                                    <TableHead className="w-1/9">ACTIONS</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -235,27 +228,23 @@ export default function VideoManagementDashboard() {
                                                 </div>
                                             </div>
                                         </TableCell>
+                                        <TableCell>{video.creator}</TableCell>
+                                        <TableCell>{video.category}</TableCell>
                                         <TableCell>
-                                            {video.creator}
-                                        </TableCell>
-                                        <TableCell>
-                                            {video.category}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                video.status === 'Active' ? 'bg-green-100 text-green-800' :
-                                                    video.status === 'Inactive' ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-red-100 text-red-800'
-                                            }`}>
+                                            <div
+                                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                    video.status === "Active"
+                                                        ? "bg-green-100 text-green-800"
+                                                        : video.status === "Inactive"
+                                                        ? "bg-yellow-100 text-yellow-800"
+                                                        : "bg-red-100 text-red-800"
+                                                }`}
+                                            >
                                                 {video.status}
                                             </div>
                                         </TableCell>
-                                        <TableCell>
-                                            {video.views}
-                                        </TableCell>
-                                        <TableCell>
-                                            {video.publish}
-                                        </TableCell>
+                                        <TableCell>{video.views}</TableCell>
+                                        <TableCell>{video.publish}</TableCell>
                                         <TableCell>
                                             <div className="flex space-x-2">
                                                 <button className="text-blue-600 hover:text-blue-900 cursor-pointer transition-colors duration-200">
@@ -275,7 +264,9 @@ export default function VideoManagementDashboard() {
                         </Table>
 
                         <div className="flex items-center justify-between mt-4">
-                            <p className="text-sm text-gray-500">Showing 1 to 4 of 12,345 results</p>
+                            <p className="text-sm text-gray-500">
+                                Showing 1 to 4 of 12,345 results
+                            </p>
                             <div className="flex space-x-2">
                                 <Button variant="outline" size="sm" disabled={page === 1}>
                                     Previous
