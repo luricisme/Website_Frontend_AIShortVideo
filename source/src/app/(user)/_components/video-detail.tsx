@@ -99,7 +99,7 @@ const VideoDetail = ({ video }: VideoDetailProps) => {
                     muted={false}
                     isVisible={isVisible}
                 />
-                <div className="flex flex-col justify-end gap-3 mb-4">
+                <div className="flex flex-col justify-end gap-3 mb-4 !items-center">
                     <div className="flex flex-col gap-2">
                         <div className="flex flex-col items-center gap-1 text-white text-sm">
                             <div className="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer bg-white/10 hover:bg-white/20 transition-colors duration-200">
@@ -155,10 +155,12 @@ const VideoDetail = ({ video }: VideoDetailProps) => {
                             </div>
                         </div>
                     </div>
-                    <Avatar className="w-11 h-11 rounded-md">
-                        <AvatarImage src={video.author.avatar} />
-                        <AvatarFallback>{video.author.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
+                    <div className="w-11 h-11">
+                        <Avatar className="w-11 h-11 rounded-md">
+                            <AvatarImage src={video.author.avatar} />
+                            <AvatarFallback>{video.author.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                    </div>
                 </div>
             </div>
             <div></div>
