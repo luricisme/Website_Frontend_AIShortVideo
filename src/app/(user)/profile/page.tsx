@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { User, Video, Trash2 } from "lucide-react";
 import VideoCard, { VideoCardProps } from "@/app/(user)/_components/video-card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 // type VideoProps = {
 //     id: number;
@@ -201,18 +203,26 @@ export default function UserProfileApp() {
                         <User className="w-12 h-12 text-white" />
                     </div>
                     <div className="flex-1">
-                        <div className="flex items-center space-x-4 mb-2">
+                        <div className="flex flex-col space-x-4">
                             <h1 className="text-2xl font-bold">
                                 {userProfile.firstName} {userProfile.lastName}
                             </h1>
+                            <p className="text-zinc-400">@{userProfile.username}</p>
+                        </div>
+                        <div className="my-2">
                             <button
                                 onClick={() => setCurrentPage("edit")}
                                 className="px-4 py-1.5 border border-zinc-600 rounded-lg text-sm hover:bg-zinc-800 transition-colors"
                             >
                                 Edit Profile
                             </button>
+                            <Button
+                                variant="secondary"
+                                className="ml-4 px-4 py-1.5 text-sm hover:bg-purple-600 transition-colors"
+                            >
+                                <Link href="/dashboard">Dashboard</Link>
+                            </Button>
                         </div>
-                        <p className="text-zinc-400 mb-4">@{userProfile.username}</p>
                         <div className="flex space-x-8 mb-4">
                             <div className="text-center">
                                 <div className="font-bold">{userProfile.followers}</div>
