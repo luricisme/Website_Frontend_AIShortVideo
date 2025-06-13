@@ -339,7 +339,7 @@ const ShortsPage = () => {
     };
 
     return (
-        <div className="relative h-screen bg-black overflow-hidden">
+        <div className="relative bg-black overflow-hidden">
             <div ref={containerRef} className={scrollContainerClass}>
                 {videos.map((video, index) => (
                     <div

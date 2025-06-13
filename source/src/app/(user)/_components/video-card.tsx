@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import VideoActionDropdown from "@/app/(user)/_components/video-action-dropdown";
 
-type VideoCardProps = {
+export type VideoCardProps = {
     id: number;
     title: string;
     description: string;
