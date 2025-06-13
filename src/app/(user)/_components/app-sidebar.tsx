@@ -77,7 +77,7 @@ export function AppSidebar() {
                 <div className="flex items-center justify-between px-4 py-2 gap-2 ">
                     <Button className="w-full flex items-center justify-center gap-2 cursor-pointer">
                         <Plus strokeWidth={4} />
-                        <span className="text-sm font-bold">Create Video</span>
+                        <Link href={"/create-video"} className="text-sm font-bold">Create Video</Link>
                     </Button>
                 </div>
             </SidebarFooter>

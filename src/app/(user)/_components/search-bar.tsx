@@ -1,6 +1,8 @@
 import { Search } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
+// import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 const SearchBar = () => {
@@ -19,9 +21,11 @@ const SearchBar = () => {
                     />
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button className="!font-semibold">Sign In</Button>
+                    <Button className="!font-semibold">
+                        <Link href={"/signin"}>Sign In</Link>
+                    </Button>
                     <Button variant="outline" className="!font-semibold">
-                        Register
+                        <Link href={"/register"}>Register</Link>
                     </Button>
                 </div>
             </div>
