@@ -3,10 +3,11 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 
 // import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const SearchBar = () => {
     return (
-        <div className="flex items-center w-full gap-2 py-4">
+        <div className="h-[76px] flex items-center w-full gap-2 py-4 sticky top-0 z-50 bg-background">
             <SidebarTrigger />
             <div className="flex items-center justify-between w-full">
                 <div className="relative flex items-center justify-center w-full max-w-[400px]">
@@ -20,10 +21,12 @@ const SearchBar = () => {
                     />
                 </div>
                 <div className="flex items-center gap-2">
-                    <Link href={"/signin"} className="!font-semibold">Sign In</Link>
-                    <Link href={"/register"} className="!font-semibold">
-                        Register
-                    </Link>
+                    <Button className="!font-semibold">
+                        <Link href={"/signin"}>Sign In</Link>
+                    </Button>
+                    <Button variant="outline" className="!font-semibold">
+                        <Link href={"/register"}>Register</Link>
+                    </Button>
                 </div>
             </div>
         </div>

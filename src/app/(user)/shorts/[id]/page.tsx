@@ -1,5 +1,9 @@
+"use client";
+
+import { useParams } from "next/navigation";
 import ShortsViewer from "@/app/(user)/_components/shorts-viewer ";
 
+// Danh sách video mẫu (có thể lấy từ API hoặc từ một file riêng)
 const VIDEO_LIST = [
     {
         id: 1,
@@ -100,13 +104,35 @@ const VIDEO_LIST = [
     },
 ];
 
-export default function Home() {
+const ShortsPage = () => {
+    const params = useParams();
+    const initialVideoId = params?.id ? String(params.id) : null;
+
+    // Tìm video hiện tại từ ID và sắp xếp lại danh sách video
+    const getInitialVideoAndIndex = () => {
+        if (!initialVideoId) {
+            return { index: 0, videos: VIDEO_LIST };
+        }
+
+        const id = parseInt(initialVideoId);
+        const selectedVideoIndex = VIDEO_LIST.findIndex((video) => video.id === id);
+
+        if (selectedVideoIndex === -1) {
+            return { index: 0, videos: VIDEO_LIST };
+        }
+
+        // Thay vì sắp xếp lại, chỉ cần xác định index ban đầu
+        return { index: selectedVideoIndex, videos: VIDEO_LIST };
+    };
+
     return (
         <ShortsViewer
             videos={VIDEO_LIST}
-            initialVideoIndex={0}
-            updateUrl={false} // Không cập nhật URL cho homepage
-            urlPath="/" // Không cần thiết vì updateUrl = false
+            initialVideoIndex={getInitialVideoAndIndex().index}
+            updateUrl={true}
+            urlPath="/shorts"
         />
     );
-}
+};
+
+export default ShortsPage;

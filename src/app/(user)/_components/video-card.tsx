@@ -77,7 +77,7 @@ const VideoCard = ({ video }: { video: VideoCardProps }) => {
 
     return (
         <div className="flex flex-col">
-            <Link href={`/video/${video.id}`} className="block">
+            <Link href={`/shorts/${video.id}`} className="block">
                 <div
                     className="relative w-full aspect-[9/16]"
                     onMouseEnter={() => handleMouseEnter()}
