@@ -2,6 +2,7 @@
 
 import VideoCard from "@/app/(user)/_components/video-card";
 import StatsOverview from "@/app/(user)/dashboard/_components/stats-overview";
+import { VideoDetailModal } from "@/app/(user)/dashboard/_components/video-detail-modal";
 import VideoTable from "@/app/(user)/dashboard/_components/video-table";
 import { PlatformPieChart, ViewsTrendChart } from "@/components/charts/dashboard-charts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -127,6 +128,13 @@ const Dashboard = () => {
 
                     <TabsContent value="videos" className="mt-6">
                         <VideoTable videoStats={videoStats} onVideoSelect={setSelectedVideo} />
+
+                        {selectedVideo && (
+                            <VideoDetailModal
+                                video={videoStats.find((v) => v.id === selectedVideo)!}
+                                onClose={() => setSelectedVideo(null)}
+                            />
+                        )}
                     </TabsContent>
                 </Tabs>
             </div>
