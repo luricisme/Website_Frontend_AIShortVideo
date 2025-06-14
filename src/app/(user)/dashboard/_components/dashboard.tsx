@@ -2,6 +2,7 @@
 
 import VideoCard from "@/app/(user)/_components/video-card";
 import StatsOverview from "@/app/(user)/dashboard/_components/stats-overview";
+import VideoTable from "@/app/(user)/dashboard/_components/video-table";
 import { PlatformPieChart, ViewsTrendChart } from "@/components/charts/dashboard-charts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { useState } from "react";
 
 const Dashboard = () => {
     // Mock data for date range selection
@@ -25,6 +27,8 @@ const Dashboard = () => {
         viewsTrendData,
         platformData,
     } = useDashboardData();
+
+    const [selectedVideo, setSelectedVideo] = useState<number | null>(null);
 
     return (
         <div className="text-white pb-10">
@@ -119,6 +123,10 @@ const Dashboard = () => {
                                 </div>
                             </CardContent>
                         </Card>
+                    </TabsContent>
+
+                    <TabsContent value="videos" className="mt-6">
+                        <VideoTable videoStats={videoStats} onVideoSelect={setSelectedVideo} />
                     </TabsContent>
                 </Tabs>
             </div>
