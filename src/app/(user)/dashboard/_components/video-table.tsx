@@ -1,6 +1,29 @@
 import Pagination from "@/components/table/pagination";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
     Table,
     TableBody,
@@ -14,6 +37,85 @@ import { BarChart3, Edit, Eye, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+
+const DeleteVideoAlertDialog = ({ id }: { id: string }) => {
+    return (
+        <AlertDialog>
+            <AlertDialogTrigger asChild>
+                <Button
+                    title="Xóa video"
+                    variant="ghost"
+                    size="sm"
+                    className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+                    onClick={() => {
+                        // Xử lý xóa video
+                        console.log(`Xóa video với ID: ${id}`);
+                    }}
+                >
+                    <Trash2 className="w-4 h-4" />
+                </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Xác nhận xóa video</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Bạn có chắc chắn muốn xóa video này? Hành động này không thể hoàn tác.
+                        <br />
+                        Video ID: {id}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogAction>Continue</AlertDialogAction>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
+};
+
+const EditVideoInfoDialog = ({ id }: { id: string }) => {
+    return (
+        <Dialog>
+            <form>
+                <DialogTrigger asChild>
+                    <Button
+                        title="Chỉnh sửa video"
+                        variant="ghost"
+                        size="sm"
+                        className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+                        onClick={() => {
+                            // Xử lý chỉnh sửa video
+                            console.log(`Chỉnh sửa video với ID: ${id}`);
+                        }}
+                    >
+                        <Edit className="w-4 h-4" />
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Chỉnh sửa thông tin video</DialogTitle>
+                        <DialogDescription>
+                            Cập nhật thông tin video của bạn. Hãy chắc chắn rằng các trường thông
+                            tin là chính xác.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4">
+                        <div className="grid gap-3">
+                            <Label htmlFor="title-1">Title</Label>
+                            <Input id="title-1" name="title" defaultValue="Pedro Duarte" />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="submit">Save changes</Button>
+                        <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+                    </DialogFooter>
+                </DialogContent>
+            </form>
+        </Dialog>
+    );
+};
 
 interface VideoTableProps {
     videoStats: VideoStats[];
@@ -118,30 +220,9 @@ const VideoTable = ({ videoStats, onVideoSelect }: VideoTableProps) => {
                                                 <BarChart3 className="w-4 h-4 mr-1" />
                                             </Button>
                                         </Link>
-                                        <Button
-                                            title="Chỉnh sửa video"
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-zinc-400 hover:text-white hover:bg-zinc-800"
-                                            onClick={() => {
-                                                // Xử lý chỉnh sửa video
-                                                console.log(`Chỉnh sửa video với ID: ${video.id}`);
-                                            }}
-                                        >
-                                            <Edit className="w-4 h-4" />
-                                        </Button>
-                                        <Button
-                                            title="Xóa video"
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-zinc-400 hover:text-white hover:bg-zinc-800"
-                                            onClick={() => {
-                                                // Xử lý xóa video
-                                                console.log(`Xóa video với ID: ${video.id}`);
-                                            }}
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
+
+                                        <EditVideoInfoDialog id={"" + video.id} />
+                                        <DeleteVideoAlertDialog id={"" + video.id} />
                                     </div>
                                 </TableCell>
                             </TableRow>
