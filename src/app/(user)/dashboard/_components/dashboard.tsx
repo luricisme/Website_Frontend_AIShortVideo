@@ -1,6 +1,7 @@
 "use client";
 
 import VideoCard from "@/app/(user)/_components/video-card";
+import PlatformStats from "@/app/(user)/dashboard/_components/platform-stats";
 import StatsOverview from "@/app/(user)/dashboard/_components/stats-overview";
 import { VideoDetailModal } from "@/app/(user)/dashboard/_components/video-detail-modal";
 import VideoTable from "@/app/(user)/dashboard/_components/video-table";
@@ -135,6 +136,10 @@ const Dashboard = () => {
                                 onClose={() => setSelectedVideo(null)}
                             />
                         )}
+                    </TabsContent>
+
+                    <TabsContent value="platforms" className="mt-6">
+                        <PlatformStats />
                     </TabsContent>
                 </Tabs>
             </div>
