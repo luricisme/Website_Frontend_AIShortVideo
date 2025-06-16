@@ -82,14 +82,14 @@ export default function CaptionPage() {
         <div className="min-h-screen py-20 px-4">
             <div className="max-w-7xl mx-auto">
                 <StepNavigation />
-                <Card className="max-w-4xl mx-auto">
+                <Card className="max-w-4xl mx-auto px-4">
                     <CardHeader className="text-center">
                         <CardTitle className="text-2xl font-bold">Add subtitles</CardTitle>
                         <CardDescription>
                             Customize the style and position of subtitles
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-6 px-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <Label className="text-sm font-medium mb-2 block">Subtitle type</Label>

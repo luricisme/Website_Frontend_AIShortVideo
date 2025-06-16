@@ -7,16 +7,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, Image, ArrowRight, ArrowLeft, Check } from 'lucide-react';
+import { RefreshCw, ImagePlus, ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import { useVideoCreation } from '../_context/VideoCreationContext';
 import StepNavigation from '../_components/StepNavigation';
 import { GeneratedImage } from '../_types/video';
+import Image from "next/image";
 
 const mockImages: GeneratedImage[] = [
-    { id: 1, url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop', prompt: 'Natural Science' },
-    { id: 2, url: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=400&h=300&fit=crop', prompt: 'Chemical experiment' },
-    { id: 3, url: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=300&fit=crop', prompt: 'Modern technology' },
-    { id: 4, url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=300&fit=crop', prompt: 'Study and research' }
+    { id: 1, url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop', prompt: 'Image 1' },
+    { id: 2, url: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=400&h=300&fit=crop', prompt: 'Image 2' },
+    { id: 3, url: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=300&fit=crop', prompt: 'Image 3' },
+    { id: 4, url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=300&fit=crop', prompt: 'Image 4' }
 ];
 
 export default function ImagesPage() {
@@ -68,7 +69,7 @@ export default function ImagesPage() {
                                     </>
                                 ) : (
                                     <>
-                                        <Image className="w-4 h-4 mr-2" />
+                                        <ImagePlus className="w-4 h-4 mr-2" />
                                         Generate images from script
                                     </>
                                 )}
@@ -84,7 +85,7 @@ export default function ImagesPage() {
                                     </Badge>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                                     {generatedImages.map((image) => (
                                         <div
                                             key={image.id}
@@ -95,10 +96,11 @@ export default function ImagesPage() {
                                                     : 'hover:scale-102 hover:shadow-lg'
                                             }`}
                                         >
-                                            <img
+                                            <Image
+                                                width={800}
+                                                height={800}
                                                 src={image.url}
                                                 alt={image.prompt}
-                                                className="w-full h-48 object-cover"
                                             />
                                             <div className="absolute inset-0 bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                         <span className="text-sm font-medium text-center px-2">

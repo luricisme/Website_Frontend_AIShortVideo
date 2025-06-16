@@ -24,7 +24,7 @@ export default function AudioPage() {
     const { state, dispatch } = useVideoCreation();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [audioProgress, setAudioProgress] = useState(30);
+    const [audioProgress] = useState(30);
     const [recordingTime, setRecordingTime] = useState(0);
     const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -227,7 +227,7 @@ export default function AudioPage() {
                                         e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
                                         const files = e.dataTransfer.files;
                                         if (files.length > 0) {
-                                            const event = { target: { files } } as any;
+                                            const event = { target: { files } } as never;
                                             handleFileUpload(event);
                                         }
                                     }}
@@ -311,9 +311,9 @@ export default function AudioPage() {
 
                         {/* Audio Preview Section */}
                         {audioData.recordedAudio && (
-                            <div className="mt-8 p-6 rounded-lg border bg-gray-50">
+                            <div className="mt-8 p-6 rounded-lg border">
                                 <Label className="text-lg font-semibold mb-4 block">Audio Preview</Label>
-                                <div className="flex items-center space-x-4 p-4 bg-white rounded-lg border">
+                                <div className="flex items-center space-x-4 p-4 rounded-lg border">
                                     <Button
                                         size="sm"
                                         variant="outline"

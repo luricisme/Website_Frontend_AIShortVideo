@@ -7,7 +7,7 @@ export default function CreateVideoPage() {
     const router = useRouter();
 
     useEffect(() => {
-        router.replace('/create-video/scripts');
+        router.replace('/create-video/script');
     }, [router]);
 
     return null;

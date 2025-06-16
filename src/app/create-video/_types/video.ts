@@ -4,6 +4,8 @@ export interface ScriptData {
     language: string;
     style: string;
     audience: string;
+    category: string;
+    tag: string;
 }
 
 export interface GeneratedImage {
@@ -38,6 +40,9 @@ export interface VideoCreationState {
     audioData: AudioData;
     captionData: CaptionData;
     isGenerating: boolean;
+    // New states for data fetching
+    fetchedData: string | null;
+    isFetchingData: boolean;
 }
 
 export interface StepProps {

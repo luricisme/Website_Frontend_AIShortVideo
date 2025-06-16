@@ -12,7 +12,9 @@ type VideoAction =
     | { type: 'SET_AUDIO_DATA'; payload: Partial<AudioData> }
     | { type: 'SET_CAPTION_DATA'; payload: Partial<CaptionData> }
     | { type: 'SET_GENERATING'; payload: boolean }
-    | { type: 'TOGGLE_IMAGE_SELECTION'; payload: number };
+    | { type: 'TOGGLE_IMAGE_SELECTION'; payload: number }
+    | { type: 'SET_FETCHED_DATA'; payload: string | null }
+    | { type: 'SET_FETCHING_DATA'; payload: boolean };
 
 const initialState: VideoCreationState = {
     scriptData: {
@@ -20,7 +22,9 @@ const initialState: VideoCreationState = {
         dataSource: '',
         language: '',
         style: '',
-        audience: ''
+        audience: '',
+        category: '',
+        tag: ''
     },
     generatedScript: '',
     selectedImages: [],
@@ -41,15 +45,26 @@ const initialState: VideoCreationState = {
         color: '',
         background: false
     },
-    isGenerating: false
+    isGenerating: false,
+    fetchedData: null,
+    isFetchingData: false
 };
 
 function videoReducer(state: VideoCreationState, action: VideoAction): VideoCreationState {
     switch (action.type) {
         case 'SET_SCRIPT_DATA':
+            // Reset fetched data when script data changes (except style and audience)
+            const newScriptData = { ...state.scriptData, ...action.payload };
+            const shouldResetData = (
+                action.payload.topic !== undefined ||
+                action.payload.dataSource !== undefined ||
+                action.payload.language !== undefined
+            );
+
             return {
                 ...state,
-                scriptData: { ...state.scriptData, ...action.payload }
+                scriptData: newScriptData,
+                fetchedData: shouldResetData ? null : state.fetchedData
             };
         case 'SET_GENERATED_SCRIPT':
             return {
@@ -89,6 +104,16 @@ function videoReducer(state: VideoCreationState, action: VideoAction): VideoCrea
             return {
                 ...state,
                 selectedImages: newSelectedImages
+            };
+        case 'SET_FETCHED_DATA':
+            return {
+                ...state,
+                fetchedData: action.payload
+            };
+        case 'SET_FETCHING_DATA':
+            return {
+                ...state,
+                isFetchingData: action.payload
             };
         default:
             return state;

@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-    ArrowLeft, ArrowRight, Play, Pause, Download, RefreshCw,
-    Image, Mic, Settings, Volume2, FileText, Palette
+    ArrowLeft, ArrowRight, Play, Pause, Download,
+    Mic, Settings, FileText, Palette
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,9 +17,9 @@ export default function PreviewPage() {
     const router = useRouter();
     const { state } = useVideoCreation();
     const [isPlaying, setIsPlaying] = useState(false);
-    const [currentTime, setCurrentTime] = useState(0);
-    const [isExporting, setIsExporting] = useState(false);
-    const [exportProgress, setExportProgress] = useState(0);
+    const [currentTime] = useState(0);
+    const [isExporting] = useState(false);
+    const [exportProgress] = useState(0);
 
     const totalDuration = 150; // 2:30 in seconds
     const progress = (currentTime / totalDuration) * 100;
@@ -29,24 +29,24 @@ export default function PreviewPage() {
         // In real app, this would control actual video playback
     };
 
-    const handleExport = () => {
-        setIsExporting(true);
-        setExportProgress(0);
-
-        // Simulate export progress
-        const interval = setInterval(() => {
-            setExportProgress(prev => {
-                if (prev >= 100) {
-                    clearInterval(interval);
-                    setIsExporting(false);
-                    // Show success message or download
-                    alert('Video đã được xuất thành công!');
-                    return 100;
-                }
-                return prev + 10;
-            });
-        }, 500);
-    };
+    // const handleExport = () => {
+    //     setIsExporting(true);
+    //     setExportProgress(0);
+    //
+    //     // Simulate export progress
+    //     const interval = setInterval(() => {
+    //         setExportProgress(prev => {
+    //             if (prev >= 100) {
+    //                 clearInterval(interval);
+    //                 setIsExporting(false);
+    //                 // Show success message or download
+    //                 alert('Video đã được xuất thành công!');
+    //                 return 100;
+    //             }
+    //             return prev + 10;
+    //         });
+    //     }, 500);
+    // };
 
     const handleEdit = () => {
         router.push('/create-video/edit');
@@ -85,9 +85,9 @@ export default function PreviewPage() {
 
                             {/* Play overlay */}
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="text-center text-white">
+                                <div className="text-center">
                                     <div
-                                        className="w-20 h-20 mx-auto mb-4 bg-white bg-opacity-20 rounded-full flex items-center justify-center cursor-pointer hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm"
+                                        className="w-20 h-20 mx-auto mb-4 text-black bg-white bg-opacity-20 rounded-full flex items-center justify-center cursor-pointer hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm"
                                         onClick={handlePlayPause}
                                     >
                                         {isPlaying ? (
@@ -187,8 +187,8 @@ export default function PreviewPage() {
                                 className="px-6 py-3"
                                 disabled={isExporting}
                             >
-                                <RefreshCw className="w-4 h-4" />
-                                Edit
+                                <Palette className="w-4 h-4" />
+                                Edit video
                             </Button>
                             <Button
                                 className="px-8 py-3 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700"
@@ -202,7 +202,7 @@ export default function PreviewPage() {
                                     </>
                                 ) : (
                                     <>
-                                        <Download className="w-4 h-4 mr-2" />
+                                        <Download className="w-4 h-4" />
                                         Export video
                                     </>
                                 )}
@@ -215,6 +215,7 @@ export default function PreviewPage() {
                                 Back
                             </Button>
                             <Button onClick={handleNext} disabled={isExporting}>
+                                <Download className="w-4 h-4" />
                                 Export
                                 <ArrowRight className="w-4 h-4" />
                             </Button>
