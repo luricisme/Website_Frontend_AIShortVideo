@@ -1,13 +1,39 @@
+"use client";
+
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Check, LockKeyhole, LogIn, Mail } from "lucide-react";
 import Image from "next/image";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { InputWithIcon } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { icons } from "@/constants/icons";
+import { useForm } from "react-hook-form";
+
+// 1. Login Schema
+const loginSchema = z.object({
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type LoginType = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+    const form = useForm<LoginType>({
+        resolver: zodResolver(loginSchema),
+        defaultValues: {
+            email: "",
+            password: "",
+        },
+    });
+
+    const onSubmit = (data: LoginType) => {
+        console.log(data);
+    };
+
     return (
         <div className="min-h-screen w-full text-white grid grid-cols-1 lg:grid-cols-2">
             {/* Left side - Content */}
@@ -27,12 +53,12 @@ export default function LoginPage() {
                 {/* Main Content */}
                 <div className="max-w-lg w-full">
                     <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
-                        Tạo video ngắn AI trong vài phút
+                        Create AI short videos in minutes
                     </h1>
 
                     <p className="text-gray-400 text-sm sm:text-base lg:text-lg mb-8 sm:mb-10 lg:mb-12 leading-relaxed">
-                        Công cụ tạo video ngắn thông minh giúp bạn dễ dàng tạo nội dung hấp dẫn cho
-                        mạng xã hội mà không cần kinh nghiệm chỉnh sửa.
+                        An intelligent short video creation tool that helps you easily create
+                        engaging content for social media without editing experience.
                     </p>
 
                     {/* Features */}
@@ -42,7 +68,7 @@ export default function LoginPage() {
                                 <Check strokeWidth={3.5} className="w-3 h-3 text-white" />
                             </div>
                             <span className="text-gray-300 text-sm sm:text-base">
-                                Biến văn bản thành video chỉ trong vài phút
+                                Turn text into video in just a few minutes
                             </span>
                         </div>
 
@@ -51,7 +77,7 @@ export default function LoginPage() {
                                 <Check strokeWidth={3.5} className="w-3 h-3 text-white" />
                             </div>
                             <span className="text-gray-300 text-sm sm:text-base">
-                                Hàng nghìn mẫu và hiệu ứng chuyên nghiệp
+                                Thousands of professional templates and effects
                             </span>
                         </div>
 
@@ -60,7 +86,7 @@ export default function LoginPage() {
                                 <Check strokeWidth={3.5} className="w-3 h-3 text-white" />
                             </div>
                             <span className="text-gray-300 text-sm sm:text-base">
-                                Tối ưu hóa cho TikTok, Instagram và YouTube Shorts
+                                Optimized for TikTok, Instagram, and YouTube Shorts
                             </span>
                         </div>
                     </div>
@@ -77,34 +103,66 @@ export default function LoginPage() {
                     </CardHeader>
 
                     <CardContent className="space-y-5 sm:space-y-6 px-4 sm:px-6 md:px-8 pb-6 sm:pb-8">
-                        <div className="space-y-3 sm:space-y-4">
-                            <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                                    <Mail color="#808080" className="w-4 h-4 sm:w-5 sm:h-5" />
-                                </span>
-                                <Input
-                                    type="email"
-                                    placeholder="Email address"
-                                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 h-10 sm:h-12 pl-9 sm:pl-10 text-sm sm:text-base"
+                        <Form {...form}>
+                            <form
+                                onSubmit={form.handleSubmit(onSubmit)}
+                                className="space-y-3 sm:space-y-4"
+                            >
+                                <FormField
+                                    control={form.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormControl>
+                                                <InputWithIcon
+                                                    type="email"
+                                                    placeholder="Email address"
+                                                    autoComplete="email"
+                                                    icon={
+                                                        <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                    }
+                                                    inputBg="#282828"
+                                                    iconPosition="left"
+                                                    {...field}
+                                                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 h-10 sm:h-12 text-sm sm:text-base"
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                 />
-                            </div>
 
-                            <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                                    <LockKeyhole
-                                        color="#808080"
-                                        className="w-4 h-4 sm:w-5 sm:h-5"
-                                    />
-                                </span>
-                                <Input
-                                    type="password"
-                                    placeholder="Password"
-                                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 h-10 sm:h-12 pl-9 sm:pl-10 text-sm sm:text-base"
+                                <FormField
+                                    control={form.control}
+                                    name="password"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormControl>
+                                                <InputWithIcon
+                                                    type="password"
+                                                    placeholder="Password"
+                                                    autoComplete="current-password"
+                                                    icon={
+                                                        <LockKeyhole className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                    }
+                                                    inputBg="#282828"
+                                                    iconPosition="left"
+                                                    {...field}
+                                                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 h-10 sm:h-12 text-sm sm:text-base"
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                 />
-                            </div>
-                        </div>
+                            </form>
+                        </Form>
 
-                        <Button className="w-full h-10 sm:h-12 bg-[#D9D9D9] text-black hover:bg-gray-200 font-semibold text-sm sm:text-base">
+                        <Button
+                            onClick={form.handleSubmit(onSubmit)}
+                            disabled={form.formState.isSubmitting}
+                            className="w-full h-10 sm:h-12 bg-[#D9D9D9] text-black hover:bg-gray-200 font-semibold text-sm sm:text-base"
+                        >
                             Sign In
                             <LogIn strokeWidth={2.5} className="w-3 h-3 sm:w-4 sm:h-4 ml-2" />
                         </Button>
@@ -135,7 +193,7 @@ export default function LoginPage() {
                         </Button>
 
                         <div className="text-center text-xs sm:text-sm">
-                            <span className="text-[#786E6E]">Dont have an account? </span>
+                            <span className="text-[#786E6E]">Don&apos;t have an account? </span>
                             <button className="text-white hover:underline font-medium">
                                 Register
                             </button>
