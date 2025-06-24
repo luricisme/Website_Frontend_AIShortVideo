@@ -2,9 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import VideoDetail from "@/app/(user)/_components/video-detail";
+import RightPanel, { PanelConfig } from "@/app/(user)/_components/right-panel";
+import {
+    CommentsPanel,
+    DetailsPanel,
+    SharePanel,
+    PlaylistPanel,
+} from "@/app/(user)/_components/panel-contents";
 import { useDebounce } from "@/hooks/use-debounce";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useBodyScroll, useScrollContainer } from "@/hooks/use-body-scroll";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface Video {
     id: number;
@@ -35,6 +43,9 @@ const ShortsViewer = ({
     updateUrl = false,
     urlPath = "/shorts",
 }: ShortsViewerProps) => {
+    const isMobile = useMediaQuery("(max-width: 767px)");
+    const isCompactView = useMediaQuery("(max-width: 1249px)");
+
     useBodyScroll(true); // Ẩn scroll của body
     const scrollContainerClass = useScrollContainer({
         height: "h-[calc(100vh-80px)]",
@@ -44,6 +55,13 @@ const ShortsViewer = ({
     });
 
     const [currentVideoIndex, setCurrentVideoIndex] = useState(initialVideoIndex);
+
+    const [isShowRightPanel, setIsShowRightPanel] = useState(false);
+    const [isPanelVisible, setIsPanelVisible] = useState(false);
+    const [currentPanel, setCurrentPanel] = useState<PanelConfig | null>(null);
+    const currentPanelTitleRef = useRef<string | null>(null);
+
+    const panelTimerRef = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const videoRefs = useRef<(HTMLDivElement | null)[]>([]);
     const HEADER_HEIGHT = 80;
@@ -51,28 +69,21 @@ const ShortsViewer = ({
     const [hasInitialized, setHasInitialized] = useState(false);
     const urlUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Khởi tạo refs cho mỗi video
     useEffect(() => {
         videoRefs.current = videoRefs.current.slice(0, videos.length);
     }, [videos]);
 
-    // Cập nhật URL khi chuyển video, nhưng sử dụng replaceState thay vì router.push
     useEffect(() => {
-        // Không cần cập nhật URL khi mới khởi tạo trang
         if (!hasInitialized) return;
 
-        // Nếu không cần cập nhật URL, thoát sớm
         if (!updateUrl) return;
 
-        // Hủy timeout cũ nếu có
         if (urlUpdateTimeoutRef.current) {
             clearTimeout(urlUpdateTimeoutRef.current);
         }
 
-        // Đặt timeout mới để tránh cập nhật URL quá thường xuyên
         urlUpdateTimeoutRef.current = setTimeout(() => {
             const videoId = videos[currentVideoIndex].id;
-            // Sử dụng History API để thay đổi URL mà không tải lại trang
             window.history.replaceState({ id: videoId }, "", `${urlPath}/${videoId}`);
         }, 300);
 
@@ -83,7 +94,6 @@ const ShortsViewer = ({
         };
     }, [currentVideoIndex, videos, hasInitialized, updateUrl, urlPath]);
 
-    // Tạo hàm xử lý scroll với debounce
     const handleScrollDebounced = useCallback(() => {
         if (!containerRef.current || isScrolling) return;
 
@@ -98,7 +108,6 @@ const ShortsViewer = ({
 
     const debouncedScroll = useDebounce(handleScrollDebounced, 50);
 
-    // Xử lý sự kiện scroll
     useEffect(() => {
         const container = containerRef.current;
         if (container) {
@@ -112,7 +121,6 @@ const ShortsViewer = ({
         };
     }, [debouncedScroll]);
 
-    // Xử lý wheel event
     useEffect(() => {
         const handleWheel = (e: WheelEvent) => {
             e.preventDefault();
@@ -155,7 +163,6 @@ const ShortsViewer = ({
         };
     }, [currentVideoIndex, videos.length, isScrolling]);
 
-    // Xử lý phím mũi tên
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (isScrolling || !containerRef.current) return;
@@ -191,34 +198,28 @@ const ShortsViewer = ({
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [currentVideoIndex, videos.length, isScrolling]);
 
-    // Cuộn đến video ban đầu khi trang được tải
     useEffect(() => {
         if (!containerRef.current) return;
 
         const scrollToInitialVideo = () => {
-            // Đặt chiều cao cụ thể cho mỗi phần tử video
             videoRefs.current.forEach((ref) => {
                 if (ref) {
                     ref.style.height = `${window.innerHeight - HEADER_HEIGHT}px`;
                 }
             });
 
-            // Cuộn đến video được chọn ban đầu
             const initialScrollPosition = initialVideoIndex * (window.innerHeight - HEADER_HEIGHT);
             containerRef.current?.scrollTo({
                 top: initialScrollPosition,
                 behavior: "auto",
             });
 
-            // Đánh dấu đã khởi tạo
             setHasInitialized(true);
         };
 
-        // Đặt timeout để đảm bảo rằng container đã được render
         setTimeout(scrollToInitialVideo, 100);
     }, [initialVideoIndex]);
 
-    // Hàm xử lý nhấn vào nút điều hướng
     const handleNavClick = (direction: "prev" | "next") => {
         if (isScrolling || !containerRef.current) return;
 
@@ -246,8 +247,93 @@ const ShortsViewer = ({
         }, 800);
     };
 
+    const handleOpenPanel = (panelConfig: PanelConfig) => {
+        const isSamePanel = isShowRightPanel && currentPanel?.title === panelConfig.title;
+
+        if (isSamePanel) {
+            handleClosePanel();
+        } else {
+            currentPanelTitleRef.current = panelConfig.title;
+
+            setCurrentPanel(panelConfig);
+
+            setIsPanelVisible(true);
+
+            setTimeout(() => {
+                setIsShowRightPanel(true);
+            }, 10);
+        }
+    };
+
+    const handleClosePanel = () => {
+        setIsShowRightPanel(false);
+
+        if (panelTimerRef.current) {
+            clearTimeout(panelTimerRef.current);
+        }
+
+        panelTimerRef.current = setTimeout(() => {
+            setIsPanelVisible(false);
+            // Có thể reset panel nếu muốn
+            // setCurrentPanel(null);
+        }, 500); // Đợi hết animation transform (500ms)
+    };
+
+    useEffect(() => {
+        return () => {
+            if (panelTimerRef.current) {
+                clearTimeout(panelTimerRef.current);
+            }
+        };
+    }, []);
+
+    const createPanelConfigs = useCallback(() => {
+        const currentVideo = videos[currentVideoIndex];
+
+        return {
+            comments: {
+                title: "Bình luận",
+                content: <CommentsPanel video={currentVideo} />,
+            },
+            details: {
+                title: "Thông tin chi tiết",
+                content: <DetailsPanel video={currentVideo} />,
+            },
+            share: {
+                title: "Chia sẻ",
+                content: <SharePanel video={currentVideo} />,
+            },
+            playlist: {
+                title: "Danh sách phát",
+                content: <PlaylistPanel video={currentVideo} />,
+            },
+        };
+    }, [currentVideoIndex, videos]);
+
+    useEffect(() => {
+        // Chỉ cập nhật khi video thay đổi và panel đang hiển thị
+        if (
+            isShowRightPanel &&
+            currentPanel &&
+            currentPanelTitleRef.current === currentPanel.title
+        ) {
+            const panelConfigs = createPanelConfigs();
+            const updatedPanel = Object.values(panelConfigs).find(
+                (config) => config.title === currentPanel.title
+            );
+
+            if (updatedPanel && updatedPanel !== currentPanel) {
+                // Cập nhật panel mà không tạo ra vòng lặp
+                setCurrentPanel(updatedPanel);
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentVideoIndex, createPanelConfigs, isShowRightPanel]);
+
+    const panelConfigs = createPanelConfigs();
+
     return (
-        <div className="relative bg-black overflow-hidden">
+        <div className="relative overflow-hidden bg-black">
             <div ref={containerRef} className={scrollContainerClass}>
                 {videos.map((video, index) => (
                     <div
@@ -262,39 +348,59 @@ const ShortsViewer = ({
                         }}
                         className="overflow-hidden"
                     >
-                        <VideoDetail video={video} />
+                        <VideoDetail
+                            video={video}
+                            isVisible={currentVideoIndex === index}
+                            isShowRightPanel={isShowRightPanel}
+                            panelConfigs={panelConfigs}
+                            onOpenPanel={handleOpenPanel}
+                        />
                     </div>
                 ))}
             </div>
 
-            {/* Nút điều hướng đơn giản hóa - chỉ có lên/xuống */}
-            <div className="fixed right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-4">
-                <button
-                    className={`p-2 rounded-full bg-black/40 text-white cursor-pointer ${
-                        currentVideoIndex <= 0
-                            ? "opacity-40 cursor-not-allowed"
-                            : "hover:bg-black/60"
-                    }`}
-                    onClick={() => handleNavClick("prev")}
-                    disabled={currentVideoIndex <= 0}
-                    aria-label="Video trước"
-                >
-                    <ChevronUp size={24} />
-                </button>
+            {!isMobile && (
+                <div className="fixed right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-4 z-20">
+                    <button
+                        className={`p-2 rounded-full bg-black/40 text-white cursor-pointer ${
+                            currentVideoIndex <= 0
+                                ? "opacity-40 cursor-not-allowed"
+                                : "hover:bg-black/60"
+                        }`}
+                        onClick={() => handleNavClick("prev")}
+                        disabled={currentVideoIndex <= 0}
+                        aria-label="Video trước"
+                    >
+                        <ChevronUp size={24} />
+                    </button>
 
-                <button
-                    className={`p-2 rounded-full bg-black/40 text-white cursor-pointer ${
-                        currentVideoIndex >= videos.length - 1
-                            ? "opacity-40 cursor-not-allowed"
-                            : "hover:bg-black/60"
-                    }`}
-                    onClick={() => handleNavClick("next")}
-                    disabled={currentVideoIndex >= videos.length - 1}
-                    aria-label="Video tiếp theo"
+                    <button
+                        className={`p-2 rounded-full bg-black/40 text-white cursor-pointer ${
+                            currentVideoIndex >= videos.length - 1
+                                ? "opacity-40 cursor-not-allowed"
+                                : "hover:bg-black/60"
+                        }`}
+                        onClick={() => handleNavClick("next")}
+                        disabled={currentVideoIndex >= videos.length - 1}
+                        aria-label="Video tiếp theo"
+                    >
+                        <ChevronDown size={24} />
+                    </button>
+                </div>
+            )}
+
+            {currentPanel && (
+                <RightPanel
+                    isVisible={isShowRightPanel}
+                    isPanelVisible={isPanelVisible}
+                    title={currentPanel.title}
+                    onClose={handleClosePanel}
+                    containerRef={containerRef}
+                    isCompactView={isCompactView}
                 >
-                    <ChevronDown size={24} />
-                </button>
-            </div>
+                    {currentPanel.content}
+                </RightPanel>
+            )}
         </div>
     );
 };
