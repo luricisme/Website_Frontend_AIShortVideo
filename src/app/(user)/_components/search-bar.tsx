@@ -22,10 +22,10 @@ const SearchBar = () => {
                 </div>
                 <div className="flex items-center gap-2">
                     <Button className="!font-semibold">
-                        <Link href={"/signin"}>Sign In</Link>
+                        <Link href={"/user/signin"}>Sign In</Link>
                     </Button>
                     <Button variant="outline" className="!font-semibold">
-                        <Link href={"/register"}>Register</Link>
+                        <Link href={"/user/register"}>Register</Link>
                     </Button>
                 </div>
             </div>

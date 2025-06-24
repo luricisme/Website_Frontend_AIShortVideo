@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Check, LockKeyhole, LogIn, Mail } from "lucide-react";
+import { ALargeSmall, Check, LockKeyhole, LogIn, Mail } from "lucide-react";
 import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,24 +14,35 @@ import { icons } from "@/constants/icons";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
 
-// 1. Login Schema
-const loginSchema = z.object({
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-});
+// 1. Register Schema
+const registerSchema = z
+    .object({
+        firstName: z.string().min(1, "First name is required"),
+        lastName: z.string().min(1, "Last name is required"),
+        email: z.string().email("Invalid email address"),
+        password: z.string().min(6, "Password must be at least 6 characters"),
+        confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        message: "Passwords don't match",
+        path: ["confirmPassword"],
+    });
 
-type LoginType = z.infer<typeof loginSchema>;
+type RegisterType = z.infer<typeof registerSchema>;
 
-export default function LoginPage() {
-    const form = useForm<LoginType>({
-        resolver: zodResolver(loginSchema),
+export default function RegisterPage() {
+    const form = useForm<RegisterType>({
+        resolver: zodResolver(registerSchema),
         defaultValues: {
+            firstName: "",
+            lastName: "",
             email: "",
             password: "",
+            confirmPassword: "",
         },
     });
 
-    const onSubmit = (data: LoginType) => {
+    const onSubmit = (data: RegisterType) => {
         console.log(data);
     };
 
@@ -99,7 +110,7 @@ export default function LoginPage() {
                 <Card className="w-full max-w-md lg:max-w-full bg-[#1E1E1E] border-gray-800 shadow-[0_4px_40px_0_rgba(255,255,255,0.05)]">
                     <CardHeader className="pb-6 sm:pb-8 pt-6 sm:pt-8 px-4 sm:px-6 md:px-8">
                         <h2 className="text-xl sm:text-2xl font-semibold text-center text-white">
-                            Sign In
+                            Create Account
                         </h2>
                     </CardHeader>
 
@@ -109,6 +120,57 @@ export default function LoginPage() {
                                 onSubmit={form.handleSubmit(onSubmit)}
                                 className="space-y-3 sm:space-y-4"
                             >
+                                {/* First Name - Last Name */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="firstName"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <InputWithIcon
+                                                        type="text"
+                                                        placeholder="First Name"
+                                                        autoComplete="given-name"
+                                                        icon={
+                                                            <ALargeSmall className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                        }
+                                                        inputBg="#282828"
+                                                        iconPosition="left"
+                                                        {...field}
+                                                        className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 h-10 sm:h-12 text-sm sm:text-base"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={form.control}
+                                        name="lastName"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <InputWithIcon
+                                                        type="text"
+                                                        placeholder="Last Name"
+                                                        autoComplete="family-name"
+                                                        icon={
+                                                            <ALargeSmall className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                        }
+                                                        inputBg="#282828"
+                                                        iconPosition="left"
+                                                        {...field}
+                                                        className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 h-10 sm:h-12 text-sm sm:text-base"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+
                                 <FormField
                                     control={form.control}
                                     name="email"
@@ -156,6 +218,30 @@ export default function LoginPage() {
                                         </FormItem>
                                     )}
                                 />
+
+                                <FormField
+                                    control={form.control}
+                                    name="confirmPassword"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormControl>
+                                                <InputWithIcon
+                                                    type="password"
+                                                    placeholder="Confirm Password"
+                                                    autoComplete="current-password"
+                                                    icon={
+                                                        <LockKeyhole className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                    }
+                                                    inputBg="#282828"
+                                                    iconPosition="left"
+                                                    {...field}
+                                                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 h-10 sm:h-12 text-sm sm:text-base"
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                             </form>
                         </Form>
 
@@ -164,7 +250,7 @@ export default function LoginPage() {
                             disabled={form.formState.isSubmitting}
                             className="w-full h-10 sm:h-12 bg-[#D9D9D9] text-black hover:bg-gray-200 font-semibold text-sm sm:text-base"
                         >
-                            Sign In
+                            Create Account
                             <LogIn strokeWidth={2.5} className="w-3 h-3 sm:w-4 sm:h-4 ml-2" />
                         </Button>
 
@@ -190,16 +276,16 @@ export default function LoginPage() {
                                 height={20}
                                 className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
                             />
-                            Continue with Google
+                            Sign up with Google
                         </Button>
 
                         <div className="text-center text-xs sm:text-sm">
-                            <span className="text-[#786E6E]">Don&apos;t have an account? </span>
+                            <span className="text-[#786E6E]">Already have an account? </span>
                             <Link
-                                href={"/user/register"}
+                                href="/user/signin"
                                 className="text-white hover:underline font-medium"
                             >
-                                Register
+                                Sign In
                             </Link>
                         </div>
                     </CardContent>
