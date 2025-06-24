@@ -138,3 +138,39 @@
         -ms-overflow-style: none; /* Ẩn thanh cuộn trên IE và Edge */
     }
 }
+
+@layer utilities {
+    /* Autofill styles cho light mode */
+    .custom-autofill:-webkit-autofill,
+    .custom-autofill:-webkit-autofill:focus,
+    .custom-autofill:-webkit-autofill:hover {
+        -webkit-box-shadow: 0 0 0 1000px var(--input-bg, var(--input)) inset !important;
+        box-shadow: 0 0 0 1000px var(--input-bg, var(--input)) inset !important;
+        -webkit-text-fill-color: var(--foreground) !important;
+        caret-color: var(--foreground) !important;
+        transition: background-color 9999s ease-in-out 0s;
+    }
+
+    /* Autofill styles cho dark mode */
+    .dark .custom-autofill:-webkit-autofill,
+    .dark .custom-autofill:-webkit-autofill:focus,
+    .dark .custom-autofill:-webkit-autofill:hover {
+        -webkit-box-shadow: 0 0 0 1000px var(--input-bg, var(--input)) inset !important;
+        box-shadow: 0 0 0 1000px var(--input-bg, var(--input)) inset !important;
+        -webkit-text-fill-color: var(--foreground) !important;
+        caret-color: var(--foreground) !important;
+        transition: background-color 9999s ease-in-out 0s;
+    }
+
+    /* Alternative method using filter for better browser support */
+    .custom-autofill-alt:-webkit-autofill,
+    .custom-autofill-alt:-webkit-autofill:focus,
+    .custom-autofill-alt:-webkit-autofill:hover {
+        filter: none !important;
+        -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+        box-shadow: 0 0 0 1000px transparent inset !important;
+        background-color: var(--input-bg, var(--input)) !important;
+        -webkit-text-fill-color: var(--foreground) !important;
+        caret-color: var(--foreground) !important;
+    }
+}

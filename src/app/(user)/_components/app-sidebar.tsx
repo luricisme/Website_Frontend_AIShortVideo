@@ -17,22 +17,24 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
+import { icons } from "@/constants/icons";
+
 // Menu items.
 const items = [
     {
         title: "Home",
         url: "/",
-        icon: <Image src={"/icon/home-icon.svg"} alt="Home" width={16} height={16} />,
+        icon: <Image src={icons.home.svg} alt="Home" width={16} height={16} />,
     },
     {
         title: "Trending",
         url: "/trending",
-        icon: <Image src={"/icon/trending-icon.svg"} alt="Trending" width={16} height={16} />,
+        icon: <Image src={icons.trending.svg} alt="Trending" width={16} height={16} />,
     },
     {
         title: "Profile",
         url: "/profile",
-        icon: <Image src={"/icon/profile-icon.svg"} alt="Profile" width={16} height={16} />,
+        icon: <Image src={icons.profile.svg} alt="Profile" width={16} height={16} />,
     },
 ];
 
@@ -43,7 +45,7 @@ export function AppSidebar() {
         <Sidebar>
             <SidebarHeader>
                 <div className="flex items-center justify-between px-4 py-2 gap-2 ">
-                    <Image src={"/logo.png"} alt="Logo" width={40} height={40} />
+                    <Image src={icons.logo.png} alt="Logo" width={40} height={40} />
                     <h1 className="text-lg font-bold">AI Short Video Creator</h1>
                 </div>
             </SidebarHeader>
@@ -76,11 +78,10 @@ export function AppSidebar() {
             <SidebarFooter>
                 <div className="flex items-center justify-between px-4 py-2 gap-2 ">
                     <Link className={"w-full"} href={"/create-video"}>
-                        <Button  className="w-full flex items-center justify-center gap-2 cursor-pointer">
+                        <Button className="w-full flex items-center justify-center gap-2 cursor-pointer">
                             <Plus strokeWidth={4} />
                             <p className="text-sm font-bold">Create Video</p>
                         </Button>
-
                     </Link>
                 </div>
             </SidebarFooter>
