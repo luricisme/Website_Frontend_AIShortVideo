@@ -8,6 +8,8 @@ import CustomVideoPlayer from "@/app/(user)/_components/custom-video-player";
 import { PanelConfig } from "@/app/(user)/_components/right-panel";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
+import { icons } from "@/constants/icons";
+
 export type VideoType = {
     id: number;
     title: string;
@@ -182,7 +184,7 @@ const VideoDetail = ({
                                 <div className="flex flex-col items-center gap-1 text-white text-sm">
                                     <div className="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer bg-white/10 hover:bg-white/20 transition-colors duration-200">
                                         <Image
-                                            src={"/icon/like-icon.svg"}
+                                            src={icons.like.svg}
                                             alt="Like"
                                             width={20}
                                             height={20}
@@ -197,7 +199,7 @@ const VideoDetail = ({
                                 <div className="flex flex-col items-center gap-1 text-white text-sm">
                                     <div className="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer bg-white/10 hover:bg-white/20 transition-colors duration-200">
                                         <Image
-                                            src={"/icon/dislike-icon.svg"}
+                                            src={icons.dislike.svg}
                                             alt="Dislike"
                                             width={20}
                                             height={20}
@@ -215,7 +217,7 @@ const VideoDetail = ({
                                 >
                                     <div className="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer bg-white/10 hover:bg-white/20 transition-colors duration-200">
                                         <Image
-                                            src={"/icon/comment-icon.svg"}
+                                            src={icons.comment.svg}
                                             alt="Comment"
                                             width={20}
                                             height={20}
@@ -231,7 +233,7 @@ const VideoDetail = ({
                                 >
                                     <div className="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer bg-white/10 hover:bg-white/20 transition-colors duration-200">
                                         <Image
-                                            src={"/icon/share-icon.svg"}
+                                            src={icons.share.svg}
                                             alt="Share"
                                             width={20}
                                             height={20}

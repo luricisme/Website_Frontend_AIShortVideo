@@ -1,4 +1,4 @@
-import { Video, Gauge, Users, Hash, Flag } from "lucide-react"
+import { Video, Gauge, Users, Hash, Flag } from "lucide-react";
 // import Logo from "@/../public/logo.png"
 
 import {
@@ -6,14 +6,17 @@ import {
     SidebarContent,
     SidebarGroup,
     SidebarGroupContent,
-    SidebarGroupLabel, SidebarHeader,
+    SidebarGroupLabel,
+    SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+
+import { icons } from "@/constants/icons";
 
 export function AppSidebar() {
     return (
@@ -21,7 +24,7 @@ export function AppSidebar() {
             <SidebarContent>
                 <SidebarGroup className={"p-4"}>
                     <SidebarHeader className="mb-4 flex">
-                        <Image src={"/logo.png"} alt="Logo" width={40} height={40} />
+                        <Image src={icons.logo.png} alt="Logo" width={40} height={40} />
                         <p className="font-bold text-xl">Admin Panel</p>
                     </SidebarHeader>
                     <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
@@ -90,5 +93,5 @@ export function AppSidebar() {
                 </SidebarGroup>
             </SidebarContent>
         </Sidebar>
-    )
+    );
 }
