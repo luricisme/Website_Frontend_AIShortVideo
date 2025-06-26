@@ -175,7 +175,7 @@ const VideoDetail = ({
 
                         <div
                             ref={actionsRef}
-                            className={`absolute flex flex-col gap-3 items-center transition-all duration-300 ${
+                            className={`absolute flex flex-col gap-3 items-center transition-all duration-300 z-20 ${
                                 isActionsOverlapping ? "bg-black/20 p-2 rounded-lg" : ""
                             }`}
                             style={actionStyles}

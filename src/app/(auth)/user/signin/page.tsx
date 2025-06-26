@@ -2,7 +2,6 @@
 
 import React from "react";
 import { Check, LockKeyhole, LogIn, Mail } from "lucide-react";
-import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -10,9 +9,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { InputWithIcon } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { icons } from "@/constants/icons";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
+
+import GoogleLoginButton from "@/app/(auth)/user/_components/google-button";
 
 // 1. Login Schema
 const loginSchema = z.object({
@@ -179,19 +179,7 @@ export default function LoginPage() {
                             </div>
                         </div>
 
-                        <Button
-                            variant="outline"
-                            className="w-full h-10 sm:h-12 bg-transparent border-gray-700 text-white hover:bg-gray-800 text-sm sm:text-base"
-                        >
-                            <Image
-                                src={icons.google.svg}
-                                alt="Google Logo"
-                                width={20}
-                                height={20}
-                                className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
-                            />
-                            Continue with Google
-                        </Button>
+                        <GoogleLoginButton />
 
                         <div className="text-center text-xs sm:text-sm">
                             <span className="text-[#786E6E]">Don&apos;t have an account? </span>

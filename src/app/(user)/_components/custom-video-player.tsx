@@ -664,7 +664,7 @@ export default function CustomVideoPlayer({
             </div>
 
             {isShowVideoInfo && !isMobile && (
-                <div className="absolute bottom-24 md:bottom-28 left-0 right-0 p-2 md:p-4 text-white z-20">
+                <div className="absolute hidden md:block md:bottom-15 left-0 right-0 p-2 md:p-4 text-white z-20">
                     <div
                         className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2"
                         onClick={(e) => e.stopPropagation()}
