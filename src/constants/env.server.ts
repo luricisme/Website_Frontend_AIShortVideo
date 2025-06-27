@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const serverSchema = z.object({
+    NODE_ENV: z.enum(["development", "production", "staging"]),
     NEXTAUTH_URL: z.string().url(),
     NEXTAUTH_SECRET: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
@@ -9,6 +10,7 @@ const serverSchema = z.object({
 });
 
 const rawServer = {
+    NODE_ENV: process.env.NODE_ENV || "development",
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,

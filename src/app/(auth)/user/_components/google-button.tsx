@@ -13,9 +13,13 @@ import { LoaderCircle } from "lucide-react";
 
 type GoogleButtonProps = {
     content?: string;
+    isDisabled?: boolean;
 };
 
-const GoogleButton = ({ content = "Continue with Google" }: GoogleButtonProps) => {
+const GoogleButton = ({
+    content = "Continue with Google",
+    isDisabled = false,
+}: GoogleButtonProps) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const searchParams = useSearchParams();
     const callbackUrl = searchParams.get("callbackUrl") || "/";
@@ -48,7 +52,7 @@ const GoogleButton = ({ content = "Continue with Google" }: GoogleButtonProps) =
             variant="outline"
             className="w-full h-10 sm:h-12 bg-transparent border-gray-700 text-white hover:bg-gray-800 text-sm sm:text-base"
             onClick={handleGoogleLogin}
-            disabled={isLoading}
+            disabled={isLoading || isDisabled}
         >
             {isLoading && (
                 <div className="flex items-center justify-center">
@@ -64,17 +68,17 @@ const GoogleButton = ({ content = "Continue with Google" }: GoogleButtonProps) =
                 alt="Google Logo"
                 width={20}
                 height={20}
-                className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
+                className="w-4 h-4 sm:w-5 sm:h-5 mr-2 select-none"
             />
             {content}
         </Button>
     );
 };
 
-export default function GoogleButtonWrapper({ content }: GoogleButtonProps) {
+export default function GoogleButtonWrapper({ content, isDisabled }: GoogleButtonProps) {
     return (
         <GoogleOAuthProvider clientId={envPublic.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
-            <GoogleButton content={content} />
+            <GoogleButton content={content} isDisabled={isDisabled} />
         </GoogleOAuthProvider>
     );
 }
