@@ -1,5 +1,6 @@
 'use client';
 
+import API_URL  from "@/config";
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,55 +19,127 @@ export default function ScriptsPage() {
     const { state, dispatch } = useVideoCreation();
     const { scriptData, generatedScript, isGenerating, fetchedData, isFetchingData } = state;
 
-    // Auto fetch data when topic, language, and dataSource are selected
+    // Only auto fetch data when topic, language, and dataSource are selected AND we don't have data yet
     useEffect(() => {
-        if (scriptData.topic && scriptData.language && scriptData.dataSource && !fetchedData && !isFetchingData) {
+        const shouldAutoFetch = (
+            scriptData.topic &&
+            scriptData.language &&
+            scriptData.dataSource &&
+            !fetchedData &&
+            !isFetchingData
+        );
+
+        if (shouldAutoFetch) {
             handleDataFetch();
         }
     }, [scriptData.topic, scriptData.language, scriptData.dataSource]);
 
+    // Step 1: Collect data using /create-video/collect-data
     const handleDataFetch = async () => {
         dispatch({ type: 'SET_FETCHING_DATA', payload: true });
 
-        // Simulated API call to fetch data
-        setTimeout(() => {
-            const mockData = generateMockData();
-            dispatch({ type: 'SET_FETCHED_DATA', payload: mockData });
-            dispatch({ type: 'SET_FETCHING_DATA', payload: false });
-        }, 1500);
-    };
+        console.log(API_URL.NEXT_PUBLIC_API_URL);
+        try {
+            // API call to collect data
+            const response = await fetch(`${API_URL.NEXT_PUBLIC_API_URL}/create-video/collect-data`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: scriptData.topic,
+                    source: scriptData.dataSource,
+                    lang: scriptData.language
+                }),
+            });
 
-
-    const generateMockData = () => {
-        return `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.`;
-    };
-
-    const handleScriptGeneration = async () => {
-        dispatch({ type: 'SET_GENERATING', payload: true });
-
-        // Simulated API call
-        setTimeout(() => {
-            let newScript;
-            if (scriptData.language === 'vietnamese') {
-                newScript = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.`;
-            } else {
-                newScript = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.`;
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            dispatch({ type: 'SET_GENERATED_SCRIPT', payload: newScript });
+            const result = await response.json();
+            console.log(result);
+
+            if (result.status === 200) {
+                dispatch({ type: 'SET_FETCHED_DATA', payload: result.data });
+            } else {
+                console.error("Data fetch error:", result.message);
+                alert(`Không thể fetch data: ${result.message}`);
+            }
+        } catch (error) {
+            console.error("Data fetch failed:", error);
+            alert("Không thể fetch data. Vui lòng thử lại.");
+        } finally {
+            dispatch({ type: 'SET_FETCHING_DATA', payload: false });
+        }
+    };
+
+    // Manual refresh data - always fetch regardless of current state
+    const handleManualRefresh = async () => {
+        if (!scriptData.topic || !scriptData.language || !scriptData.dataSource) {
+            alert("Vui lòng điền đầy đủ topic, language và data source trước khi refresh data");
+            return;
+        }
+        await handleDataFetch();
+    };
+
+    // Step 2: Generate script using /create-video/generate-script with collected data
+    const handleScriptGeneration = async () => {
+        if (!fetchedData || !scriptData.style || !scriptData.audience || !scriptData.language) {
+            alert("Vui lòng điền đầy đủ thông tin trước khi tạo script");
+            return;
+        }
+
+        console.log(fetchedData);
+        dispatch({ type: 'SET_GENERATING', payload: true });
+
+        try {
+            const response = await fetch(`${API_URL.NEXT_PUBLIC_API_URL}/create-video/generate-script`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    data: fetchedData.text,
+                    style: scriptData.style,
+                    audience: scriptData.audience,
+                    lang: scriptData.language
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (result.status === 200) {
+                // Thành công - lưu script
+                dispatch({ type: 'SET_GENERATED_SCRIPT', payload: result.data.script || result.data });
+            } else {
+                // API trả về lỗi
+                console.error("API Error:", result.message);
+            }
+        } catch (err) {
+            console.error("Request failed:", err);
+            alert("Không thể tạo script. Vui lòng thử lại sau.");
+        } finally {
             dispatch({ type: 'SET_GENERATING', payload: false });
-        }, 2000);
+        }
     };
 
     const handleContinue = () => {
+        if (!generatedScript) {
+            alert("Vui lòng tạo script trước khi tiếp tục");
+            return;
+        }
         router.push('/create-video/image');
     };
 
+    // Form validation helpers
     const isBasicFormValid = scriptData.topic && scriptData.dataSource && scriptData.language;
     const isFullFormValid = isBasicFormValid && scriptData.style && scriptData.audience;
+    const hasDataToGenerateScript = fetchedData && isFullFormValid;
 
     return (
         <div className="min-h-screen py-20 px-4">
@@ -107,10 +180,9 @@ Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor
                                         <SelectValue placeholder="Select language" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="vietnamese">Tiếng Việt</SelectItem>
-                                        <SelectItem value="english">English</SelectItem>
-                                        <SelectItem value="chinese">中文</SelectItem>
-                                        <SelectItem value="japanese">日本語</SelectItem>
+                                        <SelectItem value="Vietnamese">Tiếng Việt</SelectItem>
+                                        <SelectItem value="English">English</SelectItem>
+                                        <SelectItem value="Chinese">中文</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -128,11 +200,9 @@ Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor
                                         <SelectValue placeholder="Select data source" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="wikipedia">Wikipedia</SelectItem>
-                                        <SelectItem value="nature">Nature Journal</SelectItem>
-                                        <SelectItem value="pubmed">PubMed</SelectItem>
-                                        <SelectItem value="google-scholar">Google Scholar</SelectItem>
-                                        <SelectItem value="custom-api">Custom API</SelectItem>
+                                        <SelectItem value="Wikipedia">Wikipedia</SelectItem>
+                                        <SelectItem value="Wikidata">Wikidata</SelectItem>
+                                        <SelectItem value="AI">AI</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -152,22 +222,45 @@ Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor
                                 {isFetchingData ? (
                                     <div className="flex items-center justify-center py-8">
                                         <RefreshCw className="w-6 h-6 mr-2 animate-spin text-blue-600" />
-                                        <span className="text-gray-600">Fetching data from {scriptData.dataSource}...</span>
+                                        <span className="text-gray-600">Collecting data from {scriptData.dataSource}...</span>
                                     </div>
                                 ) : fetchedData ? (
                                     <div className="bg-gray-50 p-4 rounded-lg">
-                                        <pre className="whitespace-pre-wrap text-sm text-gray-700">{fetchedData}</pre>
+                                        <div className="space-y-2">
+                                            <div className="text-xs text-gray-500">
+                                                <strong>Source:</strong> {fetchedData.source} | <strong>Language:</strong> {fetchedData.lang}
+                                            </div>
+                                            {fetchedData.text ? (
+                                                <pre className="whitespace-pre-wrap text-sm text-gray-700 max-h-48 overflow-y-auto">
+                                                    {fetchedData.text}
+                                                </pre>
+                                            ) : (
+                                                <div className="text-sm text-gray-500 italic">No content received from {fetchedData.source}</div>
+                                            )}
+                                        </div>
                                         <Button
                                             variant="outline"
                                             size="sm"
                                             className="mt-3"
-                                            onClick={handleDataFetch}
+                                            onClick={handleManualRefresh}
+                                            disabled={isFetchingData}
                                         >
-                                            <RefreshCw className="w-4 h-4 mr-1" />
+                                            <RefreshCw className={`w-4 h-4 mr-1 ${isFetchingData ? 'animate-spin' : ''}`} />
                                             Refresh Data
                                         </Button>
                                     </div>
-                                ) : null}
+                                ) : (
+                                    <div className="text-center py-4">
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleManualRefresh}
+                                            disabled={isFetchingData}
+                                        >
+                                            <Database className="w-4 h-4 mr-1" />
+                                            Fetch Data
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -257,11 +350,11 @@ Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor
                         )}
 
                         {/* Generate Script Button */}
-                        {fetchedData && (
+                        {hasDataToGenerateScript && (
                             <div className="flex justify-center mt-8">
                                 <Button
                                     onClick={handleScriptGeneration}
-                                    disabled={!isFullFormValid || isGenerating}
+                                    disabled={isGenerating}
                                     className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                                 >
                                     {isGenerating ? (
@@ -272,7 +365,7 @@ Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor
                                     ) : (
                                         <>
                                             <Sparkles className="w-4 h-4 mr-2" />
-                                            Generate script
+                                            {generatedScript ? 'Regenerate script' : 'Generate script'}
                                         </>
                                     )}
                                 </Button>
@@ -290,11 +383,11 @@ Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor
                                         payload: e.target.value
                                     })}
                                     className="min-h-48"
-                                    placeholder="Kịch bản sẽ xuất hiện ở đây..."
+                                    placeholder="Script will appear here..."
                                 />
                                 <div className="flex justify-end mt-4 space-x-3">
-                                    <Button variant="outline" onClick={handleScriptGeneration}>
-                                        <RefreshCw className="w-4 h-4 mr-1" />
+                                    <Button variant="outline" onClick={handleScriptGeneration} disabled={isGenerating}>
+                                        <RefreshCw className={`w-4 h-4 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
                                         Regenerate script
                                     </Button>
                                     <Button onClick={handleContinue}>

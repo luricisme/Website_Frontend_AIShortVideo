@@ -32,6 +32,12 @@ export interface CaptionData {
     background: boolean;
 }
 
+export interface FetchedData {
+    lang: string;
+    source: string;
+    text: string;
+}
+
 export interface VideoCreationState {
     scriptData: ScriptData;
     generatedScript: string;
@@ -40,8 +46,7 @@ export interface VideoCreationState {
     audioData: AudioData;
     captionData: CaptionData;
     isGenerating: boolean;
-    // New states for data fetching
-    fetchedData: string | null;
+    fetchedData: FetchedData | null;
     isFetchingData: boolean;
 }
 
