@@ -1,18 +1,22 @@
 "use client";
 
-import React from "react";
-import { ALargeSmall, Check, LockKeyhole, LogIn, Mail } from "lucide-react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import React from "react";
+import Link from "next/link";
+import toast from "react-hot-toast";
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ALargeSmall, Check, LoaderCircle, LockKeyhole, LogIn, Mail } from "lucide-react";
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { InputWithIcon } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import Link from "next/link";
-
+import { createUniqueUsername } from "@/utils/common";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import GoogleLoginButton from "@/app/(auth)/user/_components/google-button";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { type RegisterResponse } from "@/schemas/auth/responses";
+import http from "@/utils/api/client";
 
 // 1. Register Schema
 const registerSchema = z
@@ -31,6 +35,10 @@ const registerSchema = z
 type RegisterType = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
+    const router = useRouter();
+
+    const [isLoading, setIsLoading] = React.useState(false);
+
     const form = useForm<RegisterType>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
@@ -42,8 +50,47 @@ export default function RegisterPage() {
         },
     });
 
-    const onSubmit = (data: RegisterType) => {
+    const onSubmit = async (data: RegisterType) => {
         console.log(data);
+        setIsLoading(true);
+        try {
+            const body = {
+                firstName: data.firstName,
+                lastName: data.lastName,
+                username: createUniqueUsername(data.firstName, data.lastName),
+                email: data.email,
+                password: data.password,
+                role: "USER",
+            };
+
+            const response = await http.post<typeof body, RegisterResponse>("/auth/register", {
+                body,
+                requireAuth: false,
+            });
+
+            const responseData = await response;
+
+            // console.log("Registration response:", responseData);
+
+            if (responseData.status < 200 || responseData.status >= 300) {
+                const message = responseData.message || "Registration failed";
+                toast.error(message);
+                return;
+            }
+
+            toast.success("Registration successful! Redirecting to sign in...");
+            setTimeout(() => {
+                localStorage.setItem("email", data.email);
+                localStorage.setItem("password", data.password);
+                router.push("/user/signin");
+            }, 2000);
+        } catch (error) {
+            console.error("Error during registration:", { error });
+
+            toast.error(error instanceof Error ? error.message : "An unexpected error occurred");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -247,11 +294,27 @@ export default function RegisterPage() {
 
                         <Button
                             onClick={form.handleSubmit(onSubmit)}
-                            disabled={form.formState.isSubmitting}
+                            disabled={form.formState.isSubmitting || isLoading}
                             className="w-full h-10 sm:h-12 bg-[#D9D9D9] text-black hover:bg-gray-200 font-semibold text-sm sm:text-base"
                         >
-                            Create Account
-                            <LogIn strokeWidth={2.5} className="w-3 h-3 sm:w-4 sm:h-4 ml-2" />
+                            {isLoading ? (
+                                <>
+                                    <LoaderCircle
+                                        className="animate-spin h-5 w-5 text-gray-800 mr-2"
+                                        size={20}
+                                        aria-label="Loading"
+                                    />
+                                    Creating Account...
+                                </>
+                            ) : (
+                                <>
+                                    Create Account
+                                    <LogIn
+                                        strokeWidth={2.5}
+                                        className="w-3 h-3 sm:w-4 sm:h-4 ml-2"
+                                    />
+                                </>
+                            )}
                         </Button>
 
                         <div className="relative">
@@ -265,13 +328,19 @@ export default function RegisterPage() {
                             </div>
                         </div>
 
-                        <GoogleLoginButton content="Sign up with Google" />
+                        <GoogleLoginButton isDisabled={isLoading} content="Sign up with Google" />
 
                         <div className="text-center text-xs sm:text-sm">
                             <span className="text-[#786E6E]">Already have an account? </span>
                             <Link
                                 href="/user/signin"
-                                className="text-white hover:underline font-medium"
+                                className={`text-white hover:underline font-medium ${
+                                    form.formState.isSubmitting || isLoading
+                                        ? "pointer-events-none opacity-60"
+                                        : ""
+                                }`}
+                                tabIndex={form.formState.isSubmitting || isLoading ? -1 : 0}
+                                aria-disabled={form.formState.isSubmitting || isLoading}
                             >
                                 Sign In
                             </Link>

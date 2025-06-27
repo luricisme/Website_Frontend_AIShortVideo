@@ -32,8 +32,19 @@ export const refreshTokenResponseSchema = z.object({
     }),
 });
 
+// register response schema
+export const registerResponseSchema = z.object({
+    status: z.number(),
+    message: z.string(),
+    data: z.object({
+        username: z.string(),
+        role: z.string(),
+    }),
+});
+
 // Infer types from schemas
 export type JWTPayload = z.infer<typeof jwtPayloadSchema>;
 export type AuthResponseData = z.infer<typeof authResponseDataSchema>;
 export type AuthResponse = z.infer<typeof authResponseSchema>;
 export type RefreshTokenResponse = z.infer<typeof refreshTokenResponseSchema>;
+export type RegisterResponse = z.infer<typeof registerResponseSchema>;

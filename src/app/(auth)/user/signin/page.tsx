@@ -1,12 +1,12 @@
 "use client";
 
 import { z } from "zod";
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, LoaderCircle, LockKeyhole, LogIn, Mail } from "lucide-react";
 
@@ -36,6 +36,21 @@ export default function LoginPage() {
             password: "",
         },
     });
+
+    useEffect(() => {
+        const email = localStorage.getItem("email");
+        const password = localStorage.getItem("password");
+        if (email && password) {
+            form.setValue("email", email);
+            form.setValue("password", password);
+        }
+
+        // Cleanup function to avoid memory leaks
+        return () => {
+            localStorage.removeItem("email");
+            localStorage.removeItem("password");
+        };
+    }, []);
 
     const onSubmit = async (data: LoginType) => {
         console.log(data);
@@ -261,7 +276,6 @@ export default function LoginPage() {
                     </Card>
                 </div>
             </div>
-            <Toaster />
         </>
     );
 }

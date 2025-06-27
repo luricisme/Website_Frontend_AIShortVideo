@@ -1,6 +1,7 @@
 import { AuthProvider } from "@/app/(auth)/user/_components/auth-provider";
 import { getServerSession } from "next-auth";
 import React from "react";
+import { Toaster } from "react-hot-toast";
 
 export default async function UserLayout({
     children,
@@ -12,6 +13,7 @@ export default async function UserLayout({
     return (
         <main className="container mx-auto !bg-[#0A0A0A] !w-[100vw] flex flex-col min-h-screen">
             <AuthProvider session={session}>{children}</AuthProvider>
+            <Toaster />
         </main>
     );
 }
