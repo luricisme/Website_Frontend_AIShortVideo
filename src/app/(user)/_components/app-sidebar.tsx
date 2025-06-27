@@ -10,14 +10,13 @@ import {
     SidebarGroupContent,
     SidebarHeader,
     SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+// import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 import { icons } from "@/constants/icons";
+import { ActiveMenuDetector } from "@/app/(user)/_components/active-menu-detector";
 
 // Menu items.
 const items = [
@@ -39,8 +38,6 @@ const items = [
 ];
 
 export function AppSidebar() {
-    const pathname = usePathname();
-
     return (
         <Sidebar>
             <SidebarHeader>
@@ -53,24 +50,7 @@ export function AppSidebar() {
                 <SidebarGroup>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {items.map((item) => (
-                                <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton
-                                        asChild
-                                        isActive={
-                                            pathname === item.url ||
-                                            (pathname.startsWith(item.url) && item.url !== "/")
-                                        }
-                                    >
-                                        <Link href={item.url}>
-                                            {item.icon}
-                                            <span className="ml-2 font-medium text-sm text-gray-700 dark:text-gray-200">
-                                                {item.title}
-                                            </span>
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
+                            <ActiveMenuDetector items={items} />
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
