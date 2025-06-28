@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { RefreshCw, Sparkles, ArrowRight, Database, CheckCircle } from 'lucide-react';
 import { useVideoCreation } from '../_context/VideoCreationContext';
 import StepNavigation from '../_components/StepNavigation';
+import { saveVideoScriptData, loadVideoScriptData } from "../utils/videoStorage";
 
 export default function ScriptsPage() {
     const router = useRouter();
@@ -133,6 +134,13 @@ export default function ScriptsPage() {
             alert("Vui lòng tạo script trước khi tiếp tục");
             return;
         }
+
+        saveVideoScriptData({
+            script: generatedScript,
+            category: scriptData.category || '',
+            tag: scriptData.tag || ''
+        });
+        console.log('Local storage:', localStorage.getItem('videoScriptData'));
         router.push('/create-video/image');
     };
 

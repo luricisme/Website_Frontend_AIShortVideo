@@ -13,6 +13,7 @@ import { useVideoCreation } from '../_context/VideoCreationContext';
 import StepNavigation from '../_components/StepNavigation';
 import { GeneratedImage } from '../_types/video';
 import Image from "next/image";
+import { saveVideoImageData, loadVideoImageData } from '../utils/videoStorage';
 
 export default function ImagesPage() {
     const router = useRouter();
@@ -79,11 +80,31 @@ export default function ImagesPage() {
         dispatch({ type: 'TOGGLE_IMAGE_SELECTION', payload: imageId });
     };
 
+// Thêm useEffect để load data từ localStorage
+    useEffect(() => {
+        const savedImageData = loadVideoImageData();
+        if (savedImageData) {
+            dispatch({ type: 'SET_GENERATED_IMAGES', payload: savedImageData.generatedImages });
+            // Set selected images nếu có
+            savedImageData.selectedImages.forEach(imageId => {
+                dispatch({ type: 'TOGGLE_IMAGE_SELECTION', payload: imageId });
+            });
+        }
+    }, []);
+
+    // Thay đổi function handleContinue
     const handleContinue = () => {
         if (selectedImages.length === 0) {
             alert("Vui lòng chọn ít nhất một ảnh trước khi tiếp tục");
             return;
         }
+
+        // Lưu image data vào localStorage
+        saveVideoImageData({
+            generatedImages,
+            selectedImages
+        });
+
         router.push('/create-video/audio');
     };
 
