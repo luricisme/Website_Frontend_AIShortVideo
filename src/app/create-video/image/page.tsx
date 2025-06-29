@@ -13,7 +13,7 @@ import { useVideoCreation } from '../_context/VideoCreationContext';
 import StepNavigation from '../_components/StepNavigation';
 import { GeneratedImage } from '../_types/video';
 import Image from "next/image";
-import { saveVideoImageData, loadVideoImageData } from '../utils/videoStorage';
+import { saveVideoImageData, loadVideoImageData } from '../_utils/videoStorage';
 
 export default function ImagesPage() {
     const router = useRouter();
@@ -116,7 +116,7 @@ export default function ImagesPage() {
     const canGenerateImages = generatedScript && generatedScript.trim().length > 0;
 
     return (
-        <div className="min-h-screen py-20 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-950 py-20 px-4">
             <div className="max-w-7xl mx-auto">
                 <StepNavigation />
 

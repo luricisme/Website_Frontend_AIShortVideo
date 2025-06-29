@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectTrigger, SelectValue, SelectItem, SelectContent } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { AudioData } from '../_types/video';
-import { saveVideoAudioData, loadVideoAudioData } from '../utils/videoStorage';
+import { saveVideoAudioData, loadVideoAudioData } from '../_utils/videoStorage';
 
 // Interface for individual audio files
 interface AudioFile {
@@ -424,7 +424,7 @@ export default function AudioPage() {
     }, [audioData.voiceType, audioData.speed, audioData.customText]);
 
     return (
-        <div className="min-h-screen py-20 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-950 py-20 px-4">
             <div className="max-w-7xl mx-auto">
                 <StepNavigation />
                 <Card className="max-w-4xl mx-auto px-4">

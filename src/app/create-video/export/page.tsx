@@ -4,11 +4,13 @@ import {ArrowLeft, Home, Upload, Youtube} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import {useRouter} from "next/navigation";
 
 export default function ExportPage() {
     const [progress] = useState(20);
     const [exportProgress, setExportProgress] = useState(0);
     const [isExporting, setIsExporting] = useState(false);
+    const router = useRouter();
 
     const handleExport = async (platform: string) => {
         setIsExporting(true);
@@ -71,11 +73,17 @@ export default function ExportPage() {
         }
     ];
 
+    const handleBack = () => {
+        // Save current state before going back
+        // saveVideoCaptionData(captionData);
+        router.push('/create-video/preview');
+    };
+
     return (
-        <div className="min-h-screen bg-neutral-900">
+        <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-black px-4">
             {/* Header */}
-            <div className="flex ps-10 py-3 border-b border-neutral-700">
-                <div className="flex items-center me-7 cursor-pointer">
+            <div className="flex py-3 border-b border-neutral-700">
+                <div className="flex items-center me-7 cursor-pointer" onClick={handleBack}>
                     <Button variant="ghost" size="icon" className="text-neutral-400 hover:text-white hover:bg-neutral-700">
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
@@ -90,7 +98,7 @@ export default function ExportPage() {
                 </div>
             </div>
 
-            <div className="container mx-auto max-w-8xl py-10">
+            <div className="max-w-7xl mx-auto max-w-8xl py-10">
                 <div className="grid lg:grid-cols-3 gap-25">
                     {/* Left side - Title and Export Options */}
                     <div className="space-y-6 col-span-2">

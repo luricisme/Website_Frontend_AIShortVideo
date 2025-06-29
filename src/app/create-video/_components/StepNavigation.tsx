@@ -40,7 +40,7 @@ export default function StepNavigation() {
 
     return (
         <div className="mb-15 flex flex-col justify-center items-center">
-            <Image className={"md:fixed top-10 left-20 cursor-pointer"} src={"/logo.png"}
+            <Image className={"md:absolute top-10 left-20 cursor-pointer"} src={"/logo.png"}
                    alt="Logo" width={40} height={40} onClick={handleBackHome} />
             <div className="text-center mb-8">
                 <h1 className="text-4xl font-bold mb-3">Automatic Video Creation</h1>

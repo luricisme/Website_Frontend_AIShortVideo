@@ -10,7 +10,7 @@ import { Select, SelectTrigger, SelectValue, SelectItem, SelectContent } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import StepNavigation from '../_components/StepNavigation';
 import { useVideoCreation } from '../_context/VideoCreationContext';
-import { saveVideoCaptionData, loadVideoCaptionData } from '../utils/videoStorage';
+import { saveVideoCaptionData, loadVideoCaptionData } from '../_utils/videoStorage';
 
 export default function CaptionPage() {
     const router = useRouter();
@@ -102,7 +102,7 @@ export default function CaptionPage() {
     const { sizeClass, positionClass } = getPreviewStyles();
 
     return (
-        <div className="min-h-screen py-20 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-950 py-20 px-4">
             <div className="max-w-7xl mx-auto">
                 <StepNavigation />
                 <Card className="max-w-4xl mx-auto px-4">
