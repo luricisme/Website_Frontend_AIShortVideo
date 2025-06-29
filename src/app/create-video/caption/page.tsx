@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Select, SelectTrigger, SelectValue, SelectItem, SelectContent } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import StepNavigation from '../_components/StepNavigation';
 import { useVideoCreation } from '../_context/VideoCreationContext';
+import { saveVideoCaptionData, loadVideoCaptionData } from '../_utils/videoStorage';
 
 export default function CaptionPage() {
     const router = useRouter();
@@ -24,21 +25,43 @@ export default function CaptionPage() {
         background: false
     };
 
+    // Load saved caption data on component mount
+    useEffect(() => {
+        const savedCaptionData = loadVideoCaptionData();
+        if (savedCaptionData) {
+            dispatch({
+                type: 'SET_CAPTION_DATA',
+                payload: savedCaptionData
+            });
+        }
+    }, [dispatch]);
+
     const updateCaptionData = (updates: Partial<typeof captionData>) => {
+        const newCaptionData = { ...captionData, ...updates };
+
+        // Update context state
         dispatch({
             type: 'SET_CAPTION_DATA',
             payload: updates
         });
+
+        // Save to localStorage
+        saveVideoCaptionData(newCaptionData);
     };
 
     const handleContinue = () => {
+        // Ensure data is saved before navigation
+        saveVideoCaptionData(captionData);
         router.push('/create-video/preview');
     };
 
     const handleBack = () => {
+        // Save current state before going back
+        saveVideoCaptionData(captionData);
         router.push('/create-video/audio');
     };
 
+    // Rest of your component remains the same...
     const getPreviewStyles = () => {
         let sizeClass = '';
         switch (captionData.fontSize) {
@@ -79,7 +102,7 @@ export default function CaptionPage() {
     const { sizeClass, positionClass } = getPreviewStyles();
 
     return (
-        <div className="min-h-screen py-20 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-950 py-20 px-4">
             <div className="max-w-7xl mx-auto">
                 <StepNavigation />
                 <Card className="max-w-4xl mx-auto px-4">
@@ -165,7 +188,7 @@ export default function CaptionPage() {
                             <Checkbox
                                 id="background"
                                 checked={captionData.background}
-                                onCheckedChange={(checked: never) => updateCaptionData({ background: !!checked })}
+                                onCheckedChange={(checked: boolean) => updateCaptionData({ background: !!checked })}
                             />
                             <Label htmlFor="background" className="text-sm font-medium">
                                 Add background to subtitles
@@ -206,18 +229,18 @@ export default function CaptionPage() {
                                 </span>
                                 <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
                                     {
-                                    captionData.position === 'bottom' ? 'Bottom' :
-                                        captionData.position === 'top' ? 'Top' :
-                                            captionData.position === 'center' ? 'Center' : "Bottom"
-                                }
+                                        captionData.position === 'bottom' ? 'Bottom' :
+                                            captionData.position === 'top' ? 'Top' :
+                                                captionData.position === 'center' ? 'Center' : "Bottom"
+                                    }
                                 </span>
                                 <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
                                     {
-                                    captionData.fontSize === 'small' ? 'Small' :
-                                        captionData.fontSize === 'medium' ? 'Medium' :
-                                            captionData.fontSize === 'large' ? 'Large' :
-                                                captionData.fontSize === 'extra-large' ? 'Extra large' : 'Medium'
-                                }
+                                        captionData.fontSize === 'small' ? 'Small' :
+                                            captionData.fontSize === 'medium' ? 'Medium' :
+                                                captionData.fontSize === 'large' ? 'Large' :
+                                                    captionData.fontSize === 'extra-large' ? 'Extra large' : 'Medium'
+                                    }
                                 </span>
                             </div>
                         </div>

@@ -1,3 +1,5 @@
+// video.ts
+
 export interface ScriptData {
     topic: string;
     dataSource: string;
@@ -32,6 +34,12 @@ export interface CaptionData {
     background: boolean;
 }
 
+export interface FetchedData {
+    lang: string;
+    source: string;
+    text: string;
+}
+
 export interface VideoCreationState {
     scriptData: ScriptData;
     generatedScript: string;
@@ -40,9 +48,52 @@ export interface VideoCreationState {
     audioData: AudioData;
     captionData: CaptionData;
     isGenerating: boolean;
-    // New states for data fetching
-    fetchedData: string | null;
+    fetchedData: FetchedData | null;
     isFetchingData: boolean;
+}
+
+export interface VideoScriptData {
+    script: string;
+    category: string;
+    tag: string;
+}
+
+export interface VideoImageData {
+    generatedImages: GeneratedImage[];
+    selectedImages: number[];
+}
+
+export interface VideoAudioData {
+    selectedAudioFiles: Array<{
+        id?: string;
+        name: string;
+        url: string;
+        type: 'generated' | 'uploaded' | 'recorded';
+        voiceType?: string;
+        speed?: string;
+        duration?: number;
+        isSelected?: boolean;
+    }>;
+    audioFiles?: Array<{
+        id: string;
+        name: string;
+        url: string;
+        type: 'generated' | 'uploaded' | 'recorded';
+        voiceType?: string;
+        speed?: string;
+        duration?: number;
+        isSelected: boolean;
+    }>;
+    voiceType?: string;
+    speed?: string;
+    customText?: string;
+}
+
+export interface VideoData {
+    videoScriptData: VideoScriptData;
+    videoImageData: VideoImageData;
+    videoAudioData: VideoAudioData;
+    videoCaptionData: CaptionData;
 }
 
 export interface StepProps {
