@@ -321,6 +321,7 @@ export const authOptions: NextAuthOptions = {
 
     callbacks: {
         async jwt({ token, user }) {
+            console.log("JWT callback:", { token, user });
             if (user) {
                 token.id = user.id;
                 token.accessToken = user.accessToken;
@@ -331,6 +332,8 @@ export const authOptions: NextAuthOptions = {
                 token.accessTokenExpires =
                     user.accessTokenExpires || getTokenExpiration(user.accessToken);
             }
+
+            console.log("JWT token after processing:", token);
 
             // Kiểm tra nếu token hết hạn
             const shouldRefreshTime = Math.round(token.accessTokenExpires - Date.now());

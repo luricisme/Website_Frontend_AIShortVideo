@@ -4,12 +4,10 @@ import { validateResponse } from "./responseValidator";
 import { z } from "zod";
 import { envPublic } from "@/constants/env.public";
 
-// Types để thay thế 'any'
 type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
 type JsonObject = { [key: string]: JsonValue };
 type JsonArray = JsonValue[];
 
-// Interface cho các options của apiClient
 interface ApiClientOptions {
     method?: string;
     body?: JsonValue;
@@ -18,7 +16,6 @@ interface ApiClientOptions {
     customOptions?: RequestInit;
 }
 
-// Interface cho các options của methods HTTP
 interface HttpRequestOptions<Req extends JsonValue, Res> {
     body?: Req;
     responseSchema?: z.ZodType<Res>;
