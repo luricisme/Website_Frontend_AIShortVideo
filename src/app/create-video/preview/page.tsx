@@ -5,7 +5,7 @@ import { Player } from '@remotion/player';
 import { AbsoluteFill, Audio, Img, useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {ArrowLeft, ArrowRight, BookOpenCheck, FileText, Images} from 'lucide-react';
+import {ArrowLeft, ArrowRight, BookOpenCheck, FileText, Images, Pencil} from 'lucide-react';
 import StepNavigation from "@/app/create-video/_components/StepNavigation";
 import Image from "next/image";
 import {useRouter} from "next/navigation";
@@ -265,6 +265,10 @@ const VideoPreviewCreator = () => {
         router.push('/create-video/caption');
     };
 
+    const handleEdit = () => {
+        router.push('/create-video/edit');
+    }
+
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-black py-20 px-4 flex items-center justify-center">
@@ -332,7 +336,7 @@ const VideoPreviewCreator = () => {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="flex justify-between gap-4">
+                                <div className="flex justify-evenly gap-4">
                                     {videoData.videoImageData?.selectedImages?.map((imageId, index) => {
                                         const image = videoData.videoImageData.generatedImages.find(img => img.id === imageId);
                                         return image ? (
@@ -392,6 +396,13 @@ const VideoPreviewCreator = () => {
                                         loop
                                     />
                                 </div>
+                                <Button
+                                    className={"bg-rose-900 text-white hover:bg-rose-800"}
+                                    onClick={handleEdit}
+                                >
+                                    <Pencil />
+                                    Edit Video
+                                </Button>
                             </CardContent>
                         </Card>
                         <div className="flex justify-end gap-4 mt-4">

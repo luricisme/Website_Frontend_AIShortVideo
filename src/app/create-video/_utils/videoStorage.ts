@@ -3,6 +3,7 @@ type VideoScriptData = {
     script: string;
     category: string;
     tag: string;
+    language: string;
 };
 
 type VideoImageData = {

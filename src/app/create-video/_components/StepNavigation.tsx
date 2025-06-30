@@ -6,6 +6,7 @@ import {usePathname, useRouter} from 'next/navigation';
 import { Check, FileText, Mic, TypeOutline, Play, Download , ArrowRight, ImagePlus } from 'lucide-react';
 import { STEPS } from '../_types/video';
 import Image from "next/image";
+import { clearAllVideoData } from "../_utils/videoStorage"
 
 export default function StepNavigation() {
     const pathname = usePathname();
@@ -31,6 +32,7 @@ export default function StepNavigation() {
     };
 
     const handleBackHome = () => {
+        clearAllVideoData();
         router.push('/');
     };
 

@@ -13,7 +13,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { RefreshCw, Sparkles, ArrowRight, Database, CheckCircle } from 'lucide-react';
 import { useVideoCreation } from '../_context/VideoCreationContext';
 import StepNavigation from '../_components/StepNavigation';
-import { saveVideoScriptData } from "../_utils/videoStorage";
+import { saveVideoScriptData, clearVideoImageData } from "../_utils/videoStorage";
+import { categoryTagMap, VideoCategory } from "@/app/create-video/_types/video";
 
 export default function ScriptsPage() {
     const router = useRouter();
@@ -138,9 +139,11 @@ export default function ScriptsPage() {
         saveVideoScriptData({
             script: generatedScript,
             category: scriptData.category || '',
-            tag: scriptData.tag || ''
+            tag: scriptData.tag || '',
+            language: scriptData.language || '',
         });
-        console.log('Local storage:', localStorage.getItem('videoScriptData'));
+
+        clearVideoImageData();
         router.push('/create-video/image');
     };
 
@@ -278,29 +281,43 @@ export default function ScriptsPage() {
                                 <div className={"flex flex-col gap-6 col-span-3"}>
                                     <div>
                                         <Label className="text-sm font-medium mb-3 block">Category</Label>
-                                        <Input
-                                            id="category"
-                                            placeholder="Ex. Climate, Education,..."
+                                        <Select
                                             value={scriptData.category}
-                                            onChange={(e) => dispatch({
+                                            onValueChange={(value) => dispatch({
                                                 type: 'SET_SCRIPT_DATA',
-                                                payload: { category: e.target.value }
+                                                payload: { category: value, tag: "" } // reset tag khi đổi category
                                             })}
-                                            className="mt-1"
-                                        />
+                                        >
+                                            <SelectTrigger className="mt-1">
+                                                <SelectValue placeholder="Select category" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {Object.keys(categoryTagMap).map((cat) => (
+                                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
+
                                     <div>
                                         <Label className="text-sm font-medium mb-3 block">Tag</Label>
-                                        <Input
-                                            id="tag"
-                                            placeholder="Ex. #anime, #cooking,..."
+                                        <Select
                                             value={scriptData.tag}
-                                            onChange={(e) => dispatch({
+                                            onValueChange={(value) => dispatch({
                                                 type: 'SET_SCRIPT_DATA',
-                                                payload: { tag: e.target.value }
+                                                payload: { tag: value }
                                             })}
-                                            className="mt-1"
-                                        />
+                                            disabled={!scriptData.category}
+                                        >
+                                            <SelectTrigger className="mt-1">
+                                                <SelectValue placeholder={scriptData.category ? "Select tag" : "Select category first"} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {(categoryTagMap[scriptData.category as VideoCategory] || []).map((tag) => (
+                                                    <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                 </div>
                                 <div className={"col-span-2 md:ms-5"}>
@@ -367,12 +384,12 @@ export default function ScriptsPage() {
                                 >
                                     {isGenerating ? (
                                         <>
-                                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                            <RefreshCw className="w-4 h-4 animate-spin" />
                                             Generating...
                                         </>
                                     ) : (
                                         <>
-                                            <Sparkles className="w-4 h-4 mr-2" />
+                                            <Sparkles className="w-4 h-4" />
                                             {generatedScript ? 'Regenerate script' : 'Generate script'}
                                         </>
                                     )}
