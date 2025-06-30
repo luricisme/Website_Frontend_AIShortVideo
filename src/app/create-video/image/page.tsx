@@ -1,4 +1,3 @@
-// app/create-video/images/page.tsx
 'use client';
 
 import API_URL from "@/config";
@@ -13,19 +12,28 @@ import { useVideoCreation } from '../_context/VideoCreationContext';
 import StepNavigation from '../_components/StepNavigation';
 import { GeneratedImage } from '../_types/video';
 import Image from "next/image";
-import { saveVideoImageData, loadVideoImageData } from '../_utils/videoStorage';
+import { saveVideoImageData, loadVideoImageData, clearVideoAudioData } from '../_utils/videoStorage';
 
 export default function ImagesPage() {
     const router = useRouter();
     const { state, dispatch } = useVideoCreation();
     const { generatedImages, selectedImages, isGenerating, generatedScript } = state;
 
-    // Auto-generate images when component mounts and script exists
+    // Load data từ localStorage khi component mount
     useEffect(() => {
-        if (generatedScript && generatedImages.length === 0 && !isGenerating) {
-            handleImageGeneration();
+        dispatch({ type: 'SET_GENERATED_IMAGES', payload: [] });
+        const savedImageData = loadVideoImageData();
+
+        if (savedImageData) {
+            // Nếu có dữ liệu trong localStorage, load và hiển thị
+            dispatch({ type: 'SET_GENERATED_IMAGES', payload: savedImageData.generatedImages });
+            // Set selected images nếu có
+            savedImageData.selectedImages.forEach(imageId => {
+                dispatch({ type: 'TOGGLE_IMAGE_SELECTION', payload: imageId });
+            });
         }
-    }, [generatedScript]);
+        // Nếu không có dữ liệu trong localStorage, không làm gì cả (không auto-generate)
+    }, [dispatch]);
 
     const handleImageGeneration = async () => {
         if (!generatedScript) {
@@ -80,19 +88,6 @@ export default function ImagesPage() {
         dispatch({ type: 'TOGGLE_IMAGE_SELECTION', payload: imageId });
     };
 
-// Thêm useEffect để load data từ localStorage
-    useEffect(() => {
-        const savedImageData = loadVideoImageData();
-        if (savedImageData) {
-            dispatch({ type: 'SET_GENERATED_IMAGES', payload: savedImageData.generatedImages });
-            // Set selected images nếu có
-            savedImageData.selectedImages.forEach(imageId => {
-                dispatch({ type: 'TOGGLE_IMAGE_SELECTION', payload: imageId });
-            });
-        }
-    }, []);
-
-    // Thay đổi function handleContinue
     const handleContinue = () => {
         if (selectedImages.length === 0) {
             alert("Vui lòng chọn ít nhất một ảnh trước khi tiếp tục");
@@ -104,7 +99,7 @@ export default function ImagesPage() {
             generatedImages,
             selectedImages
         });
-
+        clearVideoAudioData();
         router.push('/create-video/audio');
     };
 

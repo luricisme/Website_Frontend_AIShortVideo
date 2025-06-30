@@ -56,6 +56,7 @@ export interface VideoScriptData {
     script: string;
     category: string;
     tag: string;
+    language: string;
 }
 
 export interface VideoImageData {
@@ -95,6 +96,33 @@ export interface VideoData {
     videoAudioData: VideoAudioData;
     videoCaptionData: CaptionData;
 }
+
+// Định nghĩa type cho category
+export type VideoCategory =
+    | "Education"
+    | "Entertainment"
+    | "Technology"
+    | "Travel"
+    | "Fitness & Health"
+    | "Beauty & Fashion"
+    | "Gaming"
+    | "Business & Finance"
+    | "Food & Cooking"
+    | "Environment";
+
+// Dùng type này cho map
+export const categoryTagMap: Record<VideoCategory, string[]> = {
+    Education: ["#StudyTips", "#ELearning", "#Science"],
+    Entertainment: ["#Comedy", "#Music", "#Dance"],
+    Technology: ["#AI", "#Coding", "#Gadgets"],
+    Travel: ["#Vlog", "#Adventure", "#FoodTour"],
+    "Fitness & Health": ["#Workout", "#Yoga", "#Nutrition"],
+    "Beauty & Fashion": ["#Makeup", "#Outfit", "#Skincare"],
+    Gaming: ["#Gameplay", "#Walkthrough", "#Review"],
+    "Business & Finance": ["#Startup", "#Investing", "#Marketing"],
+    "Food & Cooking": ["#Recipe", "#StreetFood", "#Baking"],
+    Environment: ["#ClimateChange", "#Sustainability", "#Nature"]
+};
 
 export interface StepProps {
     currentStep: number;

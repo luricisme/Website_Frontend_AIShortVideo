@@ -27,15 +27,21 @@ import StepNavigation from '../_components/StepNavigation';
 import { useVideoCreation } from '../_context/VideoCreationContext';
 import API_URL from "@/config";
 
-// Voice types with descriptions
-const VOICE_TYPES = [
-    { value: 'vi-VN-HoaiMyNeural', label: 'Hoài My (Nữ)', description: 'Giọng Bắc, tự nhiên, phù hợp đọc tin tức' },
-    { value: 'vi-VN-NamMinhNeural', label: 'Nam Minh (Nam)', description: 'Giọng Bắc, trầm ấm' },
-    { value: 'en-US-JennyNeural', label: 'Jenny (Nữ)', description: 'Giọng Mỹ phổ thông, đa dụng' },
-    { value: 'en-US-DavisNeural', label: 'Davis (Nam)', description: 'Giọng trầm, chuyên nghiệp' },
-    { value: 'zh-CN-XiaoxiaoNeural', label: 'Xiaoxiao (Nữ)', description: 'Giọng nữ trẻ trung, có thể đa cảm xúc' },
-    { value: 'zh-CN-YunyangNeural', label: 'Yunyang (Nam)', description: 'Giọng phát thanh viên' }
-];
+// Voice types with descriptions organized by language
+const VOICE_TYPES = {
+    Vietnamese: [
+        { value: 'vi-VN-HoaiMyNeural', label: 'Hoài My (Nữ)', description: 'Giọng Bắc, tự nhiên, phù hợp đọc tin tức' },
+        { value: 'vi-VN-NamMinhNeural', label: 'Nam Minh (Nam)', description: 'Giọng Bắc, trầm ấm' },
+    ],
+    English: [
+        { value: 'en-US-JennyNeural', label: 'Jenny (Nữ)', description: 'Giọng Mỹ phổ thông, đa dụng' },
+        { value: 'en-US-DavisNeural', label: 'Davis (Nam)', description: 'Giọng trầm, chuyên nghiệp' },
+    ],
+    Chinese: [
+        { value: 'zh-CN-XiaoxiaoNeural', label: 'Xiaoxiao (Nữ)', description: 'Giọng nữ trẻ trung, có thể đa cảm xúc' },
+        { value: 'zh-CN-YunyangNeural', label: 'Yunyang (Nam)', description: 'Giọng phát thanh viên' }
+    ]
+};
 
 // Speed options
 const SPEED_OPTIONS = [
@@ -50,7 +56,6 @@ export default function AudioPage() {
     const router = useRouter();
     const { state, dispatch } = useVideoCreation();
     const fileInputRef = useRef<HTMLInputElement>(null);
-    // const audioRef = useRef<HTMLAudioElement>(null);
     const [isPlaying, setIsPlaying] = useState<string | null>(null);
     const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
     const [currentPlayingAudio, setCurrentPlayingAudio] = useState<string | null>(null);
@@ -61,8 +66,9 @@ export default function AudioPage() {
     const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
 
-    // Get script from localStorage
+    // Get script and language from localStorage
     const [script, setScript] = useState('');
+    const [selectedLanguage, setSelectedLanguage] = useState<string>('English');
 
     useEffect(() => {
         const storedData = localStorage.getItem('videoScriptData');
@@ -70,15 +76,21 @@ export default function AudioPage() {
             try {
                 const parsedData = JSON.parse(storedData);
                 setScript(parsedData.script || '');
+                setSelectedLanguage(parsedData.language || 'English');
             } catch (error) {
                 console.error('Error parsing stored script:', error);
             }
         }
     }, []);
 
+    // Get available voice types for selected language
+    const getAvailableVoiceTypes = () => {
+        return VOICE_TYPES[selectedLanguage as keyof typeof VOICE_TYPES] || VOICE_TYPES.English;
+    };
+
     // Initialize audioData with default values if not present
     const audioData = state.audioData || {
-        voiceType: 'vi-VN-HoaiMyNeural',
+        voiceType: getAvailableVoiceTypes()[0]?.value || 'en-US-JennyNeural',
         speed: '1.0',
         customText: '',
         audioFile: null,
@@ -93,6 +105,15 @@ export default function AudioPage() {
             payload: { ...audioData, ...updates }
         });
     };
+
+    // Reset voice type when language changes
+    useEffect(() => {
+        const availableVoices = getAvailableVoiceTypes();
+        if (availableVoices.length > 0 &&
+            !availableVoices.some(voice => voice.value === audioData.voiceType)) {
+            updateAudioData({ voiceType: availableVoices[0].value });
+        }
+    }, [selectedLanguage]);
 
     // Add new audio file to the list
     const addAudioFile = (audioFile: Omit<AudioFile, 'id' | 'isSelected'>) => {
@@ -175,7 +196,7 @@ export default function AudioPage() {
         return audioFiles.filter(file => file.isSelected);
     };
 
-    // Thêm useEffect để load data từ localStorage
+    // Load data from localStorage
     useEffect(() => {
         const savedAudioData = loadVideoAudioData();
         if (savedAudioData) {
@@ -190,7 +211,6 @@ export default function AudioPage() {
         }
     }, []);
 
-    // Thay đổi function handleContinue
     const handleContinue = () => {
         const selectedFiles = getSelectedAudioFiles();
         if (selectedFiles.length === 0) {
@@ -198,7 +218,7 @@ export default function AudioPage() {
             return;
         }
 
-        // Lưu audio data vào localStorage
+        // Save audio data to localStorage
         saveVideoAudioData({
             audioFiles,
             selectedAudioFiles: selectedFiles,
@@ -207,7 +227,7 @@ export default function AudioPage() {
             customText: audioData.customText
         });
 
-        // Update audio data với selected files
+        // Update audio data with selected files
         updateAudioData({
             recordedAudio: selectedFiles[0].url, // Use first selected for backward compatibility
         });
@@ -262,7 +282,6 @@ export default function AudioPage() {
         }
 
         updateAudioData({ isGenerating: true });
-        console.log(textToConvert);
 
         try {
             const response = await fetch(`${API_URL.NEXT_PUBLIC_API_URL}/create-video/generate-audio`, {
@@ -272,7 +291,7 @@ export default function AudioPage() {
                 },
                 body: JSON.stringify({
                     script: textToConvert,
-                    lang: 'Vietnamese',
+                    lang: selectedLanguage,
                     voiceType: audioData.voiceType,
                     speed: audioData.speed || '1.0'
                 })
@@ -282,7 +301,8 @@ export default function AudioPage() {
 
             if (result.status === 200) {
                 // Add generated audio to files list
-                const selectedVoice = VOICE_TYPES.find(v => v.value === audioData.voiceType);
+                const availableVoices = getAvailableVoiceTypes();
+                const selectedVoice = availableVoices.find(v => v.value === audioData.voiceType);
                 addAudioFile({
                     name: `${selectedVoice?.label || 'Generated'} - ${audioData.speed}x`,
                     url: result.data.audio,
@@ -423,6 +443,16 @@ export default function AudioPage() {
         }
     }, [audioData.voiceType, audioData.speed, audioData.customText]);
 
+    // Get current language display name
+    const getLanguageDisplayName = () => {
+        const languageMap = {
+            'Vietnamese': 'Tiếng Việt',
+            'English': 'English',
+            'Chinese': '中文'
+        };
+        return languageMap[selectedLanguage as keyof typeof languageMap] || selectedLanguage;
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-950 py-20 px-4">
             <div className="max-w-7xl mx-auto">
@@ -431,7 +461,7 @@ export default function AudioPage() {
                     <CardHeader className="text-center">
                         <CardTitle className="text-2xl font-bold">Tạo và chọn âm thanh</CardTitle>
                         <CardDescription>
-                            Tạo giọng đọc từ script hoặc tải lên file audio của bạn
+                            Tạo giọng đọc từ script ({getLanguageDisplayName()}) hoặc tải lên file audio của bạn
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -445,7 +475,9 @@ export default function AudioPage() {
                             <TabsContent value="generate" className="space-y-6 mt-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <Label className="text-sm font-medium mb-2 block">Giọng đọc</Label>
+                                        <Label className="text-sm font-medium mb-2 block">
+                                            Giọng đọc ({getLanguageDisplayName()})
+                                        </Label>
                                         <Select
                                             value={audioData.voiceType}
                                             onValueChange={(value) => updateAudioData({ voiceType: value })}
@@ -454,7 +486,7 @@ export default function AudioPage() {
                                                 <SelectValue placeholder="Chọn giọng đọc" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {VOICE_TYPES.map((voice) => (
+                                                {getAvailableVoiceTypes().map((voice) => (
                                                     <SelectItem key={voice.value} value={voice.value}>
                                                         <div className="flex items-center">
                                                             <span className="font-medium me-2">{voice.label}</span>
@@ -468,7 +500,7 @@ export default function AudioPage() {
                                     <div>
                                         <Label className="text-sm font-medium mb-2 block">Tốc độ</Label>
                                         <Select
-                                            value={'1.0'}
+                                            value={audioData.speed}
                                             onValueChange={(value) => updateAudioData({ speed: value })}
                                         >
                                             <SelectTrigger>
@@ -654,7 +686,6 @@ export default function AudioPage() {
                                                         className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                                                     />
                                                     <div>
-
                                                         <div className="flex items-center gap-4">
                                                             <h4 className="font-medium">{audioFile.name}</h4>
                                                             <span className={`px-2 py-1 rounded text-xs ${
