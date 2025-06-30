@@ -14,7 +14,6 @@ import { RefreshCw, Sparkles, ArrowRight, Database, CheckCircle } from 'lucide-r
 import { useVideoCreation } from '../_context/VideoCreationContext';
 import StepNavigation from '../_components/StepNavigation';
 import { saveVideoScriptData, clearVideoImageData } from "../_utils/videoStorage";
-import { categoryTagMap, VideoCategory } from "@/app/create-video/_types/video";
 
 export default function ScriptsPage() {
     const router = useRouter();
@@ -285,39 +284,40 @@ export default function ScriptsPage() {
                                             value={scriptData.category}
                                             onValueChange={(value) => dispatch({
                                                 type: 'SET_SCRIPT_DATA',
-                                                payload: { category: value, tag: "" } // reset tag khi đổi category
+                                                payload: { category: value }
                                             })}
                                         >
                                             <SelectTrigger className="mt-1">
                                                 <SelectValue placeholder="Select category" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {Object.keys(categoryTagMap).map((cat) => (
-                                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                                ))}
+                                                <SelectItem value=" ">Select a category</SelectItem>
+                                                <SelectItem value="Education">Education</SelectItem>
+                                                <SelectItem value="Entertainment">Entertainment</SelectItem>
+                                                <SelectItem value="Technology">Technology</SelectItem>
+                                                <SelectItem value="Travel">Travel</SelectItem>
+                                                <SelectItem value="Fitness & Health">Fitness & Health</SelectItem>
+                                                <SelectItem value="Beauty & Fashion">Beauty & Fashion</SelectItem>
+                                                <SelectItem value="Gaming">Gaming</SelectItem>
+                                                <SelectItem value="Business & Finance">Business & Finance</SelectItem>
+                                                <SelectItem value="Food & Cooking">Food & Cooking</SelectItem>
+                                                <SelectItem value="Environment">Environment</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
 
                                     <div>
                                         <Label className="text-sm font-medium mb-3 block">Tag</Label>
-                                        <Select
+                                        <Input
+                                            id="tag"
+                                            placeholder="Ex. #anime, #cooking,..."
                                             value={scriptData.tag}
-                                            onValueChange={(value) => dispatch({
+                                            onChange={(e) => dispatch({
                                                 type: 'SET_SCRIPT_DATA',
-                                                payload: { tag: value }
+                                                payload: { tag: e.target.value }
                                             })}
-                                            disabled={!scriptData.category}
-                                        >
-                                            <SelectTrigger className="mt-1">
-                                                <SelectValue placeholder={scriptData.category ? "Select tag" : "Select category first"} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {(categoryTagMap[scriptData.category as VideoCategory] || []).map((tag) => (
-                                                    <SelectItem key={tag} value={tag}>{tag}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                            className="mt-1"
+                                        />
                                     </div>
                                 </div>
                                 <div className={"col-span-2 md:ms-5"}>
