@@ -6,7 +6,7 @@ import { HttpError, HttpErrorType } from "../errors/HttpError";
  */
 export async function validateResponse<T>(response: Response, schema?: z.ZodType<T>): Promise<T> {
     // Xử lý response không có body nhưng trả về lỗi
-    console.log(">>> Validating response:", response);
+    // console.log(">>> Validating response:", response);
     if (!response.ok) {
         if (response.status === 204) {
             throw new HttpError(HttpErrorType.UNKNOWN, "Empty error response", response.status);

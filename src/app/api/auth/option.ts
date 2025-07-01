@@ -203,6 +203,122 @@ export const authOptions: NextAuthOptions = {
             },
         }),
 
+        CredentialsProvider({
+            id: "google-oauth",
+            name: "Google OAuth",
+            credentials: {
+                code: { label: "Authorization Code", type: "text" },
+            },
+            async authorize(credentials) {
+                if (!credentials?.code) {
+                    throw new Error(
+                        JSON.stringify(
+                            createAuthError(
+                                AuthErrorType.MISSING_CREDENTIALS,
+                                AUTH_ERROR_CODES.MISSING_CREDENTIALS,
+                                "Google authorization code is required"
+                            )
+                        )
+                    );
+                }
+
+                try {
+                    // Gửi authorization code đến backend để xác thực
+                    console.log(">>> Processing Google OAuth with code:", credentials.code);
+
+                    const response = await fetch(
+                        `${envServer.BACKEND_URL}${AUTH_ENDPOINTS.GOOGLE_AUTH}`,
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                authorizeCode: credentials.code,
+                            }),
+                        }
+                    );
+
+                    const rawData = await response.json();
+
+                    console.log(">>> Google OAuth response:", rawData);
+
+                    if (!response.ok) {
+                        const apiError = createErrorFromResponse(response, rawData);
+                        throw new Error(JSON.stringify(apiError));
+                    }
+
+                    try {
+                        const data = authResponseSchema.parse(rawData);
+
+                        const accessToken = data.data.jwt;
+                        const tokenExpiration = getTokenExpiration(accessToken);
+
+                        return {
+                            id: data.data.id || data.data.username,
+                            name: data.data.username,
+                            email: data.data.username,
+                            role: data.data.role,
+                            accessToken: accessToken,
+                            accessTokenExpires: tokenExpiration,
+                        };
+                    } catch (error) {
+                        if (error instanceof ZodError) {
+                            console.error(
+                                "Invalid Google OAuth API response format:",
+                                error.errors
+                            );
+                            throw new Error(
+                                JSON.stringify(
+                                    createAuthError(
+                                        AuthErrorType.SERVER_ERROR,
+                                        AUTH_ERROR_CODES.SERVER_ERROR,
+                                        "Server data format error"
+                                    )
+                                )
+                            );
+                        }
+                        throw error;
+                    }
+                } catch (error) {
+                    let errorHandled = false;
+                    let errorToThrow: Error = new Error(
+                        JSON.stringify(
+                            createAuthError(
+                                AuthErrorType.SERVER_ERROR,
+                                AUTH_ERROR_CODES.SERVER_ERROR,
+                                "Google OAuth authentication failed"
+                            )
+                        )
+                    );
+
+                    if (error instanceof Error && error.message) {
+                        try {
+                            const parsedError = JSON.parse(error.message);
+                            if (
+                                parsedError.type &&
+                                parsedError.code &&
+                                typeof parsedError.message === "string"
+                            ) {
+                                console.error(
+                                    ">>> Using existing Google OAuth AuthError:",
+                                    parsedError
+                                );
+                                errorToThrow = error;
+                                errorHandled = true;
+                            }
+                        } catch (parseError) {
+                            console.error("Error parsing Google OAuth AuthError:", parseError);
+                        }
+                    }
+
+                    if (!errorHandled) {
+                        console.error("Google OAuth auth error:", error);
+                    }
+
+                    throw errorToThrow;
+                }
+            },
+        }),
+
         // Google provider with improved error handling
         CredentialsProvider({
             id: "google-credential",

@@ -19,6 +19,7 @@ export const AUTH_ENDPOINTS = {
     GOOGLE_LOGIN: "/auth/google",
     REFRESH_TOKEN: "/auth/refresh-token",
     REGISTER: "/auth/register",
+    GOOGLE_AUTH: "/auth/oauth/google",
 } as const;
 
 /**

@@ -1,12 +1,18 @@
 "use client";
 
-import { Search } from "lucide-react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useEffect } from "react";
+import toast from "react-hot-toast";
+import { Search } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUserInfo } from "@/queries/use-user-info";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useUserStore } from "@/providers/user-store-provider";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -17,7 +23,6 @@ import {
     DropdownMenuShortcut,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useRouter } from "next/navigation";
 
 const AvatarDropdownMenu = ({
     image,
@@ -70,6 +75,45 @@ const AvatarDropdownMenu = ({
 
 const SearchBar = () => {
     const { data: session, status } = useSession();
+    const { setUser } = useUserStore((state) => state);
+
+    // Video info state
+    const {
+        data: userInfoData,
+        isLoading: isUserInfoLoading,
+        error: userInfoError,
+        isError: isUserInfoError,
+    } = useUserInfo(session);
+
+    // if (userInfoData && !isUserInfoError && !isUserInfoLoading) {
+    //     setUser(userInfoData);
+    // }
+
+    useEffect(() => {
+        // trường hợp đăng nhập nhưng không có dữ liệu userInfoData hoặc bị lỗi
+        if (session?.accessToken && !isUserInfoLoading && isUserInfoError) {
+            toast.error(userInfoError?.message || "Failed to fetch user info");
+            return;
+        }
+
+        // trường hợp đăng nhập thành công và có dữ liệu userInfoData
+        if (session?.accessToken && userInfoData && !isUserInfoLoading && !isUserInfoError) {
+            setUser(userInfoData);
+            return;
+        }
+    }, [
+        userInfoData,
+        isUserInfoLoading,
+        isUserInfoError,
+        setUser,
+        session?.accessToken,
+        userInfoError?.message,
+    ]);
+
+    // console.log(">>> VideoDetail userInfoData:", userInfoData);
+    // console.log(">>> VideoDetail isUserInfoLoading:", isUserInfoLoading);
+    // console.log(">>> VideoDetail userInfoError:", userInfoError);
+    // console.log(">>> VideoDetail isUserInfoError:", isUserInfoError);
 
     return (
         <div className="h-[76px] flex items-center w-full gap-2 py-4 sticky top-0 z-50 bg-background">
@@ -93,8 +137,8 @@ const SearchBar = () => {
                         </div>
                     ) : session?.user ? (
                         <AvatarDropdownMenu
-                            image={session.user.image ?? null}
-                            name={session.user.name ?? null}
+                            image={session.user.image ?? userInfoData?.avatar ?? null}
+                            name={session.user.name ?? userInfoData?.username ?? null}
                         />
                     ) : (
                         <>

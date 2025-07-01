@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { getSession, signIn, useSession } from "next-auth/react";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle, LockKeyhole, LogIn, Mail } from "lucide-react";
 
@@ -15,6 +15,7 @@ import { InputWithIcon } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { GoogleLoginButton, LeftSideContent } from "@/app/(auth)/user/_components";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import GoogleOAuthHandler from "@/app/(auth)/user/_components/google-oauth-handler";
 
 // 1. Login Schema
 const loginSchema = z.object({
@@ -27,6 +28,9 @@ type LoginType = z.infer<typeof loginSchema>;
 export default function LoginPage() {
     const router = useRouter();
     const { data: sessionData, status } = useSession();
+
+    const searchParams = useSearchParams();
+    const googleCode = searchParams.get("google_code");
 
     const [isLoading, setIsLoading] = React.useState(false);
 
@@ -46,7 +50,6 @@ export default function LoginPage() {
             form.setValue("password", password);
         }
 
-        // Cleanup function to avoid memory leaks
         return () => {
             localStorage.removeItem("email");
             localStorage.removeItem("password");
@@ -54,12 +57,14 @@ export default function LoginPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Redirect if already authenticated
     useEffect(() => {
-        if (status === "authenticated" && sessionData) {
+        // Chỉ redirect khi authenticated VÀ KHÔNG có googleCode
+        // Nếu có googleCode, để GoogleOAuthHandler xử lý redirect
+        if (status === "authenticated" && sessionData && !googleCode) {
+            console.log(">>> Auto-redirecting from LoginPage (no Google code)");
             router.replace("/");
         }
-    }, [status, sessionData, router]);
+    }, [status, sessionData, router, googleCode]);
 
     const onSubmit = async (data: LoginType) => {
         console.log(data);
@@ -71,8 +76,6 @@ export default function LoginPage() {
                 redirect: false, // Prevent automatic redirect
             });
 
-            // console.log(">>> Login result:", result);
-
             if (result?.ok) {
                 const session = await getSession();
                 console.log(">>> Fresh session data:", session);
@@ -80,7 +83,6 @@ export default function LoginPage() {
                 if (session?.user) {
                     // Lưu thông tin user vào localStorage
                     localStorage.setItem("user", JSON.stringify(session.user));
-
                     router.replace("/");
                 }
             } else {
@@ -110,6 +112,19 @@ export default function LoginPage() {
             setIsLoading(false);
         }
     };
+
+    // Nếu có googleCode và chưa có session, hiển thị GoogleOAuthHandler
+    if (googleCode && googleCode.length > 0 && status !== "authenticated") {
+        console.log(">>> Rendering GoogleOAuthHandler");
+        return <GoogleOAuthHandler />;
+    }
+
+    // Nếu có googleCode và đã có session, vẫn hiển thị GoogleOAuthHandler
+    // để nó xử lý countdown và redirect
+    if (googleCode && googleCode.length > 0) {
+        console.log(">>> Rendering GoogleOAuthHandler (with session)");
+        return <GoogleOAuthHandler />;
+    }
 
     return (
         <>

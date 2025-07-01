@@ -7,18 +7,32 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get("state");
 
     if (!code) {
-        return NextResponse.redirect(new URL("/login?error=no_code", request.url));
+        return NextResponse.redirect(new URL("/user/signin?error=no_code", request.url));
     }
 
     try {
-        // Gửi authorization code đến backend để xác thực
+        // console.log(">>> Received Google OAuth code:", code);
+        // console.log(">>> Received state:", state);
 
-        console.log(">>> Received code:", code);
-        console.log(">>> Received state:", state);
+        // Parse state để lấy returnTo URL
+        let returnTo = "/";
+        if (state) {
+            try {
+                const decodedState = JSON.parse(decodeURIComponent(state));
+                returnTo = decodedState.returnTo || "/";
+            } catch (error) {
+                console.error("Error parsing state:", error);
+            }
+        }
 
-        return NextResponse.redirect(new URL(`/user/signin?code=${code}`, request.url));
+        // Tạo URL để redirect đến trang signin với code và callbackUrl
+        const signInUrl = new URL("/user/signin", request.url);
+        signInUrl.searchParams.set("google_code", code);
+        signInUrl.searchParams.set("callbackUrl", returnTo);
+
+        return NextResponse.redirect(signInUrl);
     } catch (error) {
         console.error("Google callback error:", error);
-        return NextResponse.redirect(new URL("/login?error=auth_failed", request.url));
+        return NextResponse.redirect(new URL("/user/signin?error=auth_failed", request.url));
     }
 }

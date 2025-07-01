@@ -1,18 +1,22 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { EllipsisVertical, Hash } from "lucide-react";
 import Image from "next/image";
-import CustomVideoPlayer from "@/app/(user)/_components/custom-video-player";
-import { PanelConfig } from "@/app/(user)/_components/right-panel";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useRouter } from "next/navigation";
+import { useRef, useEffect, useState } from "react";
+import { EllipsisVertical, Hash } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import { icons } from "@/constants/icons";
-import { Video, VideoLikeStatus } from "@/types/video.types";
-import { formatNumberToSocialStyle } from "@/utils/common";
 import { Button } from "@/components/ui/button";
-import { UserLocalStorage } from "@/types/user.types";
+import { HttpError } from "@/utils/errors/HttpError";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { formatNumberToSocialStyle } from "@/utils/common";
+import { Video, VideoLikeStatus } from "@/types/video.types";
+import { useUserStore } from "@/providers/user-store-provider";
+import { PanelConfig } from "@/app/(user)/_components/right-panel";
+import ConfirmDialog from "@/app/(user)/_components/confirm-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import CustomVideoPlayer from "@/app/(user)/_components/custom-video-player";
 import {
     dislikeVideo,
     getVideoLikeStatus,
@@ -20,10 +24,6 @@ import {
     undislikeVideo,
     unlikeVideo,
 } from "@/apiRequests/client";
-import { cn } from "@/lib/utils";
-import { HttpError } from "@/utils/errors/HttpError";
-import ConfirmDialog from "@/app/(user)/_components/confirm-dialog";
-import { useRouter } from "next/navigation";
 
 interface VideoDetailProps {
     video: Video;
@@ -51,12 +51,11 @@ const VideoDetail = ({
     const [actionStyles, setActionStyles] = useState({});
     const [isActionsOverlapping, setIsActionsOverlapping] = useState(false);
 
-    // Video info state
     const router = useRouter();
 
-    const userInfo: UserLocalStorage = JSON.parse(
-        typeof window !== "undefined" ? localStorage.getItem("user") || "{}" : "{}"
-    );
+    const { user } = useUserStore((state) => state);
+
+    const userInfo = user;
 
     const [likeCount, setLikeCount] = useState<number>(() => video.likeCnt || 0);
 
@@ -69,7 +68,7 @@ const VideoDetail = ({
         try {
             const response = await getVideoLikeStatus({
                 videoId: video.id,
-                userId: userInfo.id,
+                userId: userInfo?.id ?? "",
             });
 
             if (response.status === 200) {
@@ -82,12 +81,13 @@ const VideoDetail = ({
 
     useEffect(() => {
         // Check if user is logged in and has liked/disliked the video
-        if (userInfo.id) {
+        if (userInfo?.id ?? "") {
             // Fetch like/dislike status from API or local storage
             // For now, we will just set it to false
             fetchLikeDislikeStatus();
         }
-    }, [userInfo.id]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userInfo?.id ?? ""]);
 
     useEffect(() => {
         const calculatePosition = () => {
@@ -154,7 +154,7 @@ const VideoDetail = ({
                 // call API to remove like
                 await unlikeVideo({
                     videoId: video.id,
-                    userId: userInfo.id,
+                    userId: userInfo?.id ?? "",
                 });
             } else {
                 setLikeDislikeStatus((prev) => ({
@@ -169,11 +169,11 @@ const VideoDetail = ({
                 await Promise.all([
                     likeVideo({
                         videoId: video.id,
-                        userId: userInfo.id,
+                        userId: userInfo?.id ?? "",
                     }),
                     undislikeVideo({
                         videoId: video.id,
-                        userId: userInfo.id,
+                        userId: userInfo?.id ?? "",
                     }),
                 ]);
             }
@@ -201,7 +201,7 @@ const VideoDetail = ({
                 // call API to remove dislike
                 await undislikeVideo({
                     videoId: video.id,
-                    userId: userInfo.id,
+                    userId: userInfo?.id ?? "",
                 });
             } else {
                 setLikeDislikeStatus((prev) => ({
@@ -213,11 +213,11 @@ const VideoDetail = ({
                 await Promise.all([
                     dislikeVideo({
                         videoId: video.id,
-                        userId: userInfo.id,
+                        userId: userInfo?.id ?? "",
                     }),
                     unlikeVideo({
                         videoId: video.id,
-                        userId: userInfo.id,
+                        userId: userInfo?.id ?? "",
                     }),
                 ]);
             }
@@ -319,7 +319,7 @@ const VideoDetail = ({
                         >
                             <div className="flex flex-col gap-2">
                                 <div className="flex flex-col items-center gap-1 text-white text-sm">
-                                    {userInfo.id ? (
+                                    {userInfo?.id ?? "" ? (
                                         <button
                                             onClick={() => handleLikeClick()}
                                             className={cn(
@@ -380,7 +380,7 @@ const VideoDetail = ({
                                 </div>
 
                                 <div className="flex flex-col items-center gap-1 text-white text-sm">
-                                    {userInfo.id ? (
+                                    {userInfo?.id ?? "" ? (
                                         <button
                                             onClick={() => handleDislikeClick()}
                                             className={cn(

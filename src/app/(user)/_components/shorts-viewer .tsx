@@ -1,7 +1,13 @@
 "use client";
 
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+
+import { Video } from "@/types/video.types";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import VideoDetail from "@/app/(user)/_components/video-detail";
+import { useBodyScroll, useScrollContainer } from "@/hooks/use-body-scroll";
 import RightPanel, { PanelConfig } from "@/app/(user)/_components/right-panel";
 import {
     CommentsPanel,
@@ -9,11 +15,6 @@ import {
     SharePanel,
     PlaylistPanel,
 } from "@/app/(user)/_components/panel-contents";
-import { useDebounce } from "@/hooks/use-debounce";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { useBodyScroll, useScrollContainer } from "@/hooks/use-body-scroll";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { Video } from "@/types/video.types";
 
 interface ShortsViewerProps {
     videos: Video[];
