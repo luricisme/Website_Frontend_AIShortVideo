@@ -119,8 +119,8 @@ const RightPanel = ({
                     </div>
                 )}
 
-                <div className="p-4 overflow-y-auto" style={{ height: "calc(100% - 4rem)" }}>
-                    <div className="text-white">{children}</div>
+                <div className="overflow-y-auto" style={{ height: "calc(100% - 4rem)" }}>
+                    <div className="text-white flex flex-col h-full">{children}</div>
                 </div>
             </div>
         </>

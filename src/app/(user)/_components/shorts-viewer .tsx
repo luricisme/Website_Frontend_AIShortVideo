@@ -13,22 +13,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useBodyScroll, useScrollContainer } from "@/hooks/use-body-scroll";
 import { useMediaQuery } from "@/hooks/use-media-query";
-
-interface Video {
-    id: number;
-    title: string;
-    description: string;
-    thumbnail: string;
-    source: string;
-    duration: number;
-    views: number;
-    author: {
-        id: number;
-        name: string;
-        username: string;
-        avatar: string;
-    };
-}
+import { Video } from "@/types/video.types";
 
 interface ShortsViewerProps {
     videos: Video[];

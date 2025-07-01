@@ -35,6 +35,7 @@ const AvatarDropdownMenu = ({
             });
 
             console.log(">>> Logout successful:", result);
+            localStorage.removeItem("user");
             router.replace("/");
         } catch (error) {
             console.error(">>> Logout failed:", error);

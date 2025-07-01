@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { VideoType } from "@/app/(user)/_components/video-detail";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+
+import { Video } from "@/types/video.types";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface CustomVideoPlayerProps {
     src: string;
@@ -14,7 +15,7 @@ interface CustomVideoPlayerProps {
     muted?: boolean;
     isVisible?: boolean;
     isShowVideoInfo?: boolean;
-    video?: VideoType;
+    video?: Video;
     showMiniBanner?: boolean;
 }
 
@@ -587,11 +588,13 @@ export default function CustomVideoPlayer({
                 <div className="absolute bottom-15 left-0 right-0 p-2 md:p-4 text-white z-20 ">
                     <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
                         <Avatar className="w-6 h-6 md:w-8 md:h-8">
-                            <AvatarImage src={video.author.avatar} />
-                            <AvatarFallback>{video.author.name.charAt(0)}</AvatarFallback>
+                            <AvatarImage src={video.user.avatar || undefined} />
+                            <AvatarFallback>{video.user.username.charAt(0)}</AvatarFallback>
                         </Avatar>
 
-                        <p className="text-xs md:text-sm font-medium">@{video.author.username}</p>
+                        <p className="text-xs md:text-sm font-medium truncate max-w-[150px] md:max-w-[200px] whitespace-nowrap overflow-hidden text-ellipsis">
+                            @{video.user.username}
+                        </p>
 
                         <Button
                             size="sm"
@@ -609,7 +612,7 @@ export default function CustomVideoPlayer({
                         {video.title}
                     </h2>
 
-                    <p className="text-xs md:text-sm line-clamp-2">{video.description}</p>
+                    <p className="text-xs md:text-sm line-clamp-2">{video.script}</p>
                 </div>
             )}
 
@@ -670,11 +673,11 @@ export default function CustomVideoPlayer({
                         onClick={(e) => e.stopPropagation()}
                     >
                         <Avatar className="w-6 h-6 md:w-8 md:h-8">
-                            <AvatarImage src={video?.author.avatar} />
-                            <AvatarFallback>{video?.author.name.charAt(0)}</AvatarFallback>
+                            <AvatarImage src={video?.user.avatar || undefined} />
+                            <AvatarFallback>{video?.user.username.charAt(0)}</AvatarFallback>
                         </Avatar>
 
-                        <p className="text-xs md:text-sm font-medium">@{video?.author.username}</p>
+                        <p className="text-xs md:text-sm font-medium">@{video?.user.username}</p>
 
                         <Button
                             size="sm"
@@ -691,7 +694,7 @@ export default function CustomVideoPlayer({
                         {video?.title}
                     </h2>
 
-                    <p className="text-xs md:text-sm line-clamp-2">{video?.description}</p>
+                    <p className="text-xs md:text-sm line-clamp-2">{video?.script}</p>
                 </div>
             )}
         </div>

@@ -13,6 +13,7 @@ export const authResponseDataSchema = z.object({
     jwt: z.string(),
     username: z.string(),
     role: z.string(),
+    id: z.number().or(z.string()), // ID can be a number or string
 });
 
 // Auth response schema

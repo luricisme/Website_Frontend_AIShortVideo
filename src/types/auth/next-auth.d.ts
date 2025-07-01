@@ -10,7 +10,7 @@ declare module "next-auth" {
         refreshToken?: string;
         error?: string;
         user: {
-            id: string;
+            id: number | string;
             name?: string;
             email: string;
             role: string;
@@ -22,7 +22,7 @@ declare module "next-auth" {
      * Extends NextAuth's default User type
      */
     interface User {
-        id: string;
+        id: string | number;
         name?: string;
         email: string;
         role: string;
@@ -38,7 +38,7 @@ declare module "next-auth/jwt" {
      * Extends NextAuth's default JWT type
      */
     interface JWT extends NextAuthJWT {
-        id: string;
+        id: string | number;
         accessToken: string;
         refreshToken?: string;
         role: string;

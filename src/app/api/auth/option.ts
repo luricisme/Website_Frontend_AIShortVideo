@@ -105,7 +105,7 @@ export const authOptions: NextAuthOptions = {
                             const tokenExpiration = getTokenExpiration(accessToken);
 
                             return {
-                                id: data.data.username,
+                                id: data.data.id,
                                 name: data.data.username,
                                 email: data.data.username,
                                 role: data.data.role,
@@ -357,7 +357,7 @@ export const authOptions: NextAuthOptions = {
 
         async session({ session, token }) {
             session.user.id = token.id;
-            session.user.email = token.id;
+            session.user.email = token.email || "";
             session.user.role = token.role;
             session.accessToken = token.accessToken;
             if (token.refreshToken) {

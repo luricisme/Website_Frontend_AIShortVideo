@@ -1,134 +1,85 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import toast from "react-hot-toast";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+
+import { Video } from "@/types/video.types";
+import { getVideoById } from "@/apiRequests/client";
 import ShortsViewer from "@/app/(user)/_components/shorts-viewer ";
 
-// Danh sách video mẫu (có thể lấy từ API hoặc từ một file riêng)
-const VIDEO_LIST = [
-    {
-        id: 1,
-        title: "AI Portraits",
-        description: "A collection of AI-generated portraits.",
-        thumbnail:
-            "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-        source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-        duration: 324,
-        views: 123456,
-        author: {
-            id: 1,
-            name: "John Doe",
-            username: "johndoe",
-            avatar: "https://example.com/john-doe.jpg",
-        },
-    },
-    // Giữ nguyên các video khác...
-    {
-        id: 2,
-        title: "Đồi Núi Tự Nhiên",
-        description: "Cảnh quay tuyệt đẹp về thiên nhiên.",
-        thumbnail:
-            "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8bmF0dXJlfGVufDB8fDB8fHww",
-        source: "https://www.w3schools.com/tags/mov_bbb.mp4",
-        duration: 245,
-        views: 87321,
-        author: {
-            id: 2,
-            name: "Minh Hà",
-            username: "minhha",
-            avatar: "https://example.com/minhha.jpg",
-        },
-    },
-    {
-        id: 3,
-        title: "AI Portraits",
-        description: "A collection of AI-generated portraits.",
-        thumbnail:
-            "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-        source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-        duration: 324,
-        views: 123456,
-        author: {
-            id: 1,
-            name: "John Doe",
-            username: "johndoe",
-            avatar: "https://example.com/john-doe.jpg",
-        },
-    },
-    {
-        id: 4,
-        title: "AI Portraits",
-        description: "A collection of AI-generated portraits.",
-        thumbnail:
-            "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-        source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-        duration: 324,
-        views: 123456,
-        author: {
-            id: 1,
-            name: "John Doe",
-            username: "johndoe",
-            avatar: "https://example.com/john-doe.jpg",
-        },
-    },
-    {
-        id: 5,
-        title: "AI Portraits",
-        description: "A collection of AI-generated portraits.",
-        thumbnail:
-            "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-        source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-        duration: 324,
-        views: 123456,
-        author: {
-            id: 1,
-            name: "John Doe",
-            username: "johndoe",
-            avatar: "https://example.com/john-doe.jpg",
-        },
-    },
-    {
-        id: 6,
-        title: "AI Portraits",
-        description: "A collection of AI-generated portraits.",
-        thumbnail:
-            "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-        source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-        duration: 324,
-        views: 123456,
-        author: {
-            id: 1,
-            name: "John Doe",
-            username: "johndoe",
-            avatar: "https://example.com/john-doe.jpg",
-        },
-    },
-];
-
 const ShortsPage = () => {
+    const router = useRouter();
     const params = useParams();
     const initialVideoId = params?.id ? String(params.id) : null;
 
-    // Tìm video hiện tại từ ID và sắp xếp lại danh sách video
-    const getInitialVideoAndIndex = () => {
-        if (!initialVideoId) {
-            return { index: 0, videos: VIDEO_LIST };
+    const [video, setVideo] = useState<Video>();
+
+    const fetchVideoById = useCallback(
+        async (id: number) => {
+            try {
+                // console.log("Fetching video with ID:", id);
+                const response = await getVideoById(id);
+
+                // console.log("Video fetch response:", response);
+
+                if (response && response.data) {
+                    setVideo(response.data);
+                }
+            } catch (error) {
+                // console.log("Error fetching video by ID:", { error });
+                if (error instanceof Error) {
+                    toast.error(error.message);
+                    // redirect to home if video not found
+                    router.replace("/");
+                }
+            }
+        },
+        [router]
+    );
+
+    // Gọi hàm để lấy video ban đầu nếu có ID
+    useEffect(() => {
+        if (initialVideoId) {
+            const id = parseInt(initialVideoId);
+            fetchVideoById(id);
         }
+    }, [fetchVideoById, initialVideoId]);
 
-        const id = parseInt(initialVideoId);
-        const selectedVideoIndex = VIDEO_LIST.findIndex((video) => video.id === id);
-
-        if (selectedVideoIndex === -1) {
-            return { index: 0, videos: VIDEO_LIST };
-        }
-
-        // Thay vì sắp xếp lại, chỉ cần xác định index ban đầu
-        return { index: selectedVideoIndex, videos: VIDEO_LIST };
-    };
+    if (!video) {
+        return (
+            <div
+                role="status"
+                className="flex items-center justify-center space-x-2 text-gray-900 dark:text-white"
+                style={{
+                    height: "calc(100vh - 80px)",
+                }}
+            >
+                <svg
+                    aria-hidden="true"
+                    className="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-gray-600 dark:fill-gray-300"
+                    viewBox="0 0 100 101"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                        fill="currentColor"
+                    />
+                    <path
+                        d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                        fill="currentFill"
+                    />
+                </svg>
+                <span className="sr-only text-white">Loading...</span>
+            </div>
+        );
+    }
 
     return (
         <ShortsViewer
-            videos={VIDEO_LIST}
-            initialVideoIndex={getInitialVideoAndIndex().index}
+            videos={[video as Video]}
+            initialVideoIndex={0}
             updateUrl={true}
             urlPath="/shorts"
         />

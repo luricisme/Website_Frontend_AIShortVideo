@@ -3,7 +3,7 @@
 import { z } from "zod";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { signIn } from "next-auth/react";
+import { getSession, signIn, useSession } from "next-auth/react";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
@@ -26,6 +26,7 @@ type LoginType = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
     const router = useRouter();
+    const { data: sessionData, status } = useSession();
 
     const [isLoading, setIsLoading] = React.useState(false);
 
@@ -53,6 +54,13 @@ export default function LoginPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Redirect if already authenticated
+    useEffect(() => {
+        if (status === "authenticated" && sessionData) {
+            router.replace("/");
+        }
+    }, [status, sessionData, router]);
+
     const onSubmit = async (data: LoginType) => {
         console.log(data);
         setIsLoading(true);
@@ -66,7 +74,15 @@ export default function LoginPage() {
             // console.log(">>> Login result:", result);
 
             if (result?.ok) {
-                router.replace("/");
+                const session = await getSession();
+                console.log(">>> Fresh session data:", session);
+
+                if (session?.user) {
+                    // Lưu thông tin user vào localStorage
+                    localStorage.setItem("user", JSON.stringify(session.user));
+
+                    router.replace("/");
+                }
             } else {
                 // Thử parse thông tin lỗi từ result.error
                 try {

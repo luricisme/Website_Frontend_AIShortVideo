@@ -9,25 +9,24 @@ import { PanelConfig } from "@/app/(user)/_components/right-panel";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 import { icons } from "@/constants/icons";
-
-export type VideoType = {
-    id: number;
-    title: string;
-    description: string;
-    thumbnail: string;
-    source: string;
-    duration: number;
-    views: number;
-    author: {
-        id: number;
-        name: string;
-        username: string;
-        avatar: string;
-    };
-};
+import { Video, VideoLikeStatus } from "@/types/video.types";
+import { formatNumberToSocialStyle } from "@/utils/common";
+import { Button } from "@/components/ui/button";
+import { UserLocalStorage } from "@/types/user.types";
+import {
+    dislikeVideo,
+    getVideoLikeStatus,
+    likeVideo,
+    undislikeVideo,
+    unlikeVideo,
+} from "@/apiRequests/client";
+import { cn } from "@/lib/utils";
+import { HttpError } from "@/utils/errors/HttpError";
+import ConfirmDialog from "@/app/(user)/_components/confirm-dialog";
+import { useRouter } from "next/navigation";
 
 interface VideoDetailProps {
-    video: VideoType;
+    video: Video;
     isVisible: boolean;
     isShowRightPanel: boolean;
     panelConfigs: Record<string, PanelConfig>;
@@ -52,14 +51,43 @@ const VideoDetail = ({
     const [actionStyles, setActionStyles] = useState({});
     const [isActionsOverlapping, setIsActionsOverlapping] = useState(false);
 
-    const formatViews = (views: number) => {
-        if (views >= 1000000) {
-            return `${(views / 1000000).toFixed(1)} Tr`;
-        } else if (views >= 1000) {
-            return `${(views / 1000).toFixed(1)} N`;
+    // Video info state
+    const router = useRouter();
+
+    const userInfo: UserLocalStorage = JSON.parse(
+        typeof window !== "undefined" ? localStorage.getItem("user") || "{}" : "{}"
+    );
+
+    const [likeCount, setLikeCount] = useState<number>(() => video.likeCnt || 0);
+
+    const [likeDislikeStatus, setLikeDislikeStatus] = useState<VideoLikeStatus>({
+        liked: false,
+        disliked: false,
+    });
+
+    const fetchLikeDislikeStatus = async () => {
+        try {
+            const response = await getVideoLikeStatus({
+                videoId: video.id,
+                userId: userInfo.id,
+            });
+
+            if (response.status === 200) {
+                setLikeDislikeStatus(response.data);
+            }
+        } catch (error) {
+            console.error("Error fetching like/dislike status:", error);
         }
-        return views.toString();
     };
+
+    useEffect(() => {
+        // Check if user is logged in and has liked/disliked the video
+        if (userInfo.id) {
+            // Fetch like/dislike status from API or local storage
+            // For now, we will just set it to false
+            fetchLikeDislikeStatus();
+        }
+    }, [userInfo.id]);
 
     useEffect(() => {
         const calculatePosition = () => {
@@ -116,6 +144,93 @@ const VideoDetail = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isVerySmallScreen, isCompactView]);
 
+    const handleLikeClick = async () => {
+        const preStatus = { ...likeDislikeStatus };
+        const preLikeCount = likeCount;
+        try {
+            if (likeDislikeStatus.liked) {
+                setLikeDislikeStatus((prev) => ({ ...prev, liked: false }));
+                setLikeCount((prev) => Math.max(prev - 1, 0)); // Decrease like count
+                // call API to remove like
+                await unlikeVideo({
+                    videoId: video.id,
+                    userId: userInfo.id,
+                });
+            } else {
+                setLikeDislikeStatus((prev) => ({
+                    ...prev,
+                    liked: true,
+                    disliked: false,
+                }));
+
+                setLikeCount((prev) => prev + 1); // Increase like count
+
+                // call API to like video and remove dislike if any
+                await Promise.all([
+                    likeVideo({
+                        videoId: video.id,
+                        userId: userInfo.id,
+                    }),
+                    undislikeVideo({
+                        videoId: video.id,
+                        userId: userInfo.id,
+                    }),
+                ]);
+            }
+        } catch (error) {
+            console.log("Error handling like click:", error);
+            if (error instanceof HttpError) {
+                // restore previous state if error occurs
+                setLikeDislikeStatus(preStatus);
+                setLikeCount(preLikeCount); // Restore previous like count
+            }
+        }
+    };
+
+    const handleDislikeClick = async () => {
+        const preStatus = { ...likeDislikeStatus };
+        const preLikeCount = likeCount;
+        try {
+            // decrease like count if disliked
+            if (likeDislikeStatus.liked) {
+                setLikeCount((prev) => Math.max(prev - 1, 0));
+            }
+
+            if (likeDislikeStatus.disliked) {
+                setLikeDislikeStatus((prev) => ({ ...prev, disliked: false }));
+                // call API to remove dislike
+                await undislikeVideo({
+                    videoId: video.id,
+                    userId: userInfo.id,
+                });
+            } else {
+                setLikeDislikeStatus((prev) => ({
+                    ...prev,
+                    disliked: true,
+                    liked: false,
+                }));
+                // call API to dislike video and remove like if any
+                await Promise.all([
+                    dislikeVideo({
+                        videoId: video.id,
+                        userId: userInfo.id,
+                    }),
+                    unlikeVideo({
+                        videoId: video.id,
+                        userId: userInfo.id,
+                    }),
+                ]);
+            }
+        } catch (error) {
+            console.log("Error handling dislike click:", error);
+            if (error instanceof HttpError) {
+                // restore previous state if error occurs
+                setLikeDislikeStatus(preStatus);
+                setLikeCount(preLikeCount); // Restore previous like count
+            }
+        }
+    };
+
     return (
         <div className="relative w-full h-full bg-black overflow-hidden" ref={videoRef}>
             <div
@@ -125,30 +240,51 @@ const VideoDetail = ({
             >
                 <div className={`${isCompactView ? "hidden" : "block"} mt-auto`}>
                     <div className="flex flex-col gap-2 p-4">
-                        <div className="flex items-center gap-2 text-gray-400 bg-sidebar/80 rounded-md px-4 py-2.5 w-fit">
-                            <Hash color="#fff" size={35} strokeWidth={2} />
-                            <div className="flex flex-col text-sm">
-                                <span className="text-white font-medium cursor-pointer hover:underline">
+                        {video && video?.tags && video.tags.length > 0 && (
+                            <div className="flex items-center gap-2 text-gray-400 bg-sidebar/80 rounded-md px-4 py-2.5 w-fit">
+                                <Hash color="#fff" size={35} strokeWidth={2} />
+                                <div className="flex flex-wrap gap-2 text-sm text-white max-w-full">
+                                    {video.tags.map((tag, index) => (
+                                        <span
+                                            key={index}
+                                            className="cursor-pointer hover:underline"
+                                            // onClick={() => onOpenPanel(panelConfigs)}
+                                        >
+                                            {tag.tagName}
+                                        </span>
+                                    ))}
+                                    {/* <span className="text-white font-medium cursor-pointer hover:underline">
                                     shorts
                                 </span>
-                                <span>{formatViews(video.views)} video</span>
+                                <span>{formatViews(video.viewCnt)} video</span> */}
+                                </div>
                             </div>
-                        </div>
+                        )}
                         <h1 className="text-2xl font-semibold text-white">{video.title}</h1>
-                        <p className="text-sm text-gray-400">{video.description}</p>
+                        <p className="text-sm text-gray-400">{video.script}</p>
                         <div className="flex items-center gap-3">
                             <Avatar className="w-8 h-8">
-                                <AvatarImage src={video.author.avatar} />
-                                <AvatarFallback>{video.author.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={undefined} />
+                                <AvatarFallback>{video.user.username.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col">
                                 <span className="text-sm font-medium text-white">
-                                    {video.author.name}
+                                    {video.user.firstName} {video.user.lastName}
                                 </span>
                                 <span className="text-xs text-gray-400">
-                                    @{video.author.username}
+                                    @{video.user.username}
                                 </span>
                             </div>
+                            <Button
+                                size="sm"
+                                className="rounded-full font-semibold text-[10px] md:text-xs py-0.5 px-2 md:py-1 md:px-3 h-6 md:h-8"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Handle follow action here
+                                }}
+                            >
+                                Follow
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -163,7 +299,8 @@ const VideoDetail = ({
                         ref={videoContainerRef}
                     >
                         <CustomVideoPlayer
-                            src={video.source}
+                            src={"https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4"}
+                            // || video.videoUrl
                             autoPlay={true}
                             muted={false}
                             isVisible={isVisible}
@@ -182,32 +319,124 @@ const VideoDetail = ({
                         >
                             <div className="flex flex-col gap-2">
                                 <div className="flex flex-col items-center gap-1 text-white text-sm">
-                                    <div className="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer bg-white/10 hover:bg-white/20 transition-colors duration-200">
-                                        <Image
-                                            src={icons.like.svg}
-                                            alt="Like"
-                                            width={20}
-                                            height={20}
-                                            className="w-4 h-4 md:w-5 md:h-5"
-                                        />
-                                    </div>
+                                    {userInfo.id ? (
+                                        <button
+                                            onClick={() => handleLikeClick()}
+                                            className={cn(
+                                                "w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer",
+                                                {
+                                                    "bg-slate-400": likeDislikeStatus.liked,
+                                                    "bg-white/10 hover:bg-white/20 transition-colors duration-200":
+                                                        !likeDislikeStatus.liked,
+                                                }
+                                            )}
+                                        >
+                                            <Image
+                                                src={icons.like.svg}
+                                                alt="Like"
+                                                width={20}
+                                                height={20}
+                                                className="w-4 h-4 md:w-5 md:h-5"
+                                            />
+                                        </button>
+                                    ) : (
+                                        <ConfirmDialog
+                                            dialogTitle="You need to log in to like this video"
+                                            dialogDescription={
+                                                "Please log in to your account to like this video."
+                                            }
+                                            confirmText="Sign In"
+                                            cancelText="Cancel"
+                                            confirmAction={() => {
+                                                // Redirect to login page
+                                                router.push("/user/signin");
+                                            }}
+                                            cancelAction={() => {}}
+                                        >
+                                            <button
+                                                onClick={() => handleLikeClick()}
+                                                className={cn(
+                                                    "w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer",
+                                                    {
+                                                        "bg-slate-400": likeDislikeStatus.liked,
+                                                        "bg-white/10 hover:bg-white/20 transition-colors duration-200":
+                                                            !likeDislikeStatus.liked,
+                                                    }
+                                                )}
+                                            >
+                                                <Image
+                                                    src={icons.like.svg}
+                                                    alt="Like"
+                                                    width={20}
+                                                    height={20}
+                                                    className="w-4 h-4 md:w-5 md:h-5"
+                                                />
+                                            </button>
+                                        </ConfirmDialog>
+                                    )}
                                     <span className="text-xs md:text-sm font-medium">
-                                        {formatViews(107000)}
+                                        {formatNumberToSocialStyle(likeCount)}
                                     </span>
                                 </div>
 
                                 <div className="flex flex-col items-center gap-1 text-white text-sm">
-                                    <div className="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer bg-white/10 hover:bg-white/20 transition-colors duration-200">
-                                        <Image
-                                            src={icons.dislike.svg}
-                                            alt="Dislike"
-                                            width={20}
-                                            height={20}
-                                            className="w-4 h-4 md:w-5 md:h-5"
-                                        />
-                                    </div>
+                                    {userInfo.id ? (
+                                        <button
+                                            onClick={() => handleDislikeClick()}
+                                            className={cn(
+                                                "w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer",
+                                                {
+                                                    "bg-slate-400": likeDislikeStatus.disliked,
+                                                    "bg-white/10 hover:bg-white/20":
+                                                        !likeDislikeStatus.disliked,
+                                                }
+                                            )}
+                                        >
+                                            <Image
+                                                src={icons.dislike.svg}
+                                                alt="Dislike"
+                                                width={20}
+                                                height={20}
+                                                className="w-4 h-4 md:w-5 md:h-5"
+                                            />
+                                        </button>
+                                    ) : (
+                                        <ConfirmDialog
+                                            dialogTitle="You need to log in to dislike this video"
+                                            dialogDescription={
+                                                "Please log in to your account to dislike this video."
+                                            }
+                                            confirmText="Sign In"
+                                            cancelText="Cancel"
+                                            confirmAction={() => {
+                                                // Redirect to login page
+                                                router.push("/user/signin");
+                                            }}
+                                            cancelAction={() => {}}
+                                        >
+                                            <button
+                                                onClick={() => handleDislikeClick()}
+                                                className={cn(
+                                                    "w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer",
+                                                    {
+                                                        "bg-slate-400": likeDislikeStatus.disliked,
+                                                        "bg-white/10 hover:bg-white/20":
+                                                            !likeDislikeStatus.disliked,
+                                                    }
+                                                )}
+                                            >
+                                                <Image
+                                                    src={icons.dislike.svg}
+                                                    alt="Dislike"
+                                                    width={20}
+                                                    height={20}
+                                                    className="w-4 h-4 md:w-5 md:h-5"
+                                                />
+                                            </button>
+                                        </ConfirmDialog>
+                                    )}
                                     <span className="text-xs md:text-sm font-medium w-11 truncate">
-                                        Không thích
+                                        Dislike
                                     </span>
                                 </div>
 
@@ -224,7 +453,9 @@ const VideoDetail = ({
                                             className="w-4 h-4 md:w-5 md:h-5"
                                         />
                                     </div>
-                                    <span className="text-xs md:text-sm font-medium">604</span>
+                                    <span className="text-xs md:text-sm font-medium">
+                                        {formatNumberToSocialStyle(video.commentCnt)}
+                                    </span>
                                 </button>
 
                                 <button
@@ -253,18 +484,18 @@ const VideoDetail = ({
                                         <EllipsisVertical className="w-4 h-4 md:w-5 md:h-5" />
                                     </div>
                                     <span className="text-xs md:text-sm font-medium truncate">
-                                        Chi tiết
+                                        Details
                                     </span>
                                 </button>
 
                                 <div
-                                    className="w-9 h-9 md:w-11 md:h-11 cursor-pointer mt-2"
+                                    className="w-9 h-9 md:w-11 md:h-11 cursor-pointer mt-2 mx-auto"
                                     onClick={() => onOpenPanel(panelConfigs.playlist)}
                                 >
                                     <Avatar className="w-9 h-9 md:w-11 md:h-11 rounded-md">
-                                        <AvatarImage src={video.author.avatar} />
+                                        <AvatarImage src={undefined} />
                                         <AvatarFallback>
-                                            {video.author.name.charAt(0)}
+                                            {video.user.username.charAt(0)}
                                         </AvatarFallback>
                                     </Avatar>
                                 </div>

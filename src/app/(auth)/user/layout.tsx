@@ -3,6 +3,7 @@ import { Toaster } from "react-hot-toast";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/option";
 import { redirect, RedirectType } from "next/navigation";
+import { AuthProvider } from "@/app/(auth)/user/_components/auth-provider";
 
 export default async function AuthLayout({
     children,
@@ -20,7 +21,7 @@ export default async function AuthLayout({
 
     return (
         <main className="container mx-auto !bg-[#0A0A0A] !w-[100vw] flex flex-col min-h-screen">
-            {children}
+            <AuthProvider session={session}>{children}</AuthProvider>
             <Toaster />
         </main>
     );

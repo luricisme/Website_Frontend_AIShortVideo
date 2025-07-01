@@ -24,3 +24,17 @@ export const createUniqueUsername = (firstName: string, lastName: string) => {
 
     return base ? `${base}-${random}-${timestamp}` : `user-${random}-${timestamp}`;
 };
+
+export const formatNumberToSocialStyle = (number: number) => {
+    let result = new Intl.NumberFormat("en-US", {
+        notation: "compact",
+        maximumFractionDigits: 1,
+    })
+        .format(number)
+        .replace(".", ",");
+
+    result = result.slice(0, result.length - 1) + " " + result.slice(-1).toUpperCase();
+
+    return result;
+};
+

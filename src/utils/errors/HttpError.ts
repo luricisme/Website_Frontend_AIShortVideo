@@ -6,6 +6,7 @@ export enum HttpErrorType {
     NOT_FOUND = "NOT_FOUND",
     TIMEOUT = "TIMEOUT",
     UNKNOWN = "UNKNOWN",
+    UNAUTHORIZED = "UNAUTHORIZED",
 }
 
 export interface HttpErrorDetail {
