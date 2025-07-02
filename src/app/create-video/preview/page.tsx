@@ -1,8 +1,8 @@
+//preview/page.tsx
 'use client'
 
 import React, { useState, useEffect } from 'react';
 import { Player } from '@remotion/player';
-import { AbsoluteFill, Audio, Img, useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {ArrowLeft, ArrowRight, BookOpenCheck, FileText, Images, Pencil} from 'lucide-react';
@@ -17,192 +17,9 @@ import {
     saveVideoCaptionData
 } from '../_utils/videoStorage';
 import { VideoData } from '../_types/video';
+import VideoComposition from "@/app/create-video/_components/VideoComposition";
 
-
-// Component hiển thị phụ đề với animation
-const CaptionDisplay = ({ text, position, fontSize, color, background }: {
-    text: string;
-    // style: string;
-    position: string;
-    fontSize: string;
-    color: string;
-    background: boolean;
-}) => {
-    const frame = useCurrentFrame();
-    // const { fps } = useVideoConfig();
-
-    // Animation cho phụ đề xuất hiện từ từ
-    const opacity = interpolate(frame, [0, 30], [0, 1], {
-        extrapolateLeft: 'clamp',
-        extrapolateRight: 'clamp',
-    });
-
-    const getFontSize = () => {
-        switch (fontSize) {
-            case 'small': return '0.8rem';
-            case 'large': return '1.2rem';
-            default: return '1rem';
-        }
-    };
-
-    const getPosition = () => {
-        switch (position) {
-            case 'top': return { top: '10%', left: '50%', transform: 'translateX(-50%)' };
-            case 'bottom': return { bottom: '10%', left: '50%', transform: 'translateX(-50%)' };
-            case 'center': return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
-            default: return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
-        }
-    };
-
-    return (
-        <div
-            style={{
-                position: 'absolute',
-                ...getPosition(),
-                color: color,
-                fontSize: getFontSize(),
-                fontWeight: 'bold',
-                textAlign: 'center',
-                opacity,
-                backgroundColor: background ? 'rgba(0,0,0,0.7)' : 'transparent',
-                borderRadius: background ? '10px' : '0',
-                padding: background ? '8px 12px' : '0',
-                textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-                fontFamily: 'Arial, sans-serif',
-                lineHeight: '1.4',
-                maxWidth: '90%',
-            }}
-        >
-            {text}
-        </div>
-    );
-};
-
-// Component chính của video
-const VideoComposition = ({ videoData }: { videoData: VideoData }) => {
-    const frame = useCurrentFrame();
-    const { durationInFrames } = useVideoConfig();
-
-    if (!videoData?.videoImageData || !videoData?.videoScriptData) {
-        return (
-            <AbsoluteFill style={{ backgroundColor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ color: 'white', fontSize: '1.5rem' }}>Loading video data...</div>
-            </AbsoluteFill>
-        );
-    }
-
-    const images = videoData.videoImageData.generatedImages;
-    const selectedImageIds = videoData.videoImageData.selectedImages;
-    const selectedImages = selectedImageIds.map(id =>
-        images.find(img => img.id === id)
-    ).filter(Boolean);
-
-    const script = videoData.videoScriptData.script;
-    const captionData = videoData.videoCaptionData;
-    const audioUrl = videoData.videoAudioData?.selectedAudioFiles?.[0]?.url;
-
-    // Chia script thành các đoạn nhỏ để hiển thị theo từng hình ảnh
-    const sentences = script.split('.').filter(s => s.trim().length > 0);
-    const framesPerImage = Math.floor(durationInFrames / selectedImages.length);
-
-    // Xác định hình ảnh hiện tại
-    const currentImageIndex = Math.floor(frame / framesPerImage);
-    const currentImage = selectedImages[Math.min(currentImageIndex, selectedImages.length - 1)];
-
-    // Xác định câu hiện tại
-    const currentSentenceIndex = Math.floor((frame / durationInFrames) * sentences.length);
-    const currentSentence = sentences[Math.min(currentSentenceIndex, sentences.length - 1)];
-
-    // Animation cho hình ảnh
-    const imageOpacity = interpolate(
-        frame % framesPerImage,
-        [0, 30, framesPerImage - 30, framesPerImage],
-        [0, 1, 1, 0],
-        { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-    );
-
-    const scale = interpolate(
-        frame % framesPerImage,
-        [0, framesPerImage],
-        [1, 1.1],
-        { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-    );
-
-    return (
-        <AbsoluteFill style={{ backgroundColor: '#000' }}>
-            {/* Audio */}
-            {audioUrl && (
-                <Audio src={audioUrl} />
-            )}
-
-            {/* Hình ảnh với hiệu ứng */}
-            {currentImage && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        width: '100%',
-                        height: '100%',
-                        opacity: imageOpacity,
-                        transform: `scale(${scale})`,
-                        transition: 'all 0.5s ease-in-out',
-                    }}
-                >
-                    <Img
-                        src={currentImage.url}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                        }}
-                    />
-
-                    {/* Overlay gradient */}
-                    <div
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            background: 'linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0))',
-                        }}
-                    />
-                </div>
-            )}
-
-            {/* Phụ đề */}
-            {currentSentence && captionData && (
-                <CaptionDisplay
-                    text={currentSentence.trim() + '.'}
-                    // style={captionData.style}
-                    position={captionData.position}
-                    fontSize={captionData.fontSize}
-                    color={captionData.color}
-                    background={captionData.background}
-                />
-            )}
-
-            {/* Hashtag */}
-            {videoData.videoScriptData.tag && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        bottom: '5%',
-                        right: '5%',
-                        color: '#fff',
-                        fontSize: '1.2rem',
-                        fontWeight: 'bold',
-                        opacity: 0.8,
-                    }}
-                >
-                    {videoData.videoScriptData.tag}
-                </div>
-            )}
-        </AbsoluteFill>
-    );
-};
-
-const VideoPreviewCreator = () => {
+export default function VideoPreviewCreator () {
     const [videoData, setVideoData] = useState<VideoData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -421,5 +238,3 @@ const VideoPreviewCreator = () => {
         </div>
     );
 };
-
-export default VideoPreviewCreator;
