@@ -1,29 +1,3 @@
-// /**
-//  * Generic API response structure
-//  */
-// export interface ApiResponse<T = unknown> {
-//     status: number;
-//     message: string;
-//     data: T;
-//     errors?: ApiError[];
-// }
-
-// /**
-//  * API error structure
-//  */
-// export interface ApiError {
-//     code?: string;
-//     field?: string;
-//     message: string;
-// }
-
-// /**
-//  * Generic request structure
-//  */
-// export interface ApiRequest {
-//     [key: string]: unknown;
-// }
-
 import { z } from "zod";
 
 // ApiError schema
@@ -56,6 +30,13 @@ export type ApiError = z.infer<typeof apiErrorSchema>;
 export type ApiRequest = z.infer<typeof apiRequestSchema>;
 export type ApiBasicResponse = z.infer<typeof apiBasicResponseSchema>;
 
-export type ApiResponse<T> = T extends z.ZodTypeAny
-    ? z.infer<ReturnType<typeof apiResponseSchema<T>>>
-    : never;
+// export type ApiResponse<T> = T extends z.ZodTypeAny
+//     ? z.infer<ReturnType<typeof apiResponseSchema<T>>>
+//     : never;
+
+export interface ApiResponse<T = unknown> {
+    status: number;
+    message: string;
+    data: T;
+    errors?: ApiError[];
+}

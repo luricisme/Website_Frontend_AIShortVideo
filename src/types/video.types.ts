@@ -40,8 +40,16 @@ export const videoLikeStatusResponseSchema = z.object({
     disliked: z.boolean(),
 });
 
+// VideoLikeDislikeCommentCount schema
+export const videoLikeDislikeCommentCountSchema = z.object({
+    likeCnt: z.number(),
+    dislikeCnt: z.number(),
+    commentCnt: z.number(),
+});
+
 // Type
 export type VideoTag = z.infer<typeof videoTagSchema>;
 export type Video = z.infer<typeof videoSchema>;
 export type VideoListResponse = z.infer<typeof videoListResponseSchema>;
 export type VideoLikeStatus = z.infer<typeof videoLikeStatusResponseSchema>;
+export type VideoLikeDislikeCommentCount = z.infer<typeof videoLikeDislikeCommentCountSchema>;

@@ -7,6 +7,7 @@ import { Video } from "@/types/video.types";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useIncrementVideoViewCountMutation } from "@/queries/useVideo";
 
 interface CustomVideoPlayerProps {
     src: string;
@@ -18,6 +19,8 @@ interface CustomVideoPlayerProps {
     video?: Video;
     showMiniBanner?: boolean;
 }
+
+const THRESHOLD_SECONDS = 5; // Ngưỡng thời gian tính view cho video ngắn
 
 export default function CustomVideoPlayer({
     src,
@@ -54,6 +57,154 @@ export default function CustomVideoPlayer({
     const [videoError, setVideoError] = useState(false);
     const [firstPlayAttempt, setFirstPlayAttempt] = useState(true);
     const [showControls, setShowControls] = useState(false);
+
+    // State để theo dõi việc đã tính view
+    const [viewCounted, setViewCounted] = useState(false);
+    const viewingTimeRef = useRef<number>(0);
+    const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
+    const apiCalledRef = useRef<boolean>(false);
+
+    const incrementViewMutation = useIncrementVideoViewCountMutation();
+
+    const getViewThreshold = (videoDuration: number) => {
+        if (videoDuration <= THRESHOLD_SECONDS) {
+            return Math.max(videoDuration * 0.5, 1);
+        } else if (videoDuration <= 10) {
+            return 3;
+        } else {
+            return THRESHOLD_SECONDS;
+        }
+    };
+
+    const callViewCountAPI = (videoId: number | string, reason: string) => {
+        if (apiCalledRef.current || viewCounted) {
+            // console.log(">>> API already called, skipping...");
+            return;
+        }
+
+        console.log(`>>> 🎯 CALLING VIEW API for reason: ${reason}`);
+        apiCalledRef.current = true;
+        setViewCounted(true);
+
+        if (intervalIdRef.current) {
+            clearInterval(intervalIdRef.current);
+            intervalIdRef.current = null;
+        }
+
+        incrementViewMutation.mutate(videoId);
+        // console.log(`✅ View counted for video ${videoId} - ${reason}`);
+    };
+
+    useEffect(() => {
+        // console.log(">>> Main effect triggered");
+
+        if (!isVisible || !video?.id || apiCalledRef.current || duration === 0) {
+            // console.log(">>> Early return:", {
+            //     isVisible,
+            //     videoId: video?.id,
+            //     apiCalled: apiCalledRef.current,
+            //     duration,
+            // });
+            return;
+        }
+
+        const viewThreshold = getViewThreshold(duration);
+
+        // console.log(">>> Video setup:", {
+        //     videoId: video.id,
+        //     duration,
+        //     viewThreshold,
+        //     isPlaying,
+        //     apiCalled: apiCalledRef.current,
+        // });
+
+        if (intervalIdRef.current) {
+            // console.log(">>> Clearing existing interval");
+            clearInterval(intervalIdRef.current);
+            intervalIdRef.current = null;
+        }
+
+        if (isPlaying && !apiCalledRef.current) {
+            // console.log(">>> Creating interval for view counting");
+
+            intervalIdRef.current = setInterval(() => {
+                // console.log(">>> === INTERVAL TICK ===");
+
+                // Kiểm tra lại để tránh race condition
+                if (apiCalledRef.current) {
+                    // console.log(">>> Stopping interval - API already called");
+                    if (intervalIdRef.current) {
+                        clearInterval(intervalIdRef.current);
+                        intervalIdRef.current = null;
+                    }
+                    return;
+                }
+
+                viewingTimeRef.current += 1;
+                // console.log(">>> Interval tick - viewing time:", viewingTimeRef.current);
+
+                // Kiểm tra nếu đạt ngưỡng và chưa tính view
+                if (viewingTimeRef.current >= viewThreshold && !apiCalledRef.current) {
+                    // console.log(">>> 🎯 Calling API from interval");
+                    callViewCountAPI(video.id, `interval-based after ${viewingTimeRef.current}s`);
+                }
+            }, 1000);
+
+            // console.log(">>> Interval created with ID:", intervalIdRef.current);
+        } else {
+            // console.log(">>> Not creating interval:", {
+            //     isPlaying,
+            //     apiCalled: apiCalledRef.current,
+            // });
+        }
+
+        return () => {
+            // console.log(">>> Cleanup function called");
+            if (intervalIdRef.current) {
+                clearInterval(intervalIdRef.current);
+                intervalIdRef.current = null;
+            }
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isVisible, video?.id, duration, isPlaying]);
+
+    useEffect(() => {
+        if (!apiCalledRef.current && video?.id && duration > 0 && currentTime > 0) {
+            const viewThreshold = getViewThreshold(duration);
+            const watchedPercentage = (currentTime / duration) * 100;
+
+            if (watchedPercentage >= 80) {
+                // console.log(">>> Short video progress:", {
+                //     watchedPercentage: watchedPercentage.toFixed(1) + "%",
+                //     viewingTime: viewingTimeRef.current,
+                //     threshold: viewThreshold,
+                //     apiCalled: apiCalledRef.current,
+                // });
+            }
+
+            if (
+                watchedPercentage >= 90 &&
+                viewingTimeRef.current >= viewThreshold &&
+                !apiCalledRef.current
+            ) {
+                // console.log(">>> 🎯 Calling API for short video");
+                callViewCountAPI(video.id, `short video ${watchedPercentage.toFixed(1)}%`);
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentTime, duration, video?.id]);
+
+    useEffect(() => {
+        // console.log(">>> 🔄 Resetting for new video/src");
+        setViewCounted(false);
+        viewingTimeRef.current = 0;
+        apiCalledRef.current = false;
+
+        if (intervalIdRef.current) {
+            clearInterval(intervalIdRef.current);
+            intervalIdRef.current = null;
+        }
+    }, [src, video?.id]);
 
     const formatTime = useCallback((time: number) => {
         if (!isFinite(time) || isNaN(time)) return "0:00";

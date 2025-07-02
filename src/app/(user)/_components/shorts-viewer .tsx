@@ -278,15 +278,15 @@ const ShortsViewer = ({
 
         return {
             comments: {
-                title: "Bình luận",
+                title: "Comment",
                 content: <CommentsPanel video={currentVideo} />,
             },
             details: {
-                title: "Thông tin chi tiết",
+                title: "Video Details",
                 content: <DetailsPanel video={currentVideo} />,
             },
             share: {
-                title: "Chia sẻ",
+                title: "Share",
                 content: <SharePanel video={currentVideo} />,
             },
             playlist: {

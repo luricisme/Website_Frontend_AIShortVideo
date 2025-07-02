@@ -32,6 +32,7 @@ const AvatarDropdownMenu = ({
     name: string | null | undefined;
 }) => {
     const router = useRouter();
+    const { clearUser } = useUserStore((state) => state);
 
     const handleLogout = async () => {
         try {
@@ -41,7 +42,8 @@ const AvatarDropdownMenu = ({
 
             console.log(">>> Logout successful:", result);
             localStorage.removeItem("user");
-            router.replace("/");
+            clearUser(); // Clear user state in the store
+            router.refresh(); // Refresh the page to reflect the logout state
         } catch (error) {
             console.error(">>> Logout failed:", error);
         }

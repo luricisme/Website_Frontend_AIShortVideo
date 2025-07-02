@@ -24,6 +24,8 @@ import {
     undislikeVideo,
     unlikeVideo,
 } from "@/apiRequests/client";
+import { useVideoLikeDislikeCommentCountQuery } from "@/queries/useVideo";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 
 interface VideoDetailProps {
     video: Video;
@@ -55,14 +57,22 @@ const VideoDetail = ({
 
     const { user } = useUserStore((state) => state);
 
-    const userInfo = user;
+    const [userInfo, setUserInfo] = useState(user);
+
+    useEffect(() => {
+        setUserInfo(user);
+    }, [user]);
 
     const [likeCount, setLikeCount] = useState<number>(() => video.likeCnt || 0);
+
+    const [commentCount, setCommentCount] = useState<number>(() => video.commentCnt || 0);
 
     const [likeDislikeStatus, setLikeDislikeStatus] = useState<VideoLikeStatus>({
         liked: false,
         disliked: false,
     });
+
+    const {} = useVideoLikeDislikeCommentCountQuery(video.id);
 
     const fetchLikeDislikeStatus = async () => {
         try {
@@ -79,15 +89,41 @@ const VideoDetail = ({
         }
     };
 
+    const clearState = () => {
+        setLikeCount(0);
+        setLikeDislikeStatus({ liked: false, disliked: false });
+    };
+
+    const queryClient = useQueryClient();
+
+    // Lấy dữ liệu từ hook API
+    const { data: videoCountData } = useVideoLikeDislikeCommentCountQuery(video.id, {
+        refetchInterval: 10000,
+    });
+
+    const serverLikeCount = videoCountData?.data?.likeCnt;
+    const serverCommentCount = videoCountData?.data?.commentCnt;
+
+    useEffect(() => {
+        if (serverLikeCount !== undefined) {
+            setLikeCount(serverLikeCount);
+        }
+        if (serverCommentCount !== undefined) {
+            setCommentCount(serverCommentCount);
+        }
+    }, [serverLikeCount, serverCommentCount]);
+
     useEffect(() => {
         // Check if user is logged in and has liked/disliked the video
         if (userInfo?.id ?? "") {
             // Fetch like/dislike status from API or local storage
             // For now, we will just set it to false
             fetchLikeDislikeStatus();
+        } else {
+            clearState();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userInfo?.id ?? ""]);
+    }, [userInfo?.id]);
 
     useEffect(() => {
         const calculatePosition = () => {
@@ -151,6 +187,7 @@ const VideoDetail = ({
             if (likeDislikeStatus.liked) {
                 setLikeDislikeStatus((prev) => ({ ...prev, liked: false }));
                 setLikeCount((prev) => Math.max(prev - 1, 0)); // Decrease like count
+
                 // call API to remove like
                 await unlikeVideo({
                     videoId: video.id,
@@ -177,6 +214,11 @@ const VideoDetail = ({
                     }),
                 ]);
             }
+
+            // Update video list like count in cache
+            queryClient.invalidateQueries({
+                queryKey: ["video-like-dislike-comment-count", video.id],
+            });
         } catch (error) {
             console.log("Error handling like click:", error);
             if (error instanceof HttpError) {
@@ -221,6 +263,10 @@ const VideoDetail = ({
                     }),
                 ]);
             }
+
+            queryClient.invalidateQueries({
+                queryKey: ["video-like-dislike-comment-count", video.id],
+            });
         } catch (error) {
             console.log("Error handling dislike click:", error);
             if (error instanceof HttpError) {
@@ -454,7 +500,7 @@ const VideoDetail = ({
                                         />
                                     </div>
                                     <span className="text-xs md:text-sm font-medium">
-                                        {formatNumberToSocialStyle(video.commentCnt)}
+                                        {formatNumberToSocialStyle(commentCount)}
                                     </span>
                                 </button>
 
@@ -508,6 +554,12 @@ const VideoDetail = ({
             </div>
         </div>
     );
+};
+
+VideoDetail.updateCommentCount = (videoId: number | string, queryClient: QueryClient) => {
+    queryClient.invalidateQueries({
+        queryKey: ["video-like-dislike-comment-count", videoId],
+    });
 };
 
 export default VideoDetail;

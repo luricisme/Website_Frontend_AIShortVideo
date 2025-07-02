@@ -38,3 +38,29 @@ export const formatNumberToSocialStyle = (number: number) => {
     return result;
 };
 
+export const formatTimeAgo = (date: string | Date) => {
+    const now = new Date();
+    const past = new Date(date);
+    const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+
+    if (diffInSeconds < 0 || isNaN(diffInSeconds)) {
+        return "just now";
+    }
+
+    const intervals = [
+        { label: "year", seconds: 31536000 }, // 365 * 24 * 60 * 60
+        { label: "month", seconds: 2592000 }, // 30 * 24 * 60 * 60
+        { label: "week", seconds: 604800 }, // 7 * 24 * 60 * 60
+        { label: "day", seconds: 86400 }, // 24 * 60 * 60
+        { label: "hour", seconds: 3600 }, // 60 * 60
+        { label: "minute", seconds: 60 },
+        { label: "second", seconds: 1 },
+    ];
+
+    for (const interval of intervals) {
+        const count = Math.floor(diffInSeconds / interval.seconds);
+        if (count >= 1) {
+            return `${count} ${interval.label}${count > 1 ? "s" : ""} ago`;
+        }
+    }
+};

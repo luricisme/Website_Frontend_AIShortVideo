@@ -1,10 +1,22 @@
 import { apiBasicResponseSchema, apiResponseSchema } from "@/types/api/common";
-import { videoLikeStatusResponseSchema, videoSchema } from "@/types/video.types";
+import {
+    videoLikeDislikeCommentCountSchema,
+    videoLikeStatusResponseSchema,
+    videoListResponseSchema,
+    videoSchema,
+} from "@/types/video.types";
 import http from "@/utils/api/client";
 
 const URL = "/video";
 
-export const getVideoById = (videoId: number) => {
+export const getVideos = () => {
+    return http.get(URL, {
+        requireAuth: false,
+        responseSchema: apiResponseSchema(videoListResponseSchema),
+    });
+};
+
+export const getVideoById = (videoId: number | string) => {
     return http.get(`${URL}/${videoId}`, {
         requireAuth: false,
         responseSchema: apiResponseSchema(videoSchema),
@@ -74,4 +86,32 @@ export const undislikeVideo = ({
         requireAuth: false,
         responseSchema: apiBasicResponseSchema,
     });
+};
+
+export const getVideoLikeDislikeCommentCount = (videoId: number | string) => {
+    return http.get(`${URL}/count/${videoId}`, {
+        requireAuth: false,
+        responseSchema: apiResponseSchema(videoLikeDislikeCommentCountSchema),
+    });
+};
+
+export const incrementVideoViewCount = async (videoId: number | string) => {
+    console.log(">>> Calling Next.js route handler for video:", videoId);
+
+    // Gọi route handler thay vì backend trực tiếp
+    const response = await fetch(`/api/videos/${videoId}/view`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to update view count: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log(">>> Route handler response:", result);
+
+    return result;
 };

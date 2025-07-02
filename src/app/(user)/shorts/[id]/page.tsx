@@ -2,51 +2,42 @@
 
 import toast from "react-hot-toast";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { Video } from "@/types/video.types";
-import { getVideoById } from "@/apiRequests/client";
 import ShortsViewer from "@/app/(user)/_components/shorts-viewer ";
+import { useVideoDetailQuery } from "@/queries/useVideo";
 
 const ShortsPage = () => {
     const router = useRouter();
     const params = useParams();
     const initialVideoId = params?.id ? String(params.id) : null;
+    const videoId = initialVideoId ? parseInt(initialVideoId, 10) : null;
 
-    const [video, setVideo] = useState<Video>();
+    const {
+        data: videoResponse,
+        isLoading,
+        isError,
+        error,
+        isSuccess,
+    } = useVideoDetailQuery(videoId, {
+        enabled: !!videoId,
+    });
 
-    const fetchVideoById = useCallback(
-        async (id: number) => {
-            try {
-                // console.log("Fetching video with ID:", id);
-                const response = await getVideoById(id);
-
-                // console.log("Video fetch response:", response);
-
-                if (response && response.data) {
-                    setVideo(response.data);
-                }
-            } catch (error) {
-                // console.log("Error fetching video by ID:", { error });
-                if (error instanceof Error) {
-                    toast.error(error.message);
-                    // redirect to home if video not found
-                    router.replace("/");
-                }
-            }
-        },
-        [router]
-    );
-
-    // Gọi hàm để lấy video ban đầu nếu có ID
     useEffect(() => {
-        if (initialVideoId) {
-            const id = parseInt(initialVideoId);
-            fetchVideoById(id);
-        }
-    }, [fetchVideoById, initialVideoId]);
+        if (isError && error && !isLoading) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Không thể tải video");
+            }
 
-    if (!video) {
+            // Redirect về home nếu video không tồn tại
+            router.replace("/");
+        }
+    }, [isError, error, router, isLoading]);
+
+    if (isLoading || !videoId) {
         return (
             <div
                 role="status"
@@ -75,6 +66,13 @@ const ShortsPage = () => {
             </div>
         );
     }
+
+    // Error state hoặc không có data
+    if (isError || !isSuccess || !videoResponse?.data) {
+        return null; // Component sẽ redirect trong useEffect
+    }
+
+    const video = videoResponse.data;
 
     return (
         <ShortsViewer

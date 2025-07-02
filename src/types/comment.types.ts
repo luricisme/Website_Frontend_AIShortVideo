@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Comment schema
 export const commentSchema = z.object({
-    id: z.number(),
+    id: z.number().or(z.string()), // Allow both number and string for id
     userId: z.number(),
     avatar: z.string().nullable().optional(),
     username: z.string(),

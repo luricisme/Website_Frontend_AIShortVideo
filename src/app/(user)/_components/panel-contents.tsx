@@ -1,15 +1,6 @@
 "use client";
 
-import { commentApiRequests } from "@/apiRequests/comment";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { envPublic } from "@/constants/env.public";
-import { Comment } from "@/types/comment.types";
-import { UserLocalStorage } from "@/types/user.types";
-import { Video } from "@/types/video.types";
-import { AvatarImage } from "@radix-ui/react-avatar";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
     FacebookShareButton,
     FacebookIcon,
@@ -21,129 +12,297 @@ import {
     EmailIcon,
 } from "react-share";
 
-export const CommentsPanel = ({ video }: { video: Video }) => {
-    const [comments, setComments] = useState<Comment[]>([]);
+import { Video } from "@/types/video.types";
+import { formatTimeAgo } from "@/utils/common";
+import { Button } from "@/components/ui/button";
+import { envPublic } from "@/constants/env.public";
+import { Textarea } from "@/components/ui/textarea";
+import { useUserStore } from "@/providers/user-store-provider";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSubmitCommentMutation, useVideoCommentQuery } from "@/queries/useVideo";
+
+export const CommentsPanel = React.memo(({ video }: { video: Video }) => {
     const [inputValue, setInputValue] = useState("");
-    const userInfo: UserLocalStorage | null =
-        typeof window !== "undefined"
-            ? (() => {
-                  const item = localStorage.getItem("user");
-                  return item ? (JSON.parse(item) as UserLocalStorage) : null;
-              })()
-            : null;
+    const [isPollingEnabled, setIsPollingEnabled] = useState(true);
+    const { user } = useUserStore((state) => state);
 
-    const fetchComments = useCallback(async () => {
-        try {
-            const response = await commentApiRequests.getComments(video.id);
-            if (response.status === 200) {
-                setComments(response.data.items);
-            }
-        } catch (error) {
-            console.error("Error fetching comments:", error);
-        }
-    }, [video.id]);
+    const {
+        data: comments = [],
+        isLoading,
+        isError,
+        error,
+        dataUpdatedAt = 0,
+    } = useVideoCommentQuery(video.id, {
+        polling: isPollingEnabled,
+        pollingInterval: 10000,
+    });
 
+    const submitCommentMutation = useSubmitCommentMutation();
+
+    const userInfo = useMemo(
+        () => ({
+            id: user?.id,
+            username: user?.username,
+            avatar: user?.avatar,
+        }),
+        [user?.id, user?.username, user?.avatar]
+    );
+
+    // Tạm dừng polling khi user đang typing
     useEffect(() => {
-        fetchComments();
-    }, [fetchComments]);
+        let timeoutId: NodeJS.Timeout | null = null;
 
-    return (
-        <div className="flex flex-col h-full">
-            {/* Header */}
-            <div className="px-4 pt-4 pb-2 border-b border-white/10">
-                <h3 className="text-lg font-medium text-white">{video.title}</h3>
-                <p className="text-sm text-gray-400">Comments for video #{video.id}</p>
-            </div>
+        if (inputValue.trim()) {
+            setIsPollingEnabled(false);
+            timeoutId = setTimeout(() => {
+                setIsPollingEnabled(true);
+            }, 5000);
+        } else {
+            setIsPollingEnabled(true);
+        }
 
-            {/* Comment list */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-                {comments.length > 0 ? (
-                    comments.map((comment) => (
-                        <div key={comment.id} className="flex gap-3">
-                            <Avatar>
-                                <AvatarImage
-                                    src={comment.avatar || "https://via.placeholder.com/40"}
-                                    alt={comment.username}
-                                    className="w-8 h-8 rounded-full"
-                                />
-                                <AvatarFallback className="w-8 h-8 rounded-full bg-gray-600">
-                                    {comment.username.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium">{comment.username}</span>
-                                    <span className="text-xs text-gray-400">
-                                        {new Date(comment.createdAt).toLocaleTimeString()}
-                                    </span>
-                                </div>
-                                <p className="text-sm text-gray-300">{comment.content}</p>
-                            </div>
-                        </div>
-                    ))
-                ) : (
-                    <p className="text-sm text-gray-500">
-                        No comments yet. Be the first to comment!
-                    </p>
-                )}
-            </div>
+        return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+        };
+    }, [inputValue]);
 
-            {/* Comment input */}
-            <div className="mt-auto border-t border-white/10 p-4">
-                <div className="flex items-start gap-3">
-                    <Avatar>
+    // Pause polling khi component không visible
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            setIsPollingEnabled(!document.hidden);
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, []);
+
+    // Memoize handler functions
+    const handleCommentSubmit = useCallback(async () => {
+        if (!inputValue.trim()) {
+            return;
+        }
+
+        if (!userInfo.id) {
+            console.error("User not logged in");
+            return;
+        }
+
+        submitCommentMutation.mutate(
+            {
+                userId: userInfo.id as number,
+                videoId: video.id,
+                content: inputValue.trim(),
+                avatar: userInfo.avatar || undefined,
+                username: userInfo.username || "Anonymous",
+            },
+            {
+                onSuccess: () => {
+                    setInputValue("");
+                    setIsPollingEnabled(true);
+                },
+            }
+        );
+    }, [inputValue, userInfo, video.id, submitCommentMutation]);
+
+    const handleClearInput = useCallback(() => {
+        setInputValue("");
+    }, []);
+
+    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setInputValue(e.target.value);
+    }, []);
+
+    const handleKeyDown = useCallback(
+        (e: React.KeyboardEvent) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleCommentSubmit();
+            }
+        },
+        [handleCommentSubmit]
+    );
+
+    const handleRetry = useCallback(() => {
+        setIsPollingEnabled(true);
+    }, []);
+
+    // Memoize formatted time để tránh re-render
+    const renderedComments = useMemo(() => {
+        return comments.map((comment) => {
+            const isNewComment = Date.now() - new Date(comment.createdAt).getTime() < 60000;
+            const timeAgo = formatTimeAgo(comment.createdAt);
+
+            return (
+                <div key={comment.id} className="flex gap-3">
+                    <Avatar className="flex-shrink-0">
                         <AvatarImage
-                            src={userInfo?.avatar || "https://via.placeholder.com/40"}
-                            alt={userInfo?.name || "User"}
+                            src={comment.avatar || "https://via.placeholder.com/40"}
+                            alt={comment.username}
                             className="w-8 h-8 rounded-full"
                         />
                         <AvatarFallback className="w-8 h-8 rounded-full bg-gray-600">
-                            {userInfo?.name ? userInfo.name.charAt(0).toUpperCase() : "U"}
+                            {comment.username.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-medium truncate">{comment.username}</span>
+                            <span className="text-xs text-gray-400 flex-shrink-0">{timeAgo}</span>
+                            {isNewComment && (
+                                <span className="text-xs bg-white text-black px-1 rounded flex-shrink-0">
+                                    new
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-sm text-gray-300 mt-1 break-words leading-relaxed">
+                            {comment.content}
+                        </p>
+                    </div>
+                </div>
+            );
+        });
+    }, [comments]);
+
+    // Debug re-render
+    console.log(">>> CommentsPanel render", {
+        videoId: video.id,
+        commentsCount: comments.length,
+        isPollingEnabled,
+        inputValue: inputValue.length,
+        dataUpdatedAt: new Date(dataUpdatedAt).toLocaleTimeString(),
+    });
+
+    return (
+        <div className="flex flex-col h-full min-h-0">
+            {/* Header - Fixed */}
+            <div className="flex-shrink-0 px-4 pt-4 pb-2 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className="text-lg font-medium text-white">{video.title}</h3>
+                        <p className="text-sm text-gray-400">Comments for video #{video.id}</p>
+                    </div>
+
+                    {/* Polling indicator  */}
+                    {process.env.NODE_ENV === "development" && (
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <div
+                                className={`w-2 h-2 rounded-full ${
+                                    isPollingEnabled ? "bg-green-500" : "bg-red-500"
+                                }`}
+                            />
+                            <span>{isPollingEnabled ? "Live" : "Paused"}</span>
+                            <span>({new Date(dataUpdatedAt).toLocaleTimeString()})</span>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Comment list - Scrollable */}
+            <div className="flex-1 min-h-0 overflow-y-auto">
+                <div className="px-4 py-4 space-y-4">
+                    {isLoading ? (
+                        <div className="flex justify-center items-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                        </div>
+                    ) : isError ? (
+                        <div className="text-center py-8">
+                            <p className="text-sm text-red-400">
+                                Error loading comments:{" "}
+                                {error instanceof Error ? error.message : "Unknown error"}
+                            </p>
+                            <Button
+                                onClick={handleRetry}
+                                className="mt-2 text-xs text-blue-400 underline"
+                            >
+                                Retry
+                            </Button>
+                        </div>
+                    ) : comments.length > 0 ? (
+                        <>{renderedComments}</>
+                    ) : (
+                        <div className="text-center py-8">
+                            <p className="text-sm text-gray-500">
+                                No comments yet. Be the first to comment!
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Comment input - Fixed at bottom */}
+            <div className="flex-shrink-0 border-t border-white/10 p-4 bg-sidebar/90">
+                <div className="flex items-start gap-3 mb-3">
+                    <Avatar className="flex-shrink-0">
+                        <AvatarImage
+                            src={userInfo.avatar || undefined}
+                            alt={userInfo.username || "User"}
+                            className="w-8 h-8 rounded-full"
+                        />
+                        <AvatarFallback className="w-8 h-8 rounded-full bg-gray-600">
+                            {userInfo.username ? userInfo.username.charAt(0).toUpperCase() : "U"}
                         </AvatarFallback>
                     </Avatar>
 
-                    <Textarea
-                        style={{ resize: "none" }}
-                        className="max-h-24 flex-1"
-                        rows={1}
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        placeholder="Enter your comment here..."
-                    />
+                    <div className="flex-1 min-w-0">
+                        <Textarea
+                            style={{ resize: "none" }}
+                            className="w-full min-h-[40px] max-h-24"
+                            rows={1}
+                            value={inputValue}
+                            onChange={handleInputChange}
+                            placeholder="Enter your comment here..."
+                            disabled={submitCommentMutation.isPending}
+                            onKeyDown={handleKeyDown}
+                        />
+                    </div>
                 </div>
 
-                <div className="flex justify-end gap-2 mt-2">
+                <div className="flex justify-end gap-2">
                     <Button
                         variant={"ghost"}
+                        size="sm"
                         className="rounded-full"
-                        onClick={() => setInputValue("")}
+                        onClick={handleClearInput}
+                        disabled={submitCommentMutation.isPending}
                     >
                         <span className="text-sm">Cancel</span>
                     </Button>
-                    <Button className="rounded-full">
-                        <span className="text-sm">Comment</span>
+                    <Button
+                        size="sm"
+                        className="rounded-full"
+                        onClick={handleCommentSubmit}
+                        disabled={submitCommentMutation.isPending || !inputValue.trim()}
+                    >
+                        <span className="text-sm">
+                            {submitCommentMutation.isPending ? "Submitting..." : "Comment"}
+                        </span>
                     </Button>
                 </div>
             </div>
         </div>
     );
-};
+});
+
+CommentsPanel.displayName = "CommentsPanel";
 
 export const DetailsPanel = ({ video }: { video: Video }) => {
     return (
         <div className="flex flex-col gap-4 p-4">
             <div>
-                <h3 className="text-lg font-medium mb-2">Thông tin chi tiết</h3>
+                <h3 className="text-lg font-medium mb-2">Video Details</h3>
                 <div className="text-sm text-gray-300 space-y-2">
                     <p>
-                        <span className="text-gray-400">Tiêu đề:</span> {video.title}
+                        <span className="text-gray-400">Title:</span> {video.title}
                     </p>
                     <p>
-                        <span className="text-gray-400">Lượt xem:</span>{" "}
+                        <span className="text-gray-400">View count:</span>{" "}
                         {video.viewCnt.toLocaleString()}
                     </p>
                     <p>
-                        <span className="text-gray-400">Thời lượng:</span>{" "}
+                        <span className="text-gray-400">Duration:</span>{" "}
                         {Math.floor(video.length / 60)}:
                         {(video.length % 60).toString().padStart(2, "0")}
                     </p>
@@ -154,12 +313,12 @@ export const DetailsPanel = ({ video }: { video: Video }) => {
             </div>
 
             <div>
-                <h3 className="text-lg font-medium mb-2">Mô tả</h3>
+                <h3 className="text-lg font-medium mb-2">Description</h3>
                 <p className="text-sm text-gray-300">{video.script}</p>
             </div>
 
             <div>
-                <h3 className="text-lg font-medium mb-2">Tác giả</h3>
+                <h3 className="text-lg font-medium mb-2">Author</h3>
                 <div className="flex items-center gap-3">
                     <Avatar>
                         <AvatarImage
@@ -186,6 +345,7 @@ export const DetailsPanel = ({ video }: { video: Video }) => {
 export const SharePanel = ({ video }: { video: Video }) => {
     const [copied, setCopied] = useState(false);
     const videoUrl = `${envPublic.NEXT_PUBLIC_URL}/shorts/${video.id}`;
+    // const videoUrl = "https://dantri.com.vn/";
 
     const handleCopy = () => {
         navigator.clipboard.writeText(videoUrl).then(() => {

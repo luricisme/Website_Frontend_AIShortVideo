@@ -1,3 +1,5 @@
+"use client";
+
 import { Suspense } from "react";
 
 import VideosSkeleton from "./_components/videos-skeleton";

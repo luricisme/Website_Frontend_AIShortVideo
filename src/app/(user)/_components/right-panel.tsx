@@ -85,8 +85,8 @@ const RightPanel = ({
                     transition-all duration-500 ease-in-out
                     ${
                         shouldShowAsModal
-                            ? "inset-x-0 bottom-0 rounded-t-2xl w-full max-h-[85vh]"
-                            : "top-[80px] bottom-0 w-1/3 right-0"
+                            ? "inset-x-0 bottom-0 rounded-t-2xl w-full h-[85vh] flex flex-col"
+                            : "top-[80px] bottom-0 w-1/3 right-0 flex flex-col"
                     }
                     ${
                         isVisible
@@ -103,7 +103,8 @@ const RightPanel = ({
                     ...(shouldShowAsModal ? {} : { right: `${rightPosition}px` }),
                 }}
             >
-                <div className="sticky top-0 flex justify-between items-center p-4 border-b border-white/10 bg-sidebar/90 backdrop-blur-sm">
+                {/* Header - Fixed */}
+                <div className="flex-shrink-0 flex justify-between items-center p-4 border-b border-white/10 bg-sidebar/90 backdrop-blur-sm">
                     <h2 className="text-xl font-semibold text-white">{title}</h2>
                     <button
                         onClick={onClose}
@@ -113,14 +114,16 @@ const RightPanel = ({
                     </button>
                 </div>
 
+                {/* Modal handle indicator */}
                 {shouldShowAsModal && (
-                    <div className="flex justify-center py-1">
+                    <div className="flex-shrink-0 flex justify-center py-2 border-b border-white/10">
                         <div className="w-12 h-1 rounded-full bg-white/20" />
                     </div>
                 )}
 
-                <div className="overflow-y-auto" style={{ height: "calc(100% - 4rem)" }}>
-                    <div className="text-white flex flex-col h-full">{children}</div>
+                {/* Content - Scrollable */}
+                <div className="flex-1 min-h-0 overflow-hidden">
+                    <div className="text-white h-full">{children}</div>
                 </div>
             </div>
         </>

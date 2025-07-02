@@ -1,4 +1,4 @@
-import { apiResponseSchema } from "@/types/api/common";
+import { apiBasicResponseSchema, apiResponseSchema } from "@/types/api/common";
 import { commentListResponseSchema } from "@/types/comment.types";
 import http from "@/utils/api/client";
 
@@ -11,6 +11,27 @@ const getComments = (videoId: number) => {
     });
 };
 
+const commentVideo = ({
+    videoId,
+    userId,
+    content,
+}: {
+    videoId: number | string;
+    userId: number | string;
+    content: string;
+}) => {
+    return http.post(`${URL}`, {
+        body: {
+            videoId,
+            userId,
+            content,
+        },
+        requireAuth: false,
+        responseSchema: apiBasicResponseSchema,
+    });
+};
+
 export const commentApiRequests = {
     getComments: getComments,
+    commentVideo: commentVideo,
 };
