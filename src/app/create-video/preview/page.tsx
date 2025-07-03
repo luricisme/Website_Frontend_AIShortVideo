@@ -204,7 +204,7 @@ export default function VideoPreviewCreator () {
                                     <Player
                                         component={VideoComposition}
                                         inputProps={{ videoData }}
-                                        durationInFrames={1800} // 30 giây @ 60fps
+                                        durationInFrames={1000} // 30 giây @ 60fps
                                         compositionWidth={540}
                                         compositionHeight={960}
                                         fps={60}

@@ -7,7 +7,7 @@ import React from "react";
 
 export default function VideoComposition({ videoData }: { videoData: VideoData }) {
     const frame = useCurrentFrame();
-    const { durationInFrames } = useVideoConfig();
+    const { fps } = useVideoConfig();
 
     if (!videoData?.videoImageData || !videoData?.videoScriptData) {
         return (
@@ -26,33 +26,79 @@ export default function VideoComposition({ videoData }: { videoData: VideoData }
     const script = videoData.videoScriptData.script;
     const captionData = videoData.videoCaptionData;
     const audioUrl = videoData.videoAudioData?.selectedAudioFiles?.[0]?.url;
+    const audioSpeed = Number(videoData.videoAudioData?.speed) || 1.0;
 
-    // Chia script thành các đoạn nhỏ để hiển thị theo từng hình ảnh
+    // Chia script thành các câu
     const sentences = script.split('.').filter(s => s.trim().length > 0);
-    const framesPerImage = Math.floor(durationInFrames / selectedImages.length);
 
-    // Xác định hình ảnh hiện tại
-    const currentImageIndex = Math.floor(frame / framesPerImage);
-    const currentImage = selectedImages[Math.min(currentImageIndex, selectedImages.length - 1)];
+    // Tính toán thời gian dựa trên tốc độ audio
+    // Công thức: ~3 giây cho 10 từ ở tốc độ 1.0
+    const calculateReadingTime = (text: string, speed: number): number => {
+        const wordCount = text.trim().split(/\s+/).length;
+        const baseTimePerWord = 0.3; // 3s cho 10 từ = 0.3s/từ
+        const adjustedTime = (baseTimePerWord * wordCount) / speed;
+        return Math.max(adjustedTime, 1); // Tối thiểu 1 giây
+    };
 
-    // Xác định câu hiện tại
-    const currentSentenceIndex = Math.floor((frame / durationInFrames) * sentences.length);
-    const currentSentence = sentences[Math.min(currentSentenceIndex, sentences.length - 1)];
+    // Tạo timeline cho từng câu
+    const sentenceTimeline = sentences.map((sentence, index) => {
+        const readingTime = calculateReadingTime(sentence, audioSpeed);
+        const startTime = sentences.slice(0, index).reduce((acc, prevSentence) => {
+            return acc + calculateReadingTime(prevSentence, audioSpeed);
+        }, 0);
 
-    // Animation cho hình ảnh
+        return {
+            text: sentence.trim() + '.',
+            startTime,
+            endTime: startTime + readingTime,
+            duration: readingTime
+        };
+    });
+
+    // Tính tổng thời gian audio
+    const totalAudioDuration = sentenceTimeline[sentenceTimeline.length - 1]?.endTime || 0;
+    const currentTimeInSeconds = frame / fps;
+
+    // Tìm câu hiện tại dựa trên thời gian
+    const currentSentenceData = sentenceTimeline.find(
+        item => currentTimeInSeconds >= item.startTime && currentTimeInSeconds < item.endTime
+    );
+
+    // Tính toán hình ảnh hiện tại
+    // Chia đều hình ảnh theo thời gian video
+    const timePerImage = totalAudioDuration / selectedImages.length;
+    const currentImageIndex = Math.min(
+        Math.floor(currentTimeInSeconds / timePerImage),
+        selectedImages.length - 1
+    );
+    const currentImage = selectedImages[currentImageIndex];
+
+    // Animation cho hình ảnh (smooth transition)
+    // const imageTransitionDuration = 1; // 1 giây cho transition
+    const imageStartTime = currentImageIndex * timePerImage;
+    const imageProgress = (currentTimeInSeconds - imageStartTime) / timePerImage;
+
     const imageOpacity = interpolate(
-        frame % framesPerImage,
-        [0, 30, framesPerImage - 30, framesPerImage],
+        imageProgress,
+        [0, 0.1, 0.9, 1],
         [0, 1, 1, 0],
         { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
     );
 
     const scale = interpolate(
-        frame % framesPerImage,
-        [0, framesPerImage],
-        [1, 1.1],
+        imageProgress,
+        [0, 1],
+        [1, 1.05],
         { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
     );
+
+    // Animation cho caption
+    const captionOpacity = currentSentenceData ? interpolate(
+        currentTimeInSeconds,
+        [currentSentenceData.startTime, currentSentenceData.startTime + 0.3],
+        [0, 1],
+        { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+    ) : 0;
 
     return (
         <AbsoluteFill style={{ backgroundColor: '#000' }}>
@@ -70,7 +116,7 @@ export default function VideoComposition({ videoData }: { videoData: VideoData }
                         height: '100%',
                         opacity: imageOpacity,
                         transform: `scale(${scale})`,
-                        transition: 'all 0.5s ease-in-out',
+                        transition: 'opacity 0.3s ease-in-out',
                     }}
                 >
                     <Img
@@ -96,16 +142,17 @@ export default function VideoComposition({ videoData }: { videoData: VideoData }
                 </div>
             )}
 
-            {/* Phụ đề */}
-            {currentSentence && captionData && (
-                <CaptionDisplay
-                    text={currentSentence.trim() + '.'}
-                    // style={captionData.style}
-                    position={captionData.position}
-                    fontSize={captionData.fontSize}
-                    color={captionData.color}
-                    background={captionData.background}
-                />
+            {/* Phụ đề đồng bộ với audio */}
+            {currentSentenceData && captionData && (
+                <div style={{ opacity: captionOpacity }}>
+                    <CaptionDisplay
+                        text={currentSentenceData.text}
+                        position={captionData.position}
+                        fontSize={captionData.fontSize}
+                        color={captionData.color}
+                        background={captionData.background}
+                    />
+                </div>
             )}
 
             {/* Hashtag */}
@@ -124,6 +171,27 @@ export default function VideoComposition({ videoData }: { videoData: VideoData }
                     {videoData.videoScriptData.tag}
                 </div>
             )}
+
+            {/*/!* Debug info (có thể xóa trong production) *!/*/}
+            {/*{process.env.NODE_ENV === 'development' && (*/}
+            {/*    <div*/}
+            {/*        style={{*/}
+            {/*            position: 'absolute',*/}
+            {/*            top: '5%',*/}
+            {/*            left: '5%',*/}
+            {/*            color: '#fff',*/}
+            {/*            fontSize: '0.8rem',*/}
+            {/*            backgroundColor: 'rgba(0,0,0,0.7)',*/}
+            {/*            padding: '5px',*/}
+            {/*            borderRadius: '5px',*/}
+            {/*        }}*/}
+            {/*    >*/}
+            {/*        <div>Time: {currentTimeInSeconds.toFixed(1)}s</div>*/}
+            {/*        <div>Speed: {audioSpeed}x</div>*/}
+            {/*        <div>Image: {currentImageIndex + 1}/{selectedImages.length}</div>*/}
+            {/*        <div>Sentence: {currentSentenceData ? sentences.indexOf(currentSentenceData.text.replace('.', '')) + 1 : 0}/{sentences.length}</div>*/}
+            {/*    </div>*/}
+            {/*)}*/}
         </AbsoluteFill>
     );
 };
