@@ -14,7 +14,7 @@ export const logout = () => {
 
 export const getProfile = (userId: string | number) => {
     return http.get(`${URL}/${userId}`, {
-        requireAuth: true,
+        requireAuth: false,
         responseSchema: apiResponseSchema(userSchema),
     });
 };
