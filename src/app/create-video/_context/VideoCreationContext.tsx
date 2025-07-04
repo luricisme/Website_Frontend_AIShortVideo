@@ -1,8 +1,8 @@
-// context/VideoCreationContext.tsx
+// VideoCreationContext.tsx
 'use client';
 
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { VideoCreationState, ScriptData, AudioData, CaptionData, GeneratedImage } from "../_types/video";
+import {VideoCreationState, ScriptData, AudioData, CaptionData, GeneratedImage, FetchedData} from "../_types/video";
 
 type VideoAction =
     | { type: 'SET_SCRIPT_DATA'; payload: Partial<ScriptData> }
@@ -13,7 +13,7 @@ type VideoAction =
     | { type: 'SET_CAPTION_DATA'; payload: Partial<CaptionData> }
     | { type: 'SET_GENERATING'; payload: boolean }
     | { type: 'TOGGLE_IMAGE_SELECTION'; payload: number }
-    | { type: 'SET_FETCHED_DATA'; payload: string | null }
+    | { type: 'SET_FETCHED_DATA'; payload: FetchedData | null }
     | { type: 'SET_FETCHING_DATA'; payload: boolean };
 
 const initialState: VideoCreationState = {
@@ -79,7 +79,8 @@ function videoReducer(state: VideoCreationState, action: VideoAction): VideoCrea
         case 'SET_GENERATED_IMAGES':
             return {
                 ...state,
-                generatedImages: action.payload
+                generatedImages: action.payload,
+                selectedImages: [] // Reset selection when new images are generated
             };
         case 'SET_AUDIO_DATA':
             return {

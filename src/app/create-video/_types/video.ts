@@ -1,3 +1,5 @@
+// video.ts
+
 export interface ScriptData {
     topic: string;
     dataSource: string;
@@ -32,6 +34,12 @@ export interface CaptionData {
     background: boolean;
 }
 
+export interface FetchedData {
+    lang: string;
+    source: string;
+    text: string;
+}
+
 export interface VideoCreationState {
     scriptData: ScriptData;
     generatedScript: string;
@@ -40,10 +48,81 @@ export interface VideoCreationState {
     audioData: AudioData;
     captionData: CaptionData;
     isGenerating: boolean;
-    // New states for data fetching
-    fetchedData: string | null;
+    fetchedData: FetchedData | null;
     isFetchingData: boolean;
 }
+
+export interface VideoScriptData {
+    script: string;
+    category: string;
+    tag: string;
+    language: string;
+}
+
+export interface VideoImageData {
+    generatedImages: GeneratedImage[];
+    selectedImages: number[];
+}
+
+export interface VideoAudioData {
+    selectedAudioFiles: Array<{
+        id?: string;
+        name: string;
+        url: string;
+        type: 'generated' | 'uploaded' | 'recorded';
+        voiceType?: string;
+        speed?: string;
+        duration?: number;
+        isSelected?: boolean;
+    }>;
+    audioFiles?: Array<{
+        id: string;
+        name: string;
+        url: string;
+        type: 'generated' | 'uploaded' | 'recorded';
+        voiceType?: string;
+        speed?: string;
+        duration?: number;
+        isSelected: boolean;
+    }>;
+    voiceType?: string;
+    speed?: string;
+    customText?: string;
+}
+
+export interface VideoData {
+    videoScriptData: VideoScriptData;
+    videoImageData: VideoImageData;
+    videoAudioData: VideoAudioData;
+    videoCaptionData: CaptionData;
+}
+
+// Định nghĩa type cho category
+export type VideoCategory =
+    | "Education"
+    | "Entertainment"
+    | "Technology"
+    | "Travel"
+    | "Fitness & Health"
+    | "Beauty & Fashion"
+    | "Gaming"
+    | "Business & Finance"
+    | "Food & Cooking"
+    | "Environment";
+
+// Dùng type này cho map
+export const categoryTagMap: Record<VideoCategory, string[]> = {
+    Education: ["#StudyTips", "#ELearning", "#Science"],
+    Entertainment: ["#Comedy", "#Music", "#Dance"],
+    Technology: ["#AI", "#Coding", "#Gadgets"],
+    Travel: ["#Vlog", "#Adventure", "#FoodTour"],
+    "Fitness & Health": ["#Workout", "#Yoga", "#Nutrition"],
+    "Beauty & Fashion": ["#Makeup", "#Outfit", "#Skincare"],
+    Gaming: ["#Gameplay", "#Walkthrough", "#Review"],
+    "Business & Finance": ["#Startup", "#Investing", "#Marketing"],
+    "Food & Cooking": ["#Recipe", "#StreetFood", "#Baking"],
+    Environment: ["#ClimateChange", "#Sustainability", "#Nature"]
+};
 
 export interface StepProps {
     currentStep: number;

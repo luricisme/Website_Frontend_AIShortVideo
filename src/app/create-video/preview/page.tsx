@@ -1,228 +1,425 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-    ArrowLeft, ArrowRight, Play, Pause, Download,
-    Mic, Settings, FileText, Palette
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Player } from '@remotion/player';
+import { AbsoluteFill, Audio, Img, useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import StepNavigation from '../_components/StepNavigation';
-import { useVideoCreation } from '../_context/VideoCreationContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {ArrowLeft, ArrowRight, BookOpenCheck, FileText, Images, Pencil} from 'lucide-react';
+import StepNavigation from "@/app/create-video/_components/StepNavigation";
+import Image from "next/image";
+import {useRouter} from "next/navigation";
+import {
+    loadVideoImageData,
+    loadVideoAudioData,
+    loadVideoScriptData,
+    loadVideoCaptionData,
+    saveVideoCaptionData
+} from '../_utils/videoStorage';
+import { VideoData } from '../_types/video';
 
-export default function PreviewPage() {
-    const router = useRouter();
-    const { state } = useVideoCreation();
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [currentTime] = useState(0);
-    const [isExporting] = useState(false);
-    const [exportProgress] = useState(0);
 
-    const totalDuration = 150; // 2:30 in seconds
-    const progress = (currentTime / totalDuration) * 100;
+// Component hiển thị phụ đề với animation
+const CaptionDisplay = ({ text, position, fontSize, color, background }: {
+    text: string;
+    // style: string;
+    position: string;
+    fontSize: string;
+    color: string;
+    background: boolean;
+}) => {
+    const frame = useCurrentFrame();
+    // const { fps } = useVideoConfig();
 
-    const handlePlayPause = () => {
-        setIsPlaying(!isPlaying);
-        // In real app, this would control actual video playback
+    // Animation cho phụ đề xuất hiện từ từ
+    const opacity = interpolate(frame, [0, 30], [0, 1], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
+    });
+
+    const getFontSize = () => {
+        switch (fontSize) {
+            case 'small': return '0.8rem';
+            case 'large': return '1.2rem';
+            default: return '1rem';
+        }
     };
 
-    // const handleExport = () => {
-    //     setIsExporting(true);
-    //     setExportProgress(0);
-    //
-    //     // Simulate export progress
-    //     const interval = setInterval(() => {
-    //         setExportProgress(prev => {
-    //             if (prev >= 100) {
-    //                 clearInterval(interval);
-    //                 setIsExporting(false);
-    //                 // Show success message or download
-    //                 alert('Video đã được xuất thành công!');
-    //                 return 100;
-    //             }
-    //             return prev + 10;
-    //         });
-    //     }, 500);
-    // };
-
-    const handleEdit = () => {
-        router.push('/create-video/edit');
-    };
-
-    const handleBack = () => {
-        router.push('/create-video/caption');
-    };
-
-    const handleNext = () => {
-        router.push('/create-video/export');
-    }
-
-    const formatTime = (seconds: number) => {
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    const getPosition = () => {
+        switch (position) {
+            case 'top': return { top: '10%', left: '50%', transform: 'translateX(-50%)' };
+            case 'bottom': return { bottom: '10%', left: '50%', transform: 'translateX(-50%)' };
+            case 'center': return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+            default: return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+        }
     };
 
     return (
-        <div className="min-h-screen py-20 px-4">
-            <div className="max-w-7xl mx-auto">
+        <div
+            style={{
+                position: 'absolute',
+                ...getPosition(),
+                color: color,
+                fontSize: getFontSize(),
+                fontWeight: 'bold',
+                textAlign: 'center',
+                opacity,
+                backgroundColor: background ? 'rgba(0,0,0,0.7)' : 'transparent',
+                borderRadius: background ? '10px' : '0',
+                padding: background ? '8px 12px' : '0',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                fontFamily: 'Arial, sans-serif',
+                lineHeight: '1.4',
+                maxWidth: '90%',
+            }}
+        >
+            {text}
+        </div>
+    );
+};
+
+// Component chính của video
+const VideoComposition = ({ videoData }: { videoData: VideoData }) => {
+    const frame = useCurrentFrame();
+    const { durationInFrames } = useVideoConfig();
+
+    if (!videoData?.videoImageData || !videoData?.videoScriptData) {
+        return (
+            <AbsoluteFill style={{ backgroundColor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ color: 'white', fontSize: '1.5rem' }}>Loading video data...</div>
+            </AbsoluteFill>
+        );
+    }
+
+    const images = videoData.videoImageData.generatedImages;
+    const selectedImageIds = videoData.videoImageData.selectedImages;
+    const selectedImages = selectedImageIds.map(id =>
+        images.find(img => img.id === id)
+    ).filter(Boolean);
+
+    const script = videoData.videoScriptData.script;
+    const captionData = videoData.videoCaptionData;
+    const audioUrl = videoData.videoAudioData?.selectedAudioFiles?.[0]?.url;
+
+    // Chia script thành các đoạn nhỏ để hiển thị theo từng hình ảnh
+    const sentences = script.split('.').filter(s => s.trim().length > 0);
+    const framesPerImage = Math.floor(durationInFrames / selectedImages.length);
+
+    // Xác định hình ảnh hiện tại
+    const currentImageIndex = Math.floor(frame / framesPerImage);
+    const currentImage = selectedImages[Math.min(currentImageIndex, selectedImages.length - 1)];
+
+    // Xác định câu hiện tại
+    const currentSentenceIndex = Math.floor((frame / durationInFrames) * sentences.length);
+    const currentSentence = sentences[Math.min(currentSentenceIndex, sentences.length - 1)];
+
+    // Animation cho hình ảnh
+    const imageOpacity = interpolate(
+        frame % framesPerImage,
+        [0, 30, framesPerImage - 30, framesPerImage],
+        [0, 1, 1, 0],
+        { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+    );
+
+    const scale = interpolate(
+        frame % framesPerImage,
+        [0, framesPerImage],
+        [1, 1.1],
+        { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+    );
+
+    return (
+        <AbsoluteFill style={{ backgroundColor: '#000' }}>
+            {/* Audio */}
+            {audioUrl && (
+                <Audio src={audioUrl} />
+            )}
+
+            {/* Hình ảnh với hiệu ứng */}
+            {currentImage && (
+                <div
+                    style={{
+                        position: 'absolute',
+                        width: '100%',
+                        height: '100%',
+                        opacity: imageOpacity,
+                        transform: `scale(${scale})`,
+                        transition: 'all 0.5s ease-in-out',
+                    }}
+                >
+                    <Img
+                        src={currentImage.url}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                        }}
+                    />
+
+                    {/* Overlay gradient */}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            background: 'linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0))',
+                        }}
+                    />
+                </div>
+            )}
+
+            {/* Phụ đề */}
+            {currentSentence && captionData && (
+                <CaptionDisplay
+                    text={currentSentence.trim() + '.'}
+                    // style={captionData.style}
+                    position={captionData.position}
+                    fontSize={captionData.fontSize}
+                    color={captionData.color}
+                    background={captionData.background}
+                />
+            )}
+
+            {/* Hashtag */}
+            {videoData.videoScriptData.tag && (
+                <div
+                    style={{
+                        position: 'absolute',
+                        bottom: '5%',
+                        right: '5%',
+                        color: '#fff',
+                        fontSize: '1.2rem',
+                        fontWeight: 'bold',
+                        opacity: 0.8,
+                    }}
+                >
+                    {videoData.videoScriptData.tag}
+                </div>
+            )}
+        </AbsoluteFill>
+    );
+};
+
+const VideoPreviewCreator = () => {
+    const [videoData, setVideoData] = useState<VideoData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const router = useRouter();
+
+    // Load dữ liệu từ localStorage
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+
+                // Load all data from localStorage
+                const scriptData = loadVideoScriptData();
+                const imageData = loadVideoImageData();
+                const audioData = loadVideoAudioData();
+                const captionData = loadVideoCaptionData();
+
+                // Check if essential data exists
+                if (!scriptData || !imageData) {
+                    throw new Error('Required video data not found in localStorage');
+                }
+
+                // Combine all data
+                const combinedData = {
+                    videoScriptData: scriptData,
+                    videoImageData: imageData,
+                    videoAudioData: audioData || { selectedAudioFiles: [] },
+                    videoCaptionData: captionData || {
+                        style: "classic",
+                        position: "center",
+                        fontSize: "large",
+                        color: "#cdab8f",
+                        background: false
+                    }
+                };
+
+                setVideoData(combinedData);
+            } catch (err) {
+                console.error('Error loading video data:', err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadData();
+    }, []);
+
+    const handleContinue = () => {
+        if (videoData?.videoCaptionData) {
+            saveVideoCaptionData(videoData.videoCaptionData);
+        }
+        router.push('/create-video/export');
+    };
+
+    const handleBack = () => {
+        if (videoData?.videoCaptionData) {
+            saveVideoCaptionData(videoData.videoCaptionData);
+        }
+        router.push('/create-video/caption');
+    };
+
+    const handleEdit = () => {
+        router.push('/create-video/edit');
+    }
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-black py-20 px-4 flex items-center justify-center">
+                <div className="text-white text-xl">Loading video data...</div>
+            </div>
+        );
+    }
+
+    if (error || !videoData) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-black py-20 px-4 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-red-400 text-xl mb-4">
+                        {error || 'Failed to load video data'}
+                    </div>
+                    <Button onClick={() => router.push('/create-video')}>
+                        Go Back to Create Video
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-black py-20 px-4">
+            <div className="max-w-6xl mx-auto">
                 <StepNavigation />
-                <Card className="max-w-5xl mx-auto">
-                    <CardHeader className="text-center">
-                        <CardTitle className="text-2xl font-bold">Preview Video</CardTitle>
-                        <CardDescription>
-                            Preview your video before exporting
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        {/* Video Preview */}
-                        <div className="relative bg-black rounded-lg aspect-video overflow-hidden group">
-                            {/* Mock video background with gradient */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900" />
 
-                            {/* Play overlay */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="text-center">
-                                    <div
-                                        className="w-20 h-20 mx-auto mb-4 text-black bg-white bg-opacity-20 rounded-full flex items-center justify-center cursor-pointer hover:bg-opacity-30 transition-all duration-300 backdrop-blur-sm"
-                                        onClick={handlePlayPause}
-                                    >
-                                        {isPlaying ? (
-                                            <Pause className="w-8 h-8" />
-                                        ) : (
-                                            <Play className="w-8 h-8 ml-1" />
-                                        )}
-                                    </div>
-                                    <p className="text-lg font-medium">
-                                        {isPlaying ? 'Playing...' : 'Click to preview'}
-                                    </p>
-                                    <p className="text-sm opacity-70">
-                                        Duration: {formatTime(totalDuration)}
-                                    </p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Video Info */}
+                    <div className="space-y-6">
+                        {/* Thông tin cơ bản */}
+                        <Card className="bg-neutral-900">
+                            <CardHeader>
+                                <CardTitle className="text-white flex items-center">
+                                    <BookOpenCheck className={"me-2 text-sky-500"}/>
+                                    Thông tin Video
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="text-neutral-300 space-y-3">
+                                <div>
+                                    <strong>Thể loại:</strong> {videoData.videoScriptData?.category || 'N/A'}
                                 </div>
-                            </div>
+                                <div>
+                                    <strong>Hashtag:</strong> {videoData.videoScriptData?.tag || 'N/A'}
+                                </div>
+                                <div>
+                                    <strong>Số hình ảnh:</strong> {videoData.videoImageData?.selectedImages?.length || 0}
+                                </div>
+                                <div>
+                                    <strong>Giọng đọc:</strong> {videoData.videoAudioData?.selectedAudioFiles?.[0]?.voiceType || 'N/A'}
+                                </div>
+                                <div>
+                                    <strong>Tốc độ:</strong> {videoData.videoAudioData?.selectedAudioFiles?.[0]?.speed || '1'}x
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                            {/* Progress bar (only show when playing) */}
-                            {isPlaying && (
-                                <div className="absolute bottom-4 left-4 right-4">
-                                    <div className="bg-black bg-opacity-50 rounded-lg p-3 backdrop-blur-sm">
-                                        <div className="flex items-center space-x-3 text-white text-sm">
-                                            <span>{formatTime(currentTime)}</span>
-                                            <div className="flex-1 h-1 bg-gray-600 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-white transition-all duration-300"
-                                                    style={{ width: `${progress}%` }}
+                        {/* Hình ảnh đã chọn */}
+                        <Card className="bg-neutral-900">
+                            <CardHeader>
+                                <CardTitle className="text-white flex items-center">
+                                    <Images className={"me-2 text-pink-300"} />
+                                    Hình ảnh
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex justify-evenly gap-4">
+                                    {videoData.videoImageData?.selectedImages?.map((imageId, index) => {
+                                        const image = videoData.videoImageData.generatedImages.find(img => img.id === imageId);
+                                        return image ? (
+                                            <div key={imageId} className="relative">
+                                                <Image
+                                                    width={180}
+                                                    height={200}
+                                                    src={image.url}
+                                                    alt={`Image ${imageId}`}
+                                                    className="object-cover rounded"
                                                 />
+                                                <div className="absolute top-2 left-2 bg-neutral-800 text-white text-xs py-1 px-2 rounded-full">
+                                                    {index + 1}
+                                                </div>
                                             </div>
-                                            <span>{formatTime(totalDuration)}</span>
-                                        </div>
-                                    </div>
+                                        ) : null;
+                                    })}
                                 </div>
-                            )}
-                        </div>
+                            </CardContent>
+                        </Card>
 
-                        {/* Video Details */}
-                        <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-                            <h3 className="text-lg font-semibold text-gray-900">Video Details</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-3">
-                                    <div className="flex items-center space-x-2">
-                                        <FileText className="w-4 h-4 text-gray-500" />
-                                        <span className="text-sm text-gray-600">Topic:</span>
-                                        <Badge variant="secondary">{state.scriptData?.topic || 'Not yet'}</Badge>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <Mic className="w-4 h-4 text-gray-500" />
-                                        <span className="text-sm text-gray-600">Voice:</span>
-                                        <Badge variant="secondary">
-                                            {state.audioData?.voiceType === 'female-young' ? 'Female - Young' :
-                                                state.audioData?.voiceType === 'female-mature' ? 'Female - Mature' :
-                                                    state.audioData?.voiceType === 'male-young' ? 'Male - Young' :
-                                                        state.audioData?.voiceType === 'male-mature' ? 'Male - Mature' :
-                                                            state.audioData?.voiceType || 'Child'}
-                                        </Badge>
-                                    </div>
+                        {/* Script preview */}
+                        <Card className="bg-neutral-900">
+                            <CardHeader>
+                                <CardTitle className="text-white flex items-center">
+                                    <FileText className={"me-2 text-emerald-500"} />
+                                    Script
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-neutral-300 text-sm overflow-y-auto max-h-48">
+                                    {videoData.videoScriptData?.script || 'No script available'}
                                 </div>
-                                <div className="space-y-3">
-                                    <div className="flex items-center space-x-2">
-                                        <Palette className="w-4 h-4 text-gray-500" />
-                                        <span className="text-sm text-gray-600">Caption style:</span>
-                                        <Badge variant="secondary">
-                                            {state.captionData?.style === 'modern' ? 'Modern' :
-                                                state.captionData?.style === 'classic' ? 'Classic' :
-                                                    state.captionData?.style === 'minimal' ? 'Minimal' :
-                                                        state.captionData?.style === 'elegant' ? 'Elegant' :
-                                                            state.captionData?.style || 'Not yet'}
-                                        </Badge>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <Settings className="w-4 h-4 text-gray-500" />
-                                        <span className="text-sm text-gray-600">Resolution:</span>
-                                        <Badge variant="secondary">1920x1080 (Full HD)</Badge>
-                                    </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Video Player */}
+                    <div>
+                        <Card className="bg-neutral-900">
+                            <CardHeader>
+                                <CardTitle className="text-white flex items-center gap-2">
+                                    🎥 Video Preview
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4 h-120 w-full">
+                                    <Player
+                                        component={VideoComposition}
+                                        inputProps={{ videoData }}
+                                        durationInFrames={1800} // 30 giây @ 60fps
+                                        compositionWidth={540}
+                                        compositionHeight={960}
+                                        fps={60}
+                                        style={{ width: '100%', height: '100%' }}
+                                        controls
+                                        loop
+                                    />
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* Export Progress */}
-                        {isExporting && (
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                                <div className="flex items-center space-x-3 mb-3">
-                                    <div className="animate-spin w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full" />
-                                    <span className="font-medium text-blue-900">Exporting video...</span>
-                                </div>
-                                <Progress value={exportProgress} className="w-full" />
-                                <p className="text-sm text-blue-600 mt-2">{exportProgress}% completed</p>
-                            </div>
-                        )}
-
-                        {/* Action Buttons */}
-                        <div className="flex justify-center space-x-4">
-                            <Button
-                                variant="outline"
-                                onClick={handleEdit}
-                                className="px-6 py-3"
-                                disabled={isExporting}
-                            >
-                                <Palette className="w-4 h-4" />
-                                Edit video
-                            </Button>
-                            <Button
-                                className="px-8 py-3 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700"
-                                onClick={handleNext}
-                                disabled={isExporting}
-                            >
-                                {isExporting ? (
-                                    <>
-                                        <div className="animate-spin w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full" />
-                                        Exporting...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Download className="w-4 h-4" />
-                                        Export video
-                                    </>
-                                )}
-                            </Button>
-                        </div>
-
-                        <div className="flex justify-between mt-8">
-                            <Button variant="outline" onClick={handleBack} disabled={isExporting}>
+                                <Button
+                                    className={"bg-rose-900 text-white hover:bg-rose-800"}
+                                    onClick={handleEdit}
+                                >
+                                    <Pencil />
+                                    Edit Video
+                                </Button>
+                            </CardContent>
+                        </Card>
+                        <div className="flex justify-end gap-4 mt-4">
+                            <Button variant="outline" onClick={handleBack}>
                                 <ArrowLeft className="w-4 h-4" />
                                 Back
                             </Button>
-                            <Button onClick={handleNext} disabled={isExporting}>
-                                <Download className="w-4 h-4" />
-                                Export
+                            <Button onClick={handleContinue}>
+                                Next
                                 <ArrowRight className="w-4 h-4" />
                             </Button>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </div>
         </div>
     );
-}
+};
+
+export default VideoPreviewCreator;
