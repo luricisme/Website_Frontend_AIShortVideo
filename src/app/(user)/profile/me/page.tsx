@@ -26,104 +26,104 @@ export default function UserProfileApp() {
     }, [user]);
 
     // Sample video data
-    const VIDEO_LIST = [
-        {
-            id: 1,
-            title: "AI Portraits",
-            description: "A collection of AI-generated portraits.",
-            thumbnail:
-                "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-            source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-            duration: 324,
-            views: 123456,
-            author: {
-                id: 1,
-                name: "John Doe",
-                username: "johndoe",
-                avatar: "https://example.com/john-doe.jpg",
-            },
-        },
-        {
-            id: 2,
-            title: "AI Portraits",
-            description: "A collection of AI-generated portraits.",
-            thumbnail:
-                "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-            source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-            duration: 324,
-            views: 123456,
-            author: {
-                id: 1,
-                name: "John Doe",
-                username: "johndoe",
-                avatar: "https://example.com/john-doe.jpg",
-            },
-        },
-        {
-            id: 3,
-            title: "AI Portraits",
-            description: "A collection of AI-generated portraits.",
-            thumbnail:
-                "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-            source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-            duration: 324,
-            views: 123456,
-            author: {
-                id: 1,
-                name: "John Doe",
-                username: "johndoe",
-                avatar: "https://example.com/john-doe.jpg",
-            },
-        },
-        {
-            id: 4,
-            title: "AI Portraits",
-            description: "A collection of AI-generated portraits.",
-            thumbnail:
-                "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-            source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-            duration: 324,
-            views: 123456,
-            author: {
-                id: 1,
-                name: "John Doe",
-                username: "johndoe",
-                avatar: "https://example.com/john-doe.jpg",
-            },
-        },
-        {
-            id: 5,
-            title: "AI Portraits",
-            description: "A collection of AI-generated portraits.",
-            thumbnail:
-                "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-            source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-            duration: 324,
-            views: 123456,
-            author: {
-                id: 1,
-                name: "John Doe",
-                username: "johndoe",
-                avatar: "https://example.com/john-doe.jpg",
-            },
-        },
-        {
-            id: 6,
-            title: "AI Portraits",
-            description: "A collection of AI-generated portraits.",
-            thumbnail:
-                "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-            source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-            duration: 324,
-            views: 123456,
-            author: {
-                id: 1,
-                name: "John Doe",
-                username: "johndoe",
-                avatar: "https://example.com/john-doe.jpg",
-            },
-        },
-    ];
+    // const VIDEO_LIST = [
+    //     {
+    //         id: 1,
+    //         title: "AI Portraits",
+    //         description: "A collection of AI-generated portraits.",
+    //         thumbnail:
+    //             "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
+    //         source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
+    //         duration: 324,
+    //         views: 123456,
+    //         author: {
+    //             id: 1,
+    //             name: "John Doe",
+    //             username: "johndoe",
+    //             avatar: "https://example.com/john-doe.jpg",
+    //         },
+    //     },
+    //     {
+    //         id: 2,
+    //         title: "AI Portraits",
+    //         description: "A collection of AI-generated portraits.",
+    //         thumbnail:
+    //             "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
+    //         source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
+    //         duration: 324,
+    //         views: 123456,
+    //         author: {
+    //             id: 1,
+    //             name: "John Doe",
+    //             username: "johndoe",
+    //             avatar: "https://example.com/john-doe.jpg",
+    //         },
+    //     },
+    //     {
+    //         id: 3,
+    //         title: "AI Portraits",
+    //         description: "A collection of AI-generated portraits.",
+    //         thumbnail:
+    //             "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
+    //         source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
+    //         duration: 324,
+    //         views: 123456,
+    //         author: {
+    //             id: 1,
+    //             name: "John Doe",
+    //             username: "johndoe",
+    //             avatar: "https://example.com/john-doe.jpg",
+    //         },
+    //     },
+    //     {
+    //         id: 4,
+    //         title: "AI Portraits",
+    //         description: "A collection of AI-generated portraits.",
+    //         thumbnail:
+    //             "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
+    //         source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
+    //         duration: 324,
+    //         views: 123456,
+    //         author: {
+    //             id: 1,
+    //             name: "John Doe",
+    //             username: "johndoe",
+    //             avatar: "https://example.com/john-doe.jpg",
+    //         },
+    //     },
+    //     {
+    //         id: 5,
+    //         title: "AI Portraits",
+    //         description: "A collection of AI-generated portraits.",
+    //         thumbnail:
+    //             "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
+    //         source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
+    //         duration: 324,
+    //         views: 123456,
+    //         author: {
+    //             id: 1,
+    //             name: "John Doe",
+    //             username: "johndoe",
+    //             avatar: "https://example.com/john-doe.jpg",
+    //         },
+    //     },
+    //     {
+    //         id: 6,
+    //         title: "AI Portraits",
+    //         description: "A collection of AI-generated portraits.",
+    //         thumbnail:
+    //             "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
+    //         source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
+    //         duration: 324,
+    //         views: 123456,
+    //         author: {
+    //             id: 1,
+    //             name: "John Doe",
+    //             username: "johndoe",
+    //             avatar: "https://example.com/john-doe.jpg",
+    //         },
+    //     },
+    // ];
 
     const handleEditProfile = () => {
         setCurrentPage("edit");
@@ -160,7 +160,7 @@ export default function UserProfileApp() {
                     activeTab={activeTab}
                     onTabChange={handleTabChange}
                     onEditProfile={handleEditProfile}
-                    videos={VIDEO_LIST}
+                    videos={[]}
                     user={userProfile || user}
                     isFetching={isFetching}
                     isOtherUser={false} // Assuming this is the current user's profile

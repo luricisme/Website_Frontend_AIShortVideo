@@ -1,10 +1,11 @@
-import VideoCard, { VideoCardProps } from "@/app/(user)/_components/video-card";
+import VideoCard from "@/app/(user)/_components/video-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { User } from "@/types/user.types";
+import { Video } from "@/types/video.types";
 import Link from "next/link";
 
-const VideoGrid = ({ videos }: { videos: VideoCardProps[] }) => (
+const VideoGrid = ({ videos }: { videos: Video[] }) => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-6">
         {videos.map((video) => (
             <VideoCard key={video.id} video={video} />
@@ -16,7 +17,7 @@ interface ProfilePageProps {
     activeTab: string;
     onTabChange?: (tab: string) => void;
     onEditProfile?: () => void;
-    videos?: VideoCardProps[];
+    videos?: Video[];
     user: User;
     isFetching: boolean;
     isOtherUser: boolean; // Optional prop to indicate if it's another user's profile
