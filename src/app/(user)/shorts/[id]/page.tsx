@@ -1,87 +1,147 @@
-"use client";
+import { getVideoDetail } from "@/apiRequests/video";
+import { envServer } from "@/constants/env.server";
+import ShortsPage from "@/app/(user)/shorts/[id]/shorts-page-client";
+import type { Metadata, ResolvingMetadata } from "next";
 
-import toast from "react-hot-toast";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
-
-import { Video } from "@/types/video.types";
-import ShortsViewer from "@/app/(user)/_components/shorts-viewer ";
-import { useVideoDetailQuery } from "@/queries/useVideo";
-
-const ShortsPage = () => {
-    const router = useRouter();
-    const params = useParams();
-    const initialVideoId = params?.id ? String(params.id) : null;
-    const videoId = initialVideoId ? parseInt(initialVideoId, 10) : null;
-
-    const {
-        data: videoResponse,
-        isLoading,
-        isError,
-        error,
-        isSuccess,
-    } = useVideoDetailQuery(videoId, {
-        enabled: !!videoId,
-    });
-
-    useEffect(() => {
-        if (isError && error && !isLoading) {
-            if (error instanceof Error) {
-                toast.error(error.message);
-            } else {
-                toast.error("Không thể tải video");
-            }
-
-            // Redirect về home nếu video không tồn tại
-            router.replace("/");
-        }
-    }, [isError, error, router, isLoading]);
-
-    if (isLoading || !videoId) {
-        return (
-            <div
-                role="status"
-                className="flex items-center justify-center space-x-2 text-gray-900 dark:text-white"
-                style={{
-                    height: "calc(100vh - 80px)",
-                }}
-            >
-                <svg
-                    aria-hidden="true"
-                    className="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-gray-600 dark:fill-gray-300"
-                    viewBox="0 0 100 101"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                >
-                    <path
-                        d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-                        fill="currentColor"
-                    />
-                    <path
-                        d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-                        fill="currentFill"
-                    />
-                </svg>
-                <span className="sr-only text-white">Loading...</span>
-            </div>
-        );
-    }
-
-    // Error state hoặc không có data
-    if (isError || !isSuccess || !videoResponse?.data) {
-        return null; // Component sẽ redirect trong useEffect
-    }
-
-    const video = videoResponse.data;
-
-    return (
-        <ShortsViewer
-            videos={[video as Video]}
-            initialVideoIndex={0}
-            updateUrl={true}
-            urlPath="/shorts"
-        />
-    );
+type Props = {
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-export default ShortsPage;
+export async function generateMetadata(
+    { params }: Props,
+    parent: ResolvingMetadata
+): Promise<Metadata> {
+    try {
+        const { id } = await params;
+        const videoId = id ? parseInt(id, 10) : null;
+
+        console.log("🔍 Generating metadata for video:", videoId);
+
+        if (!videoId) {
+            return {
+                title: "Invalid Video",
+                description: "The video ID is invalid.",
+            };
+        }
+
+        const video = await getVideoDetail(videoId);
+
+        if (!video || !video.data) {
+            return {
+                title: "Video Not Found",
+                description: "The requested video does not exist.",
+            };
+        }
+
+        const previousImages = (await parent).openGraph?.images || [];
+
+        return {
+            title: video.data.title,
+            description: video.data.script || "Watch this amazing video.",
+            openGraph: {
+                title: video.data.title,
+                description: video.data.script || "Watch this amazing video.",
+                // ⚠️ Use relative URL - metadataBase will resolve it
+                url: `/shorts/${videoId}`,
+                siteName: "AI Short Video Platform",
+                type: "video.other",
+                images: [
+                    {
+                        // ⚠️ Use absolute URL or ensure thumbnail is full URL
+                        // url: video.data.thumbnail?.startsWith("http")
+                        //     ? video.data.thumbnail
+                        //     : `${envServer.NEXTAUTH_URL}/default-thumbnail.jpg`,
+                        url: "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
+                        width: 1200, // ⚠️ Facebook recommended size
+                        height: 630,
+                        alt: video.data.title,
+                        type: "image/jpeg",
+                    },
+                    ...previousImages,
+                ],
+                videos: [
+                    {
+                        // ⚠️ Use absolute URL for video
+                        url: video.data.videoUrl?.startsWith("http")
+                            ? video.data.videoUrl
+                            : `${envServer.NEXTAUTH_URL}/shorts/${videoId}`,
+                        width: 1280,
+                        height: 720,
+                        type: "video/mp4",
+                    },
+                ],
+                // ⚠️ Add more OG properties
+                locale: "en_US",
+            },
+            twitter: {
+                card: "summary_large_image",
+                title: video.data.title,
+                description: video.data.script || "Watch this amazing video.",
+                // ⚠️ Fix Twitter images format
+                images: {
+                    // url: video.data.thumbnail?.startsWith("http")
+                    //     ? video.data.thumbnail
+                    //     : `${envServer.NEXTAUTH_URL}/default-thumbnail.jpg`,
+                    url: "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
+                    alt: video.data.title,
+                },
+                creator: "@yourusername", // ⚠️ Add your Twitter handle
+                site: "@yoursite",
+            },
+            authors: [{ name: video.data.user?.username || "AI Video Creator" }],
+            category: video.data.category || "Entertainment",
+            keywords: [video.data.category || "video", "shorts", "entertainment", "ai-generated"],
+            // ⚠️ Enhanced robots configuration
+            robots: {
+                index: true,
+                follow: true,
+                googleBot: {
+                    index: true,
+                    follow: true,
+                    "max-video-preview": -1,
+                    "max-image-preview": "large",
+                    "max-snippet": -1,
+                },
+            },
+            other: {
+                "video:duration": video.data.length?.toString() || "30",
+                "video:release_date": new Date().toISOString(),
+                // ⚠️ Add Facebook App ID if you have one
+                "fb:app_id": "your_facebook_app_id", // Replace with actual ID
+            },
+        };
+    } catch (error) {
+        console.error("❌ Error generating metadata:", error);
+        return {
+            title: "Video Not Found",
+            description: "The requested video does not exist.",
+            openGraph: {
+                title: "Video Not Found",
+                description: "The requested video does not exist.",
+                type: "website",
+                images: [
+                    {
+                        url: "/default-error.jpg", // ⚠️ Relative URL
+                        width: 1200,
+                        height: 630,
+                        alt: "Video Not Found",
+                    },
+                ],
+            },
+            twitter: {
+                card: "summary",
+                title: "Video Not Found",
+                description: "The requested video does not exist.",
+                images: {
+                    url: "/default-error.jpg", // ⚠️ Relative URL
+                    alt: "Video Not Found",
+                },
+            },
+        };
+    }
+}
+
+export default function Page() {
+    return <ShortsPage />;
+}

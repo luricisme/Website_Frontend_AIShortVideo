@@ -59,22 +59,21 @@ export function AppSidebar() {
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {items.map((item) => (
-                                <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton
-                                        asChild
-                                        isActive={
-                                            pathname === item.url ||
-                                            (pathname.startsWith(item.url) && item.url !== "/")
-                                        }
-                                    >
-                                        <Link href={item.url}>
+                                <Link key={item.title} href={item.url} prefetch={false}>
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton
+                                            isActive={
+                                                pathname === item.url ||
+                                                (pathname.startsWith(item.url) && item.url !== "/")
+                                            }
+                                        >
                                             {item.icon}
                                             <span className="ml-2 font-medium text-sm text-gray-700 dark:text-gray-200">
                                                 {item.title}
                                             </span>
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                </Link>
                             ))}
                         </SidebarMenu>
                     </SidebarGroupContent>

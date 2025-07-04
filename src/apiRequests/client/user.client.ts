@@ -37,7 +37,7 @@ export const updateAvatar = (avatar: File) => {
     const formData = new FormData();
     formData.append("avatar", avatar);
 
-    console.log("Updating avatar with formData:", formData);
+    // console.log("Updating avatar with formData:", formData);
 
     return http.post(`${URL}/avatar`, {
         requireAuth: true,

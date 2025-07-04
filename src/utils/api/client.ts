@@ -121,8 +121,16 @@ export async function apiClient(
             // Thử lấy phiên mới (có thể đã được refresh)
             const newSession = await getSession();
 
+            console.log(">>> New session after 401:", newSession);
+
+            const isExpired = new Date(newSession?.expires || 0) < new Date();
+
             // Nếu vẫn lỗi refresh hoặc không có phiên mới
-            if (newSession?.error === "RefreshAccessTokenError" || !newSession?.accessToken) {
+            if (
+                newSession?.error === "RefreshAccessTokenError" ||
+                !newSession?.accessToken ||
+                isExpired
+            ) {
                 await signOut({
                     redirect: true,
                     callbackUrl: "/user/signin?error=session_expired",

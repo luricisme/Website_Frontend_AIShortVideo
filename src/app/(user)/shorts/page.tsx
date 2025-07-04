@@ -1,5 +1,3 @@
-"use client";
-
 export default function ShortsIndexPage() {
     return (
         <div className="flex items-center justify-center h-screen bg-black">

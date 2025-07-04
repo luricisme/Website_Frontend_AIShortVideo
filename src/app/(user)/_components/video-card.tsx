@@ -1,28 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+
 import { cn } from "@/lib/utils";
-import VideoActionDropdown from "@/app/(user)/_components/video-action-dropdown";
+import { Video } from "@/types/video.types";
+import { formatNumberToSocialStyle } from "@/utils/common";
 
-export type VideoCardProps = {
-    id: number;
-    title: string;
-    description: string;
-    thumbnail: string;
-    source: string;
-    duration: number;
-    views: number;
-    author: {
-        id: number;
-        name: string;
-        username: string;
-        avatar: string;
-    };
-};
-
-const VideoCard = ({ video }: { video: VideoCardProps }) => {
+const VideoCard = ({ video }: { video: Video }) => {
     const [isHovering, setIsHovering] = useState<boolean>(false);
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const playPromiseRef = useRef<Promise<void> | null>(null);
@@ -85,7 +71,9 @@ const VideoCard = ({ video }: { video: VideoCardProps }) => {
                 >
                     {!isHovering && (
                         <Image
-                            src={video.thumbnail}
+                            src={
+                                "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8"
+                            }
                             alt={video.title}
                             fill
                             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
@@ -98,7 +86,7 @@ const VideoCard = ({ video }: { video: VideoCardProps }) => {
 
                     <video
                         ref={videoRef}
-                        src={video.source}
+                        src={"https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4"}
                         className={cn(
                             "absolute top-0 left-0 w-full h-full object-cover rounded-lg transition-opacity duration-300 cursor-pointer",
                             isHovering ? "opacity-100" : "opacity-0"
@@ -109,12 +97,10 @@ const VideoCard = ({ video }: { video: VideoCardProps }) => {
                         preload="none"
                     />
 
-                    {video.duration && !isHovering && (
+                    {video.length && !isHovering && (
                         <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
-                            {Math.floor(video.duration / 60)}:
-                            {video.duration % 60 < 10
-                                ? `0${video.duration % 60}`
-                                : video.duration % 60}
+                            {Math.floor(video.length / 60)}:
+                            {video.length % 60 < 10 ? `0${video.length % 60}` : video.length % 60}
                         </div>
                     )}
 
@@ -126,15 +112,18 @@ const VideoCard = ({ video }: { video: VideoCardProps }) => {
                 </div>
             </Link>
             <div className="flex flex-col mt-2">
-                <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-white line-clamp-2">{video.title}</span>
-                    <VideoActionDropdown />
-                </div>
-                <div className="text-xs font-bold text-[#AAAAAA] flex items-center justify-between mt-1">
-                    <span>@{video.author.username}</span>
-                    <span>
-                        {video.views >= 1000 ? `${(video.views / 1000).toFixed(1)}K` : video.views}{" "}
-                        views
+                <div className="text-xs font-bold text-[#AAAAAA] flex flex-col gap-0.5 mt-1">
+                    {/* title */}
+                    <Link
+                        href={`/shorts/${video.id}`}
+                        onClick={() => {
+                            if (videoRef.current) {
+                                videoRef.current.pause();
+                            }
+                        }}
+                    className="line-clamp-2 text-white text-sm">{video.title}</Link>
+                    <span className="text-white">
+                        {formatNumberToSocialStyle(video.viewCnt)} views
                     </span>
                 </div>
             </div>

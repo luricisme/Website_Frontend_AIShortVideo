@@ -2,8 +2,12 @@ import { apiBasicResponseSchema, apiResponseSchema } from "@/types/api/common";
 import {
     videoLikeDislikeCommentCountSchema,
     videoLikeStatusResponseSchema,
+    videoListByCategoryNameSchema,
+    videoListByTagNameSchema,
     videoListResponseSchema,
     videoSchema,
+    videoTopPopularTagListResponseSchema,
+    videoTopTrendingCategoryListResponseSchema,
 } from "@/types/video.types";
 import http from "@/utils/api/client";
 
@@ -114,4 +118,58 @@ export const incrementVideoViewCount = async (videoId: number | string) => {
     console.log(">>> Route handler response:", result);
 
     return result;
+};
+
+export const getTopTrendingCategories = () => {
+    return http.get(`${URL}/top-trending-categories`, {
+        requireAuth: false,
+        responseSchema: apiResponseSchema(videoTopTrendingCategoryListResponseSchema),
+    });
+};
+
+export const getTopPopularTags = () => {
+    return http.get(`${URL}/top-popular-tags`, {
+        requireAuth: false,
+        responseSchema: apiResponseSchema(videoTopPopularTagListResponseSchema),
+    });
+};
+
+export const getVideosByTagName = async ({
+    tagName,
+    pageNo = 1,
+    pageSize = 10,
+}: {
+    tagName: string;
+    pageNo?: number;
+    pageSize?: number;
+}) => {
+    const params = new URLSearchParams({
+        pageNo: pageNo.toString(),
+        pageSize: pageSize.toString(),
+    });
+
+    return http.get(`${URL}/tag/${tagName}?${params.toString()}`, {
+        requireAuth: false,
+        responseSchema: apiResponseSchema(videoListByTagNameSchema),
+    });
+};
+
+export const getVideosByCategoryName = async ({
+    categoryName,
+    pageNo = 1,
+    pageSize = 10,
+}: {
+    categoryName: string;
+    pageNo?: number;
+    pageSize?: number;
+}) => {
+    const params = new URLSearchParams({
+        pageNo: pageNo.toString(),
+        pageSize: pageSize.toString(),
+    });
+
+    return http.get(`${URL}/category/${categoryName}?${params.toString()}`, {
+        requireAuth: false,
+        responseSchema: apiResponseSchema(videoListByCategoryNameSchema),
+    });
 };

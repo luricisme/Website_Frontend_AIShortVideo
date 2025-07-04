@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 
 export default function Error({
@@ -16,14 +17,16 @@ export default function Error({
     return (
         <div className="h-screen flex items-center justify-center bg-black text-white">
             <div className="text-center space-y-4 p-6">
-                <h2 className="text-xl font-semibold">Có lỗi xảy ra!</h2>
-                <p className="text-neutral-400">Không thể tải video. Vui lòng thử lại.</p>
-                <button
+                <h2 className="text-xl font-semibold">
+                    Error occurs!
+                </h2>
+                <p className="text-neutral-400">{error.message || "An unexpected error occurred."}</p>
+                <Button
                     onClick={reset}
                     className="px-4 py-2 bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors"
                 >
-                    Thử lại
-                </button>
+                    Try Again
+                </Button>
             </div>
         </div>
     );

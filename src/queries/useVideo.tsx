@@ -3,15 +3,24 @@ import { commentApiRequests } from "@/apiRequests/comment";
 import VideoDetail from "@/app/(user)/_components/video-detail";
 import { checkFollowing } from "@/apiRequests/client/user.client";
 import { Comment, CommentListResponse } from "@/types/comment.types";
-import { Video, VideoLikeStatus, VideoListResponse } from "@/types/video.types";
+import {
+    Video,
+    VideoLikeStatus,
+    VideoListResponse,
+    VideoTopTrendingCategoryListResponse,
+} from "@/types/video.types";
 import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
     dislikeVideo,
+    getTopPopularTags,
+    getTopTrendingCategories,
     getVideoById,
     getVideoLikeDislikeCommentCount,
     getVideoLikeStatus,
     getVideos,
+    getVideosByCategoryName,
+    getVideosByTagName,
     incrementVideoViewCount,
     likeVideo,
     undislikeVideo,
@@ -648,5 +657,103 @@ export const useCheckFollowStatusQuery = (userId: number | string) => {
             return checkFollowing(userId);
         },
         enabled: !!userId, // Only run if userId is provided
+    });
+};
+
+export const useGetCategoriesQuery = () => {
+    return useQuery({
+        queryKey: ["trending-categories"],
+        queryFn: () => getTopTrendingCategories(),
+        staleTime: 1000 * 60 * 60, // 1 hour
+        gcTime: 1000 * 60 * 60 * 2, // 2 hours
+    });
+};
+
+export const useGetPopularTagsQuery = () => {
+    return useQuery({
+        queryKey: ["popular-tags"],
+        queryFn: () => getTopPopularTags(),
+        staleTime: 1000 * 60 * 60, // 1 hour
+        gcTime: 1000 * 60 * 60 * 2, // 2 hours
+    });
+};
+
+export const useGetTrendingVideosQuery = (
+    {
+        activeCategory,
+        activeTag,
+        currentPage = 1,
+        pageSize = 10,
+    }: {
+        activeCategory?: string;
+        activeTag?: string;
+        currentPage?: number;
+        pageSize?: number;
+    },
+    {
+        enabled = false, // Chỉ chạy khi có category hoặc tag
+    }: {
+        enabled: boolean | string | null | undefined;
+    }
+) => {
+    const queryClient = useQueryClient();
+    // const categories =
+    //     (
+    //         queryClient.getQueryData([
+    //             "trending-categories",
+    //         ]) as ApiResponse<VideoTopTrendingCategoryListResponse>
+    //     ).data || [];
+
+    const categories =
+        queryClient.getQueryData<ApiResponse<VideoTopTrendingCategoryListResponse>>([
+            "trending-categories",
+        ])?.data || [];
+
+    // console.log("useGetTrendingVideosQuery categories:", categories);
+    // console.log(">>> is enabled:", enabled);
+
+    return useQuery({
+        queryKey: ["trending-videos", activeCategory, activeTag, currentPage, pageSize],
+        queryFn: () => {
+            if (activeCategory) {
+                return getVideosByCategoryName({
+                    categoryName: activeCategory,
+                    pageNo: currentPage,
+                    pageSize: pageSize,
+                });
+            } else if (activeTag) {
+                return getVideosByTagName({
+                    tagName: activeTag,
+                    pageNo: currentPage,
+                    pageSize: pageSize,
+                });
+            } else {
+                // default use first category
+                if (categories?.length > 0) {
+                    return getVideosByCategoryName({
+                        categoryName: categories[0].category,
+                        pageNo: currentPage,
+                        pageSize: pageSize,
+                    });
+                }
+
+                // If no category or tag is active, return empty response with correct shape
+                return Promise.resolve({
+                    status: 200,
+                    message: "No category or tag selected",
+                    data: {
+                        pageNo: currentPage,
+                        pageSize: pageSize,
+                        totalPage: 0,
+                        totalElements: 0,
+                        items: [] as Video[],
+                    },
+                    errors: [],
+                });
+            }
+        },
+        enabled: !!enabled, // Wait for categories
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        gcTime: 1000 * 60 * 10, // 10 minutes
     });
 };
