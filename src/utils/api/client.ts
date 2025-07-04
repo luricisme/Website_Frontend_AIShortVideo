@@ -42,9 +42,13 @@ export async function apiClient(
     try {
         // Khởi tạo headers mặc định
         const headers: Record<string, string> = {
-            "Content-Type": "application/json",
             ...customHeaders,
         };
+
+        if (!(body instanceof FormData)) {
+            // Nếu body không phải là FormData, thêm Content-Type
+            headers["Content-Type"] = "application/json";
+        }
 
         // console.log(">>> API Request:");
         // Thêm Authorization nếu endpoint yêu cầu xác thực
@@ -80,13 +84,30 @@ export async function apiClient(
 
         // Thêm body nếu có
         if (body !== undefined) {
-            requestConfig.body = JSON.stringify(body);
+            if (body instanceof FormData) {
+                // FormData - gửi trực tiếp, KHÔNG stringify
+                requestConfig.body = body;
+                // console.log(">>> Sending FormData:", body);
+                // Log FormData entries for debugging
+                // for (const [key, value] of body.entries()) {
+                //     console.log(`>>> FormData [${key}]:`, value);
+                // }
+            } else {
+                // JSON data - stringify như bình thường
+                requestConfig.body = JSON.stringify(body);
+                // console.log(">>> Sending JSON:", body);
+            }
         }
 
         // Gọi API
         let response: Response;
         try {
-            // console.log(">>> Fetching:", `${baseUrl}${endpoint}`)
+            // console.log(">>> Request config:", {
+            //     url: `${baseUrl}${endpoint}`,
+            //     method,
+            //     headers,
+            //     bodyType: body instanceof FormData ? "FormData" : typeof body,
+            // });
             response = await fetch(`${baseUrl}${endpoint}`, requestConfig);
         } catch (error) {
             // Xử lý lỗi mạng
@@ -210,6 +231,9 @@ const http = {
             if (body !== undefined && requestSchema) {
                 validatedBody = requestSchema.parse(body) as Req;
             }
+
+            console.log(">>> POST request body:", validatedBody);
+            console.log(">>> POST request headers:", addMetadataHeaders(headers));
 
             const response = await apiClient(endpoint, {
                 method: "POST",

@@ -2,7 +2,7 @@ import { Session } from "next-auth";
 import { useMutation, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
 
 import { User } from "@/types/user.types";
-import { getProfile, updateProfile } from "@/apiRequests/client/user.client";
+import { getProfile, updateAvatar, updateProfile } from "@/apiRequests/client/user.client";
 import { useUserStore } from "@/providers/user-store-provider";
 import toast from "react-hot-toast";
 
@@ -71,6 +71,91 @@ export const useUpdateProfileMutation = () => {
             } else {
                 toast.error("Failed to update profile");
             }
+        },
+    });
+};
+
+export const useUpdateAvatarMutation = () => {
+    const queryClient = useQueryClient();
+    const { setUser, user } = useUserStore((state) => state);
+
+    return useMutation({
+        mutationFn: async (avatarFile: File) => {
+            return await updateAvatar(avatarFile);
+        },
+
+        onMutate: async (avatarFile) => {
+            // Cancel outgoing queries
+            await queryClient.cancelQueries({ queryKey: ["user-info"] });
+
+            // Get previous user data
+            const previousUser = queryClient.getQueryData(["user-info"]) as User;
+
+            // Create preview URL for optimistic update
+            const previewUrl = URL.createObjectURL(avatarFile);
+
+            // Optimistically update avatar in cache
+            queryClient.setQueryData(["user-info"], (old: User) => {
+                // if (!old?.data) return old;
+                if (!old) return old;
+
+                return {
+                    ...old,
+                    avatar: previewUrl,
+                };
+            });
+
+            // Also update user store
+            const currentUser = user;
+            if (currentUser) {
+                setUser({ ...currentUser, avatar: previewUrl });
+            }
+
+            return { previousUser, previewUrl };
+        },
+
+        onError: (error, variables, context) => {
+            // Rollback optimistic update
+            if (context?.previousUser) {
+                queryClient.setQueryData(["user-info"], context.previousUser);
+            }
+
+            // Cleanup preview URL
+            if (context?.previewUrl) {
+                URL.revokeObjectURL(context.previewUrl);
+            }
+
+            console.error("Avatar update failed:", error);
+        },
+
+        onSuccess: (response, variables, context) => {
+            // Cleanup preview URL
+            if (context?.previewUrl) {
+                URL.revokeObjectURL(context.previewUrl);
+            }
+
+            // Update with real avatar URL from server
+            if (response.data) {
+                queryClient.setQueryData(["user-info"], (old: User) => {
+                    if (!old) return old;
+
+                    return {
+                        ...old,
+                        avatar: response.data, // Use real URL from server
+                    };
+                });
+
+                // Update user store with real URL
+                const currentUser = user;
+                if (currentUser) {
+                    setUser({ ...currentUser, avatar: response.data });
+                }
+            }
+        },
+
+        onSettled: () => {
+            // Invalidate and refetch user info
+            queryClient.invalidateQueries({ queryKey: ["user-info"] });
         },
     });
 };

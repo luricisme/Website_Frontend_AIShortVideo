@@ -31,7 +31,6 @@ const ProfilePage = ({
     isFetching,
     isOtherUser = false, // Default to false if not specified
 }: ProfilePageProps) => {
-
     console.log(">>> ProfilePage user:", user);
 
     return (
