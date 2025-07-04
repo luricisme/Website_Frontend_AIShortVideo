@@ -31,7 +31,8 @@ const ProfilePage = ({
     isFetching,
     isOtherUser = false, // Default to false if not specified
 }: ProfilePageProps) => {
-    console.log(">>> is other user:", isOtherUser);
+
+    console.log(">>> ProfilePage user:", user);
 
     return (
         <div className="min-h-screen text-white mb-10">

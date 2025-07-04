@@ -13,7 +13,7 @@ import {
 interface ConfirmDialogProps {
     dialogTitle: string;
     dialogDescription: React.ReactNode;
-    children?: React.ReactNode; 
+    children?: React.ReactNode;
     confirmText?: string; // Optional text for the confirmation button
     cancelText?: string; // Optional text for the cancellation button
     confirmAction?: () => void; // Optional action to perform on confirmation

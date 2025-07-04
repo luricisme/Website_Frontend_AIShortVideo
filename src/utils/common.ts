@@ -33,7 +33,11 @@ export const formatNumberToSocialStyle = (number: number) => {
         .format(number)
         .replace(".", ",");
 
-    result = result.slice(0, result.length - 1) + " " + result.slice(-1).toUpperCase();
+    const lastChar = result.slice(-1);
+    const charRegex = /[a-zA-Z]/;
+    if (charRegex.test(lastChar)) {
+        result = result.slice(0, result.length - 1) + " " + result.slice(-1).toUpperCase();
+    }
 
     return result;
 };
@@ -59,7 +63,7 @@ export const formatTimeAgo = (date: string | Date) => {
 
     for (const interval of intervals) {
         const count = Math.floor(diffInSeconds / interval.seconds);
-        
+
         if (count >= 1) {
             if (count === 1) {
                 return `${count} ${interval.label} ago`;

@@ -506,6 +506,138 @@ export const useSubmitCommentMutation = () => {
     });
 };
 
+export const useUpdateCommentMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            commentId,
+            content,
+            videoId,
+        }: {
+            commentId: number | string;
+            content: string;
+            videoId?: number | string;
+        }) => {
+            if (!commentId || !content) {
+                throw new Error(
+                    `Video ${videoId}:::Comment ID and content are required to update a comment.`
+                );
+            }
+            return await commentApiRequests.updateComment(commentId, content);
+        },
+
+        onMutate: async ({ commentId, content, videoId }) => {
+            // Target specific video's comments
+            const queryKey = videoId ? ["comments", videoId] : ["comments"];
+
+            await queryClient.cancelQueries({ queryKey });
+
+            const previousComments =
+                queryClient.getQueryData<ApiResponse<CommentListResponse>>(queryKey);
+
+            queryClient.setQueryData(queryKey, (old: ApiResponse<CommentListResponse>) => {
+                if (!old?.data?.items) return old;
+
+                return {
+                    ...old,
+                    data: {
+                        ...old.data,
+                        items: old.data.items.map((c) =>
+                            c.id === commentId ? { ...c, content } : c
+                        ),
+                    },
+                };
+            });
+
+            return { previousComments, queryKey };
+        },
+
+        onError: (err, variables, context) => {
+            if (context?.previousComments && context?.queryKey) {
+                queryClient.setQueryData(context.queryKey, context.previousComments);
+            }
+        },
+
+        onSettled: (data, error, variables, context) => {
+            if (context?.queryKey) {
+                queryClient.invalidateQueries({ queryKey: context.queryKey });
+            }
+        },
+
+        onSuccess: (response, { commentId, videoId }) => {
+            if (response.status === 200) {
+                const queryKey = videoId ? ["comments", videoId] : ["comments"];
+                queryClient.invalidateQueries({ queryKey });
+                console.log(`Comment ${commentId} updated successfully`);
+            }
+        },
+    });
+};
+
+export const useDeleteCommentMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            commentId,
+            videoId,
+        }: {
+            commentId: number | string;
+            videoId?: number | string;
+        }) => {
+            if (!commentId) {
+                throw new Error(`Video ${videoId}:::Comment ID is required to delete a comment.`);
+            }
+            return await commentApiRequests.deleteComment(commentId);
+        },
+
+        onMutate: async ({ commentId, videoId }) => {
+            const queryKey = videoId ? ["comments", videoId] : ["comments"];
+
+            await queryClient.cancelQueries({ queryKey });
+
+            const previousComments =
+                queryClient.getQueryData<ApiResponse<CommentListResponse>>(queryKey);
+
+            queryClient.setQueryData(queryKey, (old: ApiResponse<CommentListResponse>) => {
+                if (!old?.data?.items) return old;
+
+                return {
+                    ...old,
+                    data: {
+                        ...old.data,
+                        items: old.data.items.filter((c) => c.id !== commentId),
+                    },
+                };
+            });
+
+            return { previousComments, queryKey };
+        },
+
+        onError: (err, variables, context) => {
+            if (context?.previousComments && context?.queryKey) {
+                queryClient.setQueryData(context.queryKey, context.previousComments);
+            }
+        },
+
+        onSettled: (data, error, variables, context) => {
+            if (context?.queryKey) {
+                queryClient.invalidateQueries({ queryKey: context.queryKey });
+            }
+        },
+
+        onSuccess: (response, { commentId, videoId }) => {
+            if (response.status === 204) {
+                if (videoId) {
+                    VideoDetail.updateCommentCount(videoId, queryClient);
+                }
+                console.log(`Comment ${commentId} deleted successfully`);
+            }
+        },
+    });
+};
+
 export const useCheckFollowStatusQuery = (userId: number | string) => {
     return useQuery({
         queryKey: ["follow-status", userId],

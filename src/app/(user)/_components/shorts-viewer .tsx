@@ -9,12 +9,8 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import VideoDetail from "@/app/(user)/_components/video-detail";
 import { useBodyScroll, useScrollContainer } from "@/hooks/use-body-scroll";
 import RightPanel, { PanelConfig } from "@/app/(user)/_components/right-panel";
-import {
-    CommentsPanel,
-    DetailsPanel,
-    SharePanel,
-    PlaylistPanel,
-} from "@/app/(user)/_components/panel-contents";
+import { DetailsPanel, SharePanel, PlaylistPanel } from "@/app/(user)/_components/panel-contents";
+import { CommentsPanel } from "@/app/(user)/_components/comment";
 
 interface ShortsViewerProps {
     videos: Video[];
