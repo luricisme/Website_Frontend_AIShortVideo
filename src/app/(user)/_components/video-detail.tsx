@@ -14,7 +14,9 @@ import { formatNumberToSocialStyle } from "@/utils/common";
 import { Video, VideoLikeStatus } from "@/types/video.types";
 import { useUserStore } from "@/providers/user-store-provider";
 import { PanelConfig } from "@/app/(user)/_components/right-panel";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import ConfirmDialog from "@/app/(user)/_components/confirm-dialog";
+import { followUser, unfollowUser } from "@/apiRequests/client/user.client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import CustomVideoPlayer from "@/app/(user)/_components/custom-video-player";
 import {
@@ -24,8 +26,10 @@ import {
     undislikeVideo,
     unlikeVideo,
 } from "@/apiRequests/client";
-import { useVideoLikeDislikeCommentCountQuery } from "@/queries/useVideo";
-import { QueryClient, useQueryClient } from "@tanstack/react-query";
+import {
+    useCheckFollowStatusQuery,
+    useVideoLikeDislikeCommentCountQuery,
+} from "@/queries/useVideo";
 
 interface VideoDetailProps {
     video: Video;
@@ -49,6 +53,7 @@ const VideoDetail = ({
     const isCompactView = useMediaQuery("(max-width: 1249px)");
     const isVerySmallScreen = useMediaQuery("(max-width: 380px)");
     const isExtraSmallScreen = useMediaQuery("(max-width: 350px)");
+    const is340pxScreen = useMediaQuery("(max-width: 340px)");
 
     const [actionStyles, setActionStyles] = useState({});
     const [isActionsOverlapping, setIsActionsOverlapping] = useState(false);
@@ -71,6 +76,18 @@ const VideoDetail = ({
         liked: false,
         disliked: false,
     });
+
+    const {
+        data: followStatusData,
+        // isLoading: isFollowStatusLoading,
+        refetch: refetchFollowStatus,
+    } = useCheckFollowStatusQuery(video.user.id ?? "");
+
+    const [isFollowing, setIsFollowing] = useState<boolean>(followStatusData?.data ?? false);
+
+    useEffect(() => {
+        setIsFollowing(followStatusData?.data ?? false);
+    }, [followStatusData?.data]);
 
     const {} = useVideoLikeDislikeCommentCountQuery(video.id);
 
@@ -150,7 +167,7 @@ const VideoDetail = ({
             if (isVerySmallScreen) {
                 setActionStyles({
                     right: "5px",
-                    bottom: "16px",
+                    bottom: "30px",
                 });
                 return;
             }
@@ -158,7 +175,7 @@ const VideoDetail = ({
             if (isCompactView || wouldOverlap) {
                 setActionStyles({
                     right: "8px",
-                    bottom: "16px",
+                    bottom: "30px",
                     transform: "none",
                 });
             } else {
@@ -277,6 +294,41 @@ const VideoDetail = ({
         }
     };
 
+    const [isFollowingLoading, setIsFollowingLoading] = useState(false);
+    const handleFollowClick = async () => {
+        if (isFollowingLoading) return; // Prevent multiple clicks
+        setIsFollowingLoading(true); // Set loading state to true
+        try {
+            let response;
+            setIsFollowing((prev) => !prev); // Toggle follow state
+            if (isFollowing) {
+                response = await unfollowUser(video.user.id ?? "");
+            } else {
+                response = await followUser(video.user.id ?? "");
+            }
+
+            console.log(">>> Follow response:", response);
+            if (response && response.status === 200) {
+                // re-fetch follow status
+                await refetchFollowStatus();
+            }
+        } catch (error) {
+            console.error("Error following user:", { error });
+            if (error instanceof HttpError) {
+                // Handle specific HTTP error cases here
+                console.error("HTTP Error:", error.message);
+            } else {
+                // Handle other types of errors
+                console.error("Unexpected Error:", error);
+            }
+
+            // Optionally, revert the follow state if an error occurs
+            setIsFollowing((prev) => !prev); // Revert follow state
+        } finally {
+            setIsFollowingLoading(false); // Reset loading state
+        }
+    };
+
     return (
         <div className="relative w-full h-full bg-black overflow-hidden" ref={videoRef}>
             <div
@@ -321,16 +373,19 @@ const VideoDetail = ({
                                     @{video.user.username}
                                 </span>
                             </div>
-                            <Button
-                                size="sm"
-                                className="rounded-full font-semibold text-[10px] md:text-xs py-0.5 px-2 md:py-1 md:px-3 h-6 md:h-8"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    // Handle follow action here
-                                }}
-                            >
-                                Follow
-                            </Button>
+                            {userInfo?.id && (
+                                <Button
+                                    size="sm"
+                                    className="rounded-full font-semibold text-[10px] md:text-xs py-0.5 px-2 md:py-1 md:px-3 h-6 md:h-8"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        // Handle follow action here
+                                        handleFollowClick();
+                                    }}
+                                >
+                                    {isFollowing ? "Unfollow" : "Follow"}
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -343,6 +398,9 @@ const VideoDetail = ({
                     <div
                         className="h-full max-h-[calc(100vh-120px)] flex items-center justify-center relative"
                         ref={videoContainerRef}
+                        style={{
+                            width: is340pxScreen ? "100%" : "initial", // Adjust width for very small screens
+                        }}
                     >
                         <CustomVideoPlayer
                             src={"https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4"}
@@ -354,6 +412,9 @@ const VideoDetail = ({
                             video={video}
                             className="h-auto max-h-full aspect-[9/16]"
                             showMiniBanner={isCompactView}
+                            isFollowing={isFollowing}
+                            onFollowClick={handleFollowClick}
+                            user={userInfo ?? undefined}
                         />
 
                         <div
@@ -400,7 +461,6 @@ const VideoDetail = ({
                                             cancelAction={() => {}}
                                         >
                                             <button
-                                                onClick={() => handleLikeClick()}
                                                 className={cn(
                                                     "w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer",
                                                     {
@@ -461,7 +521,6 @@ const VideoDetail = ({
                                             cancelAction={() => {}}
                                         >
                                             <button
-                                                onClick={() => handleDislikeClick()}
                                                 className={cn(
                                                     "w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer",
                                                     {
@@ -486,23 +545,54 @@ const VideoDetail = ({
                                     </span>
                                 </div>
 
-                                <button
-                                    className="flex flex-col items-center gap-1 text-white text-sm"
-                                    onClick={() => onOpenPanel(panelConfigs.comments)}
-                                >
-                                    <div className="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer bg-white/10 hover:bg-white/20 transition-colors duration-200">
-                                        <Image
-                                            src={icons.comment.svg}
-                                            alt="Comment"
-                                            width={20}
-                                            height={20}
-                                            className="w-4 h-4 md:w-5 md:h-5"
-                                        />
-                                    </div>
-                                    <span className="text-xs md:text-sm font-medium">
-                                        {formatNumberToSocialStyle(commentCount)}
-                                    </span>
-                                </button>
+                                {userInfo?.id ? (
+                                    <button
+                                        className="flex flex-col items-center gap-1 text-white text-sm"
+                                        onClick={() => onOpenPanel(panelConfigs.comments)}
+                                    >
+                                        <div className="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer bg-white/10 hover:bg-white/20 transition-colors duration-200">
+                                            <Image
+                                                src={icons.comment.svg}
+                                                alt="Comment"
+                                                width={20}
+                                                height={20}
+                                                className="w-4 h-4 md:w-5 md:h-5"
+                                            />
+                                        </div>
+                                        <span className="text-xs md:text-sm font-medium">
+                                            {formatNumberToSocialStyle(commentCount)}
+                                        </span>
+                                    </button>
+                                ) : (
+                                    <ConfirmDialog
+                                        dialogTitle="You need to log in to comment on this video"
+                                        dialogDescription={
+                                            "Please log in to your account to comment on this video."
+                                        }
+                                        confirmText="Sign In"
+                                        cancelText="Cancel"
+                                        confirmAction={() => {
+                                            // Redirect to login page
+                                            router.push("/user/signin");
+                                        }}
+                                        cancelAction={() => {}}
+                                    >
+                                        <button className="flex flex-col items-center gap-1 text-white text-sm">
+                                            <div className="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center cursor-pointer bg-white/10 hover:bg-white/20 transition-colors duration-200">
+                                                <Image
+                                                    src={icons.comment.svg}
+                                                    alt="Comment"
+                                                    width={20}
+                                                    height={20}
+                                                    className="w-4 h-4 md:w-5 md:h-5"
+                                                />
+                                            </div>
+                                            <span className="text-xs md:text-sm font-medium">
+                                                {formatNumberToSocialStyle(commentCount)}
+                                            </span>
+                                        </button>
+                                    </ConfirmDialog>
+                                )}
 
                                 <button
                                     className="flex flex-col items-center gap-1 text-white text-sm"
@@ -536,7 +626,13 @@ const VideoDetail = ({
 
                                 <div
                                     className="w-9 h-9 md:w-11 md:h-11 cursor-pointer mt-2 mx-auto"
-                                    onClick={() => onOpenPanel(panelConfigs.playlist)}
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Prevent video click event
+                                        e.preventDefault(); // Prevent default action
+                                        if (video.user.id) {
+                                            router.push(`/profile/${video.user.id}`);
+                                        }
+                                    }}
                                 >
                                     <Avatar className="w-9 h-9 md:w-11 md:h-11 rounded-md">
                                         <AvatarImage src={undefined} />

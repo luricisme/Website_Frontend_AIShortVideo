@@ -59,8 +59,16 @@ export const formatTimeAgo = (date: string | Date) => {
 
     for (const interval of intervals) {
         const count = Math.floor(diffInSeconds / interval.seconds);
+        
         if (count >= 1) {
-            return `${count} ${interval.label}${count > 1 ? "s" : ""} ago`;
+            if (count === 1) {
+                return `${count} ${interval.label} ago`;
+            } else {
+                // Thêm 's' cho số nhiều
+                return `${count} ${interval.label}s ago`;
+            }
         }
     }
+
+    return "just now";
 };

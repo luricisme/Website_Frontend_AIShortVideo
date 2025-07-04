@@ -10,13 +10,13 @@ type JsonArray = JsonValue[];
 
 interface ApiClientOptions {
     method?: string;
-    body?: JsonValue;
+    body?: JsonValue | FormData;
     headers?: Record<string, string>;
     requireAuth?: boolean;
     customOptions?: RequestInit;
 }
 
-interface HttpRequestOptions<Req extends JsonValue, Res> {
+interface HttpRequestOptions<Req extends JsonValue | FormData, Res> {
     body?: Req;
     responseSchema?: z.ZodType<Res>;
     requestSchema?: z.ZodType<Req>;
@@ -46,10 +46,12 @@ export async function apiClient(
             ...customHeaders,
         };
 
+        // console.log(">>> API Request:");
         // Thêm Authorization nếu endpoint yêu cầu xác thực
         if (requireAuth) {
             // Lấy phiên hiện tại
             const session = await getSession();
+            // console.log(">>> Current session:", session);
 
             if (!session?.accessToken) {
                 throw HttpError.fromAuthError("No access token available");
@@ -65,6 +67,7 @@ export async function apiClient(
             }
 
             // Thêm token vào headers
+            // console.log(">>> Using access token:", session.accessToken);
             headers.Authorization = `Bearer ${session.accessToken}`;
         }
 
@@ -83,6 +86,7 @@ export async function apiClient(
         // Gọi API
         let response: Response;
         try {
+            // console.log(">>> Fetching:", `${baseUrl}${endpoint}`)
             response = await fetch(`${baseUrl}${endpoint}`, requestConfig);
         } catch (error) {
             // Xử lý lỗi mạng
@@ -187,7 +191,7 @@ const http = {
         }
     },
 
-    async post<Req extends JsonValue, Res>(
+    async post<Req extends JsonValue | FormData, Res>(
         endpoint: string,
         options: HttpRequestOptions<Req, Res> = {}
     ): Promise<Res> {

@@ -3,6 +3,7 @@
 import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 
+import { User } from "@/types/user.types";
 import { Video } from "@/types/video.types";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -18,6 +19,9 @@ interface CustomVideoPlayerProps {
     isShowVideoInfo?: boolean;
     video?: Video;
     showMiniBanner?: boolean;
+    isFollowing: boolean; // Thêm prop này nếu cần
+    onFollowClick?: () => void; // Callback khi nhấn nút theo dõi
+    user?: User;
 }
 
 const THRESHOLD_SECONDS = 5; // Ngưỡng thời gian tính view cho video ngắn
@@ -31,6 +35,9 @@ export default function CustomVideoPlayer({
     isShowVideoInfo = false,
     video = undefined,
     showMiniBanner = false,
+    isFollowing,
+    onFollowClick = () => {},
+    user = undefined,
 }: CustomVideoPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const progressBarRef = useRef<HTMLDivElement>(null);
@@ -41,6 +48,7 @@ export default function CustomVideoPlayer({
     const animationFrameRef = useRef<number | null>(null);
 
     const isMobile = useMediaQuery("(max-width: 640px)");
+    const is340pxScreen = useMediaQuery("(max-width: 340px)");
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -737,9 +745,13 @@ export default function CustomVideoPlayer({
 
             {showMiniBanner && video && (
                 <div className="absolute bottom-15 left-0 right-0 p-2 md:p-4 text-white z-20 ">
-                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                    <div
+                        className={`flex items-center gap-2 md:gap-3 mb-1 md:mb-2 flex-wrap ${
+                            is340pxScreen ? "max-w-[200px]" : "max-w-[300px]"
+                        } md:max-w-[400px]`}
+                    >
                         <Avatar className="w-6 h-6 md:w-8 md:h-8">
-                            <AvatarImage src={video.user.avatar || undefined} />
+                            <AvatarImage src={video.user?.avatar || undefined} />
                             <AvatarFallback>{video.user.username.charAt(0)}</AvatarFallback>
                         </Avatar>
 
@@ -747,16 +759,20 @@ export default function CustomVideoPlayer({
                             @{video.user.username}
                         </p>
 
-                        <Button
-                            size="sm"
-                            className="rounded-full font-semibold text-[10px] md:text-xs py-0.5 px-2 md:py-1 md:px-3 h-6 md:h-8"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                // Handle follow action here
-                            }}
-                        >
-                            Follow
-                        </Button>
+                        {user?.id && (
+                            <Button
+                                size="sm"
+                                className="rounded-full font-semibold text-[10px] md:text-xs py-0.5 px-2 md:py-1 md:px-3 h-6 md:h-8"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    alert("is following: " + isFollowing);
+                                    // Handle follow action here
+                                    onFollowClick(); // Call the provided callback
+                                }}
+                            >
+                                {isFollowing ? "Unfollow" : "Follow"}
+                            </Button>
+                        )}
                     </div>
 
                     <h2 className="text-sm md:text-lg font-semibold mb-0.5 md:mb-1 line-clamp-1">
@@ -820,7 +836,9 @@ export default function CustomVideoPlayer({
             {isShowVideoInfo && !isMobile && (
                 <div className="absolute hidden md:block md:bottom-15 left-0 right-0 p-2 md:p-4 text-white z-20">
                     <div
-                        className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2"
+                        className={`flex items-center gap-2 md:gap-3 mb-1 md:mb-2 flex-wrap ${
+                            is340pxScreen ? "max-w-[200px]" : "max-w-[300px]"
+                        } md:max-w-[400px]`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <Avatar className="w-6 h-6 md:w-8 md:h-8">
@@ -828,17 +846,22 @@ export default function CustomVideoPlayer({
                             <AvatarFallback>{video?.user.username.charAt(0)}</AvatarFallback>
                         </Avatar>
 
-                        <p className="text-xs md:text-sm font-medium">@{video?.user.username}</p>
+                        <p className="text-xs md:text-sm font-medium truncate max-w-[150px] md:max-w-[200px] whitespace-nowrap overflow-hidden text-ellipsis">
+                            @{video?.user.username}
+                        </p>
 
-                        <Button
-                            size="sm"
-                            className="rounded-full font-semibold text-[10px] md:text-xs py-0.5 px-2 md:py-1 md:px-3 h-6 md:h-8"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                            }}
-                        >
-                            Follow
-                        </Button>
+                        {user?.id && (
+                            <Button
+                                size="sm"
+                                className="rounded-full font-semibold text-[10px] md:text-xs py-0.5 px-2 md:py-1 md:px-3 h-6 md:h-8"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onFollowClick(); // Call the provided callback
+                                }}
+                            >
+                                {isFollowing ? "Unfollow" : "Follow"}
+                            </Button>
+                        )}
                     </div>
 
                     <h2 className="text-sm md:text-lg font-semibold mb-0.5 md:mb-1 line-clamp-1">

@@ -18,6 +18,21 @@ export interface AuthResponseUser {
     role?: string;
 }
 
+export const followerResponseSchema = z.object({
+    pageNo: z.number().optional(),
+    pageSize: z.number().optional(),
+    totalElements: z.number().optional(),
+    items: z
+        .array(
+            z.object({
+                username: z.string().min(1, "Username is required"),
+                userId: z.union([z.number(), z.string()]).optional(),
+            })
+        )
+        .optional()
+        .nullable(),
+});
+
 export const userSchema = z.object({
     id: z.union([z.number(), z.string()]).optional(), // id can be a number or a string, and is optional
     firstName: z.string().min(1, "First name is required"),
@@ -32,8 +47,8 @@ export const userSchema = z.object({
     tiktok: z.string().nullable().optional(),
     youtube: z.string().nullable().optional(),
     twitter: z.string().nullable().optional(),
-    followers: z.number().int().optional(),
-    following: z.number().int().optional(),
+    followers: followerResponseSchema.optional(),
+    followings: followerResponseSchema.optional(),
 });
 
 // Type

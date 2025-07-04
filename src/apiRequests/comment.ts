@@ -1,5 +1,5 @@
-import { apiBasicResponseSchema, apiResponseSchema } from "@/types/api/common";
-import { commentListResponseSchema } from "@/types/comment.types";
+import {  apiResponseSchema } from "@/types/api/common";
+import { commentListResponseSchema, commentSchema } from "@/types/comment.types";
 import http from "@/utils/api/client";
 
 const URL = "/video/comment";
@@ -27,7 +27,7 @@ const commentVideo = ({
             content,
         },
         requireAuth: false,
-        responseSchema: apiBasicResponseSchema,
+        responseSchema: apiResponseSchema(commentSchema),
     });
 };
 

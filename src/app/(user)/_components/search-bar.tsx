@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
@@ -30,23 +30,30 @@ const AvatarDropdownMenu = ({
 }: {
     image: string | null | undefined;
     name: string | null | undefined;
+    userId?: string | number | undefined;
 }) => {
     const router = useRouter();
     const { clearUser } = useUserStore((state) => state);
 
     const handleLogout = async () => {
         try {
-            const result = await signOut({
-                redirect: false,
-            });
+            clearUser();
 
-            console.log(">>> Logout successful:", result);
-            localStorage.removeItem("user");
-            clearUser(); // Clear user state in the store
-            router.refresh(); // Refresh the page to reflect the logout state
+            
+
+            await signOut({ redirect: false });
+
+            router.refresh();
+
+            toast.success("Logged out successfully");
         } catch (error) {
             console.error(">>> Logout failed:", error);
+            toast.error("Failed to logout");
         }
+    };
+
+    const handleProfileClick = () => {
+        router.push("/profile/me");
     };
 
     return (
@@ -57,16 +64,16 @@ const AvatarDropdownMenu = ({
                     <AvatarFallback>{(name ?? "Unknown").charAt(0)}</AvatarFallback>
                 </Avatar>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="start">
+            <DropdownMenuContent className="w-56" align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuGroup>
-                    <DropdownMenuItem className="cursor-pointer">
+                    <DropdownMenuItem className="cursor-pointer" onClick={handleProfileClick}>
                         Profile
                         <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer" onClick={() => handleLogout()}>
+                <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
                     Log out
                     <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
                 </DropdownMenuItem>
@@ -77,70 +84,105 @@ const AvatarDropdownMenu = ({
 
 const SearchBar = () => {
     const { data: session, status } = useSession();
-    const { setUser } = useUserStore((state) => state);
+    const { user, setUser, setFetching, setError, clearUser } = useUserStore((state) => state);
 
-    // Video info state
+    // Chỉ fetch user info khi có session và chưa có user data
+    const shouldFetchUserInfo = !!session?.accessToken && !user;
+
     const {
         data: userInfoData,
         isLoading: isUserInfoLoading,
         error: userInfoError,
         isError: isUserInfoError,
-    } = useUserInfo(session);
+    } = useUserInfo(session, {
+        enabled: shouldFetchUserInfo, // Conditional fetching
+    });
 
-    // if (userInfoData && !isUserInfoError && !isUserInfoLoading) {
-    //     setUser(userInfoData);
-    // }
+    const callSignOut = async () => {
+        await signOut({ redirect: false });
+    };
 
+    // Handle combined auth and user info states
     useEffect(() => {
-        // trường hợp đăng nhập nhưng không có dữ liệu userInfoData hoặc bị lỗi
-        if (session?.accessToken && !isUserInfoLoading && isUserInfoError) {
-            toast.error(userInfoError?.message || "Failed to fetch user info");
-            return;
-        }
+        // Determine current state
+        const currentState = (() => {
+            if (status === "loading") return "session-loading";
+            if (status === "unauthenticated" || !session?.accessToken) return "unauthenticated";
+            if (isUserInfoLoading) return "user-loading";
+            if (isUserInfoError && userInfoError) return "error";
+            if (userInfoData && !isUserInfoError) return "authenticated";
+            return "idle";
+        })();
 
-        // trường hợp đăng nhập thành công và có dữ liệu userInfoData
-        if (session?.accessToken && userInfoData && !isUserInfoLoading && !isUserInfoError) {
-            setUser(userInfoData);
-            return;
+        // Handle each state
+        switch (currentState) {
+            case "session-loading":
+            case "user-loading":
+                setFetching(true);
+                break;
+
+            case "unauthenticated":
+                clearUser();
+                setFetching(false);
+                break;
+
+            case "error":
+                setError(userInfoError);
+                setFetching(false);
+                toast.error(userInfoError?.message || "Failed to fetch user info");
+                // signOut({ redirect: false });
+                callSignOut();
+                break;
+
+            case "authenticated":
+                setUser(userInfoData || null);
+                setFetching(false);
+                setError(null);
+                break;
+
+            case "idle":
+            default:
+                setFetching(false);
+                break;
         }
     }, [
+        status,
+        session?.accessToken,
         userInfoData,
         isUserInfoLoading,
         isUserInfoError,
+        userInfoError,
         setUser,
-        session?.accessToken,
-        userInfoError?.message,
+        setFetching,
+        setError,
+        clearUser,
     ]);
-
-    // console.log(">>> VideoDetail userInfoData:", userInfoData);
-    // console.log(">>> VideoDetail isUserInfoLoading:", isUserInfoLoading);
-    // console.log(">>> VideoDetail userInfoError:", userInfoError);
-    // console.log(">>> VideoDetail isUserInfoError:", isUserInfoError);
 
     return (
         <div className="h-[76px] flex items-center w-full gap-2 py-4 sticky top-0 z-50 bg-background">
             <SidebarTrigger />
             <div className="flex items-center justify-between w-full">
                 <div className="relative flex items-center justify-center w-full max-w-[400px]">
-                    <button className="absolute left-3">
+                    <button className="absolute left-3" aria-label="Search">
                         <Search color="#786E6E" size={20} strokeWidth={3} />
                     </button>
                     <input
                         type="text"
                         placeholder="Search..."
-                        className="w-full py-2 pl-10 pr-4 border rounded-full focus:outline-none bg-sidebar "
+                        className="w-full py-2 pl-10 pr-4 border rounded-full focus:outline-none bg-sidebar"
+                        aria-label="Search input"
                     />
                 </div>
                 <div className="flex items-center gap-2">
-                    {status === "loading" ? (
-                        // Show skeleton while loading
+                    {status === "loading" || isUserInfoLoading ? (
                         <div className="flex items-center gap-2">
                             <Skeleton className="h-9 w-9 rounded-full" />
                         </div>
-                    ) : session?.user ? (
+                    ) : user && session?.user ? (
                         <AvatarDropdownMenu
-                            image={session.user.image ?? userInfoData?.avatar ?? null}
-                            name={session.user.name ?? userInfoData?.username ?? null}
+                            image={user?.avatar ?? session.user.image ?? null}
+                            name={user?.username ?? session.user.name ?? null}
+                            userId={user?.id}
                         />
                     ) : (
                         <>

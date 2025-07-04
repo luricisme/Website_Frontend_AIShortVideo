@@ -1,3 +1,11 @@
+import { ApiResponse } from "@/types/api/common";
+import { commentApiRequests } from "@/apiRequests/comment";
+import VideoDetail from "@/app/(user)/_components/video-detail";
+import { checkFollowing } from "@/apiRequests/client/user.client";
+import { Comment, CommentListResponse } from "@/types/comment.types";
+import { Video, VideoLikeStatus, VideoListResponse } from "@/types/video.types";
+import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
 import {
     dislikeVideo,
     getVideoById,
@@ -9,12 +17,6 @@ import {
     undislikeVideo,
     unlikeVideo,
 } from "@/apiRequests/client";
-import { commentApiRequests } from "@/apiRequests/comment";
-import VideoDetail from "@/app/(user)/_components/video-detail";
-import { ApiResponse } from "@/types/api/common";
-import { Comment, CommentListResponse } from "@/types/comment.types";
-import { Video, VideoLikeStatus, VideoListResponse } from "@/types/video.types";
-import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useVideoListQuery = ({ retryKey }: { retryKey?: string | number }) => {
     const key = retryKey ? ["videos", retryKey] : ["videos"];
@@ -501,5 +503,18 @@ export const useSubmitCommentMutation = () => {
                 console.log("Comment submitted successfully");
             }
         },
+    });
+};
+
+export const useCheckFollowStatusQuery = (userId: number | string) => {
+    return useQuery({
+        queryKey: ["follow-status", userId],
+        queryFn: () => {
+            if (!userId) {
+                throw new Error("User ID is required to check follow status.");
+            }
+            return checkFollowing(userId);
+        },
+        enabled: !!userId, // Only run if userId is provided
     });
 };
