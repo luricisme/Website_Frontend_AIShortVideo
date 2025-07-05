@@ -1,138 +1,147 @@
-"use client";
+import { getVideoDetail } from "@/apiRequests/video";
+import { envServer } from "@/constants/env.server";
+import ShortsPage from "@/app/(user)/shorts/[id]/shorts-page-client";
+import type { Metadata, ResolvingMetadata } from "next";
 
-import { useParams } from "next/navigation";
-import ShortsViewer from "@/app/(user)/_components/shorts-viewer ";
-
-// Danh sách video mẫu (có thể lấy từ API hoặc từ một file riêng)
-const VIDEO_LIST = [
-    {
-        id: 1,
-        title: "AI Portraits",
-        description: "A collection of AI-generated portraits.",
-        thumbnail:
-            "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-        source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-        duration: 324,
-        views: 123456,
-        author: {
-            id: 1,
-            name: "John Doe",
-            username: "johndoe",
-            avatar: "https://example.com/john-doe.jpg",
-        },
-    },
-    // Giữ nguyên các video khác...
-    {
-        id: 2,
-        title: "Đồi Núi Tự Nhiên",
-        description: "Cảnh quay tuyệt đẹp về thiên nhiên.",
-        thumbnail:
-            "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8bmF0dXJlfGVufDB8fDB8fHww",
-        source: "https://www.w3schools.com/tags/mov_bbb.mp4",
-        duration: 245,
-        views: 87321,
-        author: {
-            id: 2,
-            name: "Minh Hà",
-            username: "minhha",
-            avatar: "https://example.com/minhha.jpg",
-        },
-    },
-    {
-        id: 3,
-        title: "AI Portraits",
-        description: "A collection of AI-generated portraits.",
-        thumbnail:
-            "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-        source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-        duration: 324,
-        views: 123456,
-        author: {
-            id: 1,
-            name: "John Doe",
-            username: "johndoe",
-            avatar: "https://example.com/john-doe.jpg",
-        },
-    },
-    {
-        id: 4,
-        title: "AI Portraits",
-        description: "A collection of AI-generated portraits.",
-        thumbnail:
-            "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-        source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-        duration: 324,
-        views: 123456,
-        author: {
-            id: 1,
-            name: "John Doe",
-            username: "johndoe",
-            avatar: "https://example.com/john-doe.jpg",
-        },
-    },
-    {
-        id: 5,
-        title: "AI Portraits",
-        description: "A collection of AI-generated portraits.",
-        thumbnail:
-            "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-        source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-        duration: 324,
-        views: 123456,
-        author: {
-            id: 1,
-            name: "John Doe",
-            username: "johndoe",
-            avatar: "https://example.com/john-doe.jpg",
-        },
-    },
-    {
-        id: 6,
-        title: "AI Portraits",
-        description: "A collection of AI-generated portraits.",
-        thumbnail:
-            "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-        source: "https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4",
-        duration: 324,
-        views: 123456,
-        author: {
-            id: 1,
-            name: "John Doe",
-            username: "johndoe",
-            avatar: "https://example.com/john-doe.jpg",
-        },
-    },
-];
-
-const ShortsPage = () => {
-    const params = useParams();
-    const initialVideoId = params?.id ? String(params.id) : null;
-
-    // Tìm video hiện tại từ ID và sắp xếp lại danh sách video
-    const getInitialVideoAndIndex = () => {
-        if (!initialVideoId) {
-            return { index: 0, videos: VIDEO_LIST };
-        }
-
-        const id = parseInt(initialVideoId);
-        const selectedVideoIndex = VIDEO_LIST.findIndex((video) => video.id === id);
-
-        if (selectedVideoIndex === -1) {
-            return { index: 0, videos: VIDEO_LIST };
-        }
-
-        // Thay vì sắp xếp lại, chỉ cần xác định index ban đầu
-        return { index: selectedVideoIndex, videos: VIDEO_LIST };
-    };
-
-    return (
-        <ShortsViewer
-            videos={VIDEO_LIST}
-            initialVideoIndex={getInitialVideoAndIndex().index}
-            updateUrl={true}
-            urlPath="/shorts"
-        />
-    );
+type Props = {
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-export default ShortsPage;
+export async function generateMetadata(
+    { params }: Props,
+    parent: ResolvingMetadata
+): Promise<Metadata> {
+    try {
+        const { id } = await params;
+        const videoId = id ? parseInt(id, 10) : null;
+
+        console.log("🔍 Generating metadata for video:", videoId);
+
+        if (!videoId) {
+            return {
+                title: "Invalid Video",
+                description: "The video ID is invalid.",
+            };
+        }
+
+        const video = await getVideoDetail(videoId);
+
+        if (!video || !video.data) {
+            return {
+                title: "Video Not Found",
+                description: "The requested video does not exist.",
+            };
+        }
+
+        const previousImages = (await parent).openGraph?.images || [];
+
+        return {
+            title: video.data.title,
+            description: video.data.script || "Watch this amazing video.",
+            openGraph: {
+                title: video.data.title,
+                description: video.data.script || "Watch this amazing video.",
+                // ⚠️ Use relative URL - metadataBase will resolve it
+                url: `/shorts/${videoId}`,
+                siteName: "AI Short Video Platform",
+                type: "video.other",
+                images: [
+                    {
+                        // ⚠️ Use absolute URL or ensure thumbnail is full URL
+                        // url: video.data.thumbnail?.startsWith("http")
+                        //     ? video.data.thumbnail
+                        //     : `${envServer.NEXTAUTH_URL}/default-thumbnail.jpg`,
+                        url: "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
+                        width: 1200, // ⚠️ Facebook recommended size
+                        height: 630,
+                        alt: video.data.title,
+                        type: "image/jpeg",
+                    },
+                    ...previousImages,
+                ],
+                videos: [
+                    {
+                        // ⚠️ Use absolute URL for video
+                        url: video.data.videoUrl?.startsWith("http")
+                            ? video.data.videoUrl
+                            : `${envServer.NEXTAUTH_URL}/shorts/${videoId}`,
+                        width: 1280,
+                        height: 720,
+                        type: "video/mp4",
+                    },
+                ],
+                // ⚠️ Add more OG properties
+                locale: "en_US",
+            },
+            twitter: {
+                card: "summary_large_image",
+                title: video.data.title,
+                description: video.data.script || "Watch this amazing video.",
+                // ⚠️ Fix Twitter images format
+                images: {
+                    // url: video.data.thumbnail?.startsWith("http")
+                    //     ? video.data.thumbnail
+                    //     : `${envServer.NEXTAUTH_URL}/default-thumbnail.jpg`,
+                    url: "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
+                    alt: video.data.title,
+                },
+                creator: "@yourusername", // ⚠️ Add your Twitter handle
+                site: "@yoursite",
+            },
+            authors: [{ name: video.data.user?.username || "AI Video Creator" }],
+            category: video.data.category || "Entertainment",
+            keywords: [video.data.category || "video", "shorts", "entertainment", "ai-generated"],
+            // ⚠️ Enhanced robots configuration
+            robots: {
+                index: true,
+                follow: true,
+                googleBot: {
+                    index: true,
+                    follow: true,
+                    "max-video-preview": -1,
+                    "max-image-preview": "large",
+                    "max-snippet": -1,
+                },
+            },
+            other: {
+                "video:duration": video.data.length?.toString() || "30",
+                "video:release_date": new Date().toISOString(),
+                // ⚠️ Add Facebook App ID if you have one
+                "fb:app_id": "your_facebook_app_id", // Replace with actual ID
+            },
+        };
+    } catch (error) {
+        console.error("❌ Error generating metadata:", error);
+        return {
+            title: "Video Not Found",
+            description: "The requested video does not exist.",
+            openGraph: {
+                title: "Video Not Found",
+                description: "The requested video does not exist.",
+                type: "website",
+                images: [
+                    {
+                        url: "/default-error.jpg", // ⚠️ Relative URL
+                        width: 1200,
+                        height: 630,
+                        alt: "Video Not Found",
+                    },
+                ],
+            },
+            twitter: {
+                card: "summary",
+                title: "Video Not Found",
+                description: "The requested video does not exist.",
+                images: {
+                    url: "/default-error.jpg", // ⚠️ Relative URL
+                    alt: "Video Not Found",
+                },
+            },
+        };
+    }
+}
+
+export default function Page() {
+    return <ShortsPage />;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import VideoCard from "@/app/(user)/_components/video-card";
+// import VideoCard from "@/app/(user)/_components/video-card";
 import PlatformStats from "@/app/(user)/dashboard/_components/platform-stats";
 import StatsOverview from "@/app/(user)/dashboard/_components/stats-overview";
 import { VideoDetailModal } from "@/app/(user)/dashboard/_components/video-detail-modal";
@@ -25,7 +25,7 @@ const Dashboard = () => {
         setDateRange,
         totalStats,
         videoStats,
-        recentVideos,
+        // recentVideos,
         viewsTrendData,
         platformData,
     } = useDashboardData();
@@ -119,9 +119,9 @@ const Dashboard = () => {
                             </CardHeader>
                             <CardContent>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 w-full">
-                                    {recentVideos.map((video) => (
+                                    {/* {recentVideos.map((video) => (
                                         <VideoCard key={video.id} video={video} />
-                                    ))}
+                                    ))} */}
                                 </div>
                             </CardContent>
                         </Card>

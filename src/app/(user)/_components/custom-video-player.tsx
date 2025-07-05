@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { VideoType } from "@/app/(user)/_components/video-detail";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+
+import { User } from "@/types/user.types";
+import { Video } from "@/types/video.types";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useIncrementVideoViewCountMutation } from "@/queries/useVideo";
 
 interface CustomVideoPlayerProps {
     src: string;
@@ -14,9 +17,14 @@ interface CustomVideoPlayerProps {
     muted?: boolean;
     isVisible?: boolean;
     isShowVideoInfo?: boolean;
-    video?: VideoType;
+    video?: Video;
     showMiniBanner?: boolean;
+    isFollowing: boolean; // Thêm prop này nếu cần
+    onFollowClick?: () => void; // Callback khi nhấn nút theo dõi
+    user?: User;
 }
+
+const THRESHOLD_SECONDS = 5; // Ngưỡng thời gian tính view cho video ngắn
 
 export default function CustomVideoPlayer({
     src,
@@ -27,6 +35,9 @@ export default function CustomVideoPlayer({
     isShowVideoInfo = false,
     video = undefined,
     showMiniBanner = false,
+    isFollowing,
+    onFollowClick = () => {},
+    user = undefined,
 }: CustomVideoPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const progressBarRef = useRef<HTMLDivElement>(null);
@@ -37,6 +48,7 @@ export default function CustomVideoPlayer({
     const animationFrameRef = useRef<number | null>(null);
 
     const isMobile = useMediaQuery("(max-width: 640px)");
+    const is340pxScreen = useMediaQuery("(max-width: 340px)");
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -53,6 +65,154 @@ export default function CustomVideoPlayer({
     const [videoError, setVideoError] = useState(false);
     const [firstPlayAttempt, setFirstPlayAttempt] = useState(true);
     const [showControls, setShowControls] = useState(false);
+
+    // State để theo dõi việc đã tính view
+    const [viewCounted, setViewCounted] = useState(false);
+    const viewingTimeRef = useRef<number>(0);
+    const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
+    const apiCalledRef = useRef<boolean>(false);
+
+    const incrementViewMutation = useIncrementVideoViewCountMutation();
+
+    const getViewThreshold = (videoDuration: number) => {
+        if (videoDuration <= THRESHOLD_SECONDS) {
+            return Math.max(videoDuration * 0.5, 1);
+        } else if (videoDuration <= 10) {
+            return 3;
+        } else {
+            return THRESHOLD_SECONDS;
+        }
+    };
+
+    const callViewCountAPI = (videoId: number | string, reason: string) => {
+        if (apiCalledRef.current || viewCounted) {
+            // console.log(">>> API already called, skipping...");
+            return;
+        }
+
+        console.log(`>>> 🎯 CALLING VIEW API for reason: ${reason}`);
+        apiCalledRef.current = true;
+        setViewCounted(true);
+
+        if (intervalIdRef.current) {
+            clearInterval(intervalIdRef.current);
+            intervalIdRef.current = null;
+        }
+
+        incrementViewMutation.mutate(videoId);
+        // console.log(`✅ View counted for video ${videoId} - ${reason}`);
+    };
+
+    useEffect(() => {
+        // console.log(">>> Main effect triggered");
+
+        if (!isVisible || !video?.id || apiCalledRef.current || duration === 0) {
+            // console.log(">>> Early return:", {
+            //     isVisible,
+            //     videoId: video?.id,
+            //     apiCalled: apiCalledRef.current,
+            //     duration,
+            // });
+            return;
+        }
+
+        const viewThreshold = getViewThreshold(duration);
+
+        // console.log(">>> Video setup:", {
+        //     videoId: video.id,
+        //     duration,
+        //     viewThreshold,
+        //     isPlaying,
+        //     apiCalled: apiCalledRef.current,
+        // });
+
+        if (intervalIdRef.current) {
+            // console.log(">>> Clearing existing interval");
+            clearInterval(intervalIdRef.current);
+            intervalIdRef.current = null;
+        }
+
+        if (isPlaying && !apiCalledRef.current) {
+            // console.log(">>> Creating interval for view counting");
+
+            intervalIdRef.current = setInterval(() => {
+                // console.log(">>> === INTERVAL TICK ===");
+
+                // Kiểm tra lại để tránh race condition
+                if (apiCalledRef.current) {
+                    // console.log(">>> Stopping interval - API already called");
+                    if (intervalIdRef.current) {
+                        clearInterval(intervalIdRef.current);
+                        intervalIdRef.current = null;
+                    }
+                    return;
+                }
+
+                viewingTimeRef.current += 1;
+                // console.log(">>> Interval tick - viewing time:", viewingTimeRef.current);
+
+                // Kiểm tra nếu đạt ngưỡng và chưa tính view
+                if (viewingTimeRef.current >= viewThreshold && !apiCalledRef.current) {
+                    // console.log(">>> 🎯 Calling API from interval");
+                    callViewCountAPI(video.id, `interval-based after ${viewingTimeRef.current}s`);
+                }
+            }, 1000);
+
+            // console.log(">>> Interval created with ID:", intervalIdRef.current);
+        } else {
+            // console.log(">>> Not creating interval:", {
+            //     isPlaying,
+            //     apiCalled: apiCalledRef.current,
+            // });
+        }
+
+        return () => {
+            // console.log(">>> Cleanup function called");
+            if (intervalIdRef.current) {
+                clearInterval(intervalIdRef.current);
+                intervalIdRef.current = null;
+            }
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isVisible, video?.id, duration, isPlaying]);
+
+    useEffect(() => {
+        if (!apiCalledRef.current && video?.id && duration > 0 && currentTime > 0) {
+            const viewThreshold = getViewThreshold(duration);
+            const watchedPercentage = (currentTime / duration) * 100;
+
+            if (watchedPercentage >= 80) {
+                // console.log(">>> Short video progress:", {
+                //     watchedPercentage: watchedPercentage.toFixed(1) + "%",
+                //     viewingTime: viewingTimeRef.current,
+                //     threshold: viewThreshold,
+                //     apiCalled: apiCalledRef.current,
+                // });
+            }
+
+            if (
+                watchedPercentage >= 90 &&
+                viewingTimeRef.current >= viewThreshold &&
+                !apiCalledRef.current
+            ) {
+                // console.log(">>> 🎯 Calling API for short video");
+                callViewCountAPI(video.id, `short video ${watchedPercentage.toFixed(1)}%`);
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentTime, duration, video?.id]);
+
+    useEffect(() => {
+        // console.log(">>> 🔄 Resetting for new video/src");
+        setViewCounted(false);
+        viewingTimeRef.current = 0;
+        apiCalledRef.current = false;
+
+        if (intervalIdRef.current) {
+            clearInterval(intervalIdRef.current);
+            intervalIdRef.current = null;
+        }
+    }, [src, video?.id]);
 
     const formatTime = useCallback((time: number) => {
         if (!isFinite(time) || isNaN(time)) return "0:00";
@@ -585,31 +745,41 @@ export default function CustomVideoPlayer({
 
             {showMiniBanner && video && (
                 <div className="absolute bottom-15 left-0 right-0 p-2 md:p-4 text-white z-20 ">
-                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                    <div
+                        className={`flex items-center gap-2 md:gap-3 mb-1 md:mb-2 flex-wrap ${
+                            is340pxScreen ? "max-w-[200px]" : "max-w-[300px]"
+                        } md:max-w-[400px]`}
+                    >
                         <Avatar className="w-6 h-6 md:w-8 md:h-8">
-                            <AvatarImage src={video.author.avatar} />
-                            <AvatarFallback>{video.author.name.charAt(0)}</AvatarFallback>
+                            <AvatarImage src={video.user?.avatar || undefined} />
+                            <AvatarFallback>{video.user.username.charAt(0)}</AvatarFallback>
                         </Avatar>
 
-                        <p className="text-xs md:text-sm font-medium">@{video.author.username}</p>
+                        <p className="text-xs md:text-sm font-medium truncate max-w-[150px] md:max-w-[200px] whitespace-nowrap overflow-hidden text-ellipsis">
+                            @{video.user.username}
+                        </p>
 
-                        <Button
-                            size="sm"
-                            className="rounded-full font-semibold text-[10px] md:text-xs py-0.5 px-2 md:py-1 md:px-3 h-6 md:h-8"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                // Handle follow action here
-                            }}
-                        >
-                            Follow
-                        </Button>
+                        {user?.id && (
+                            <Button
+                                size="sm"
+                                className="rounded-full font-semibold text-[10px] md:text-xs py-0.5 px-2 md:py-1 md:px-3 h-6 md:h-8"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    alert("is following: " + isFollowing);
+                                    // Handle follow action here
+                                    onFollowClick(); // Call the provided callback
+                                }}
+                            >
+                                {isFollowing ? "Unfollow" : "Follow"}
+                            </Button>
+                        )}
                     </div>
 
                     <h2 className="text-sm md:text-lg font-semibold mb-0.5 md:mb-1 line-clamp-1">
                         {video.title}
                     </h2>
 
-                    <p className="text-xs md:text-sm line-clamp-2">{video.description}</p>
+                    <p className="text-xs md:text-sm line-clamp-2">{video.script}</p>
                 </div>
             )}
 
@@ -664,34 +834,41 @@ export default function CustomVideoPlayer({
             </div>
 
             {isShowVideoInfo && !isMobile && (
-                <div className="absolute bottom-24 md:bottom-28 left-0 right-0 p-2 md:p-4 text-white z-20">
+                <div className="absolute hidden md:block md:bottom-15 left-0 right-0 p-2 md:p-4 text-white z-20">
                     <div
-                        className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2"
+                        className={`flex items-center gap-2 md:gap-3 mb-1 md:mb-2 flex-wrap ${
+                            is340pxScreen ? "max-w-[200px]" : "max-w-[300px]"
+                        } md:max-w-[400px]`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <Avatar className="w-6 h-6 md:w-8 md:h-8">
-                            <AvatarImage src={video?.author.avatar} />
-                            <AvatarFallback>{video?.author.name.charAt(0)}</AvatarFallback>
+                            <AvatarImage src={video?.user.avatar || undefined} />
+                            <AvatarFallback>{video?.user.username.charAt(0)}</AvatarFallback>
                         </Avatar>
 
-                        <p className="text-xs md:text-sm font-medium">@{video?.author.username}</p>
+                        <p className="text-xs md:text-sm font-medium truncate max-w-[150px] md:max-w-[200px] whitespace-nowrap overflow-hidden text-ellipsis">
+                            @{video?.user.username}
+                        </p>
 
-                        <Button
-                            size="sm"
-                            className="rounded-full font-semibold text-[10px] md:text-xs py-0.5 px-2 md:py-1 md:px-3 h-6 md:h-8"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                            }}
-                        >
-                            Follow
-                        </Button>
+                        {user?.id && (
+                            <Button
+                                size="sm"
+                                className="rounded-full font-semibold text-[10px] md:text-xs py-0.5 px-2 md:py-1 md:px-3 h-6 md:h-8"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onFollowClick(); // Call the provided callback
+                                }}
+                            >
+                                {isFollowing ? "Unfollow" : "Follow"}
+                            </Button>
+                        )}
                     </div>
 
                     <h2 className="text-sm md:text-lg font-semibold mb-0.5 md:mb-1 line-clamp-1">
                         {video?.title}
                     </h2>
 
-                    <p className="text-xs md:text-sm line-clamp-2">{video?.description}</p>
+                    <p className="text-xs md:text-sm line-clamp-2">{video?.script}</p>
                 </div>
             )}
         </div>

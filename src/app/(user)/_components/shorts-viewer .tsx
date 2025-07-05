@@ -1,34 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import VideoDetail from "@/app/(user)/_components/video-detail";
-import RightPanel, { PanelConfig } from "@/app/(user)/_components/right-panel";
-import {
-    CommentsPanel,
-    DetailsPanel,
-    SharePanel,
-    PlaylistPanel,
-} from "@/app/(user)/_components/panel-contents";
-import { useDebounce } from "@/hooks/use-debounce";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useBodyScroll, useScrollContainer } from "@/hooks/use-body-scroll";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-interface Video {
-    id: number;
-    title: string;
-    description: string;
-    thumbnail: string;
-    source: string;
-    duration: number;
-    views: number;
-    author: {
-        id: number;
-        name: string;
-        username: string;
-        avatar: string;
-    };
-}
+import { Video } from "@/types/video.types";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import VideoDetail from "@/app/(user)/_components/video-detail";
+import { useBodyScroll, useScrollContainer } from "@/hooks/use-body-scroll";
+import RightPanel, { PanelConfig } from "@/app/(user)/_components/right-panel";
+import { DetailsPanel, SharePanel, PlaylistPanel } from "@/app/(user)/_components/panel-contents";
+import { CommentsPanel } from "@/app/(user)/_components/comment";
 
 interface ShortsViewerProps {
     videos: Video[];
@@ -292,15 +274,15 @@ const ShortsViewer = ({
 
         return {
             comments: {
-                title: "Bình luận",
+                title: "Comment",
                 content: <CommentsPanel video={currentVideo} />,
             },
             details: {
-                title: "Thông tin chi tiết",
+                title: "Video Details",
                 content: <DetailsPanel video={currentVideo} />,
             },
             share: {
-                title: "Chia sẻ",
+                title: "Share",
                 content: <SharePanel video={currentVideo} />,
             },
             playlist: {
