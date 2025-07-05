@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectTrigger, SelectValue, SelectItem, SelectContent } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { AudioData } from '../_types/video';
-import { saveVideoAudioData, loadVideoAudioData } from '../_utils/videoStorage';
+import { saveVideoAudioData, loadVideoAudioData, clearVideoCaptionData } from '../_utils/videoStorage';
 
 // Interface for individual audio files
 interface AudioFile {
@@ -43,15 +43,6 @@ const VOICE_TYPES = {
     ]
 };
 
-// Speed options
-const SPEED_OPTIONS = [
-    { value: '0.75', label: 'Slow (0.75x)' },
-    { value: '1.0', label: 'Normal (1.0x)' },
-    { value: '1.25', label: 'Fast (1.25x)' },
-    { value: '1.5', label: 'Very Fast (1.5x)' },
-    { value: '2.0', label: 'Ultra Fast (2.0x)' }
-];
-
 export default function AudioPage() {
     const router = useRouter();
     const { state, dispatch } = useVideoCreation();
@@ -67,7 +58,6 @@ export default function AudioPage() {
     const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
     const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
     const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
-
 
     // Get script and language from localStorage
     const [script, setScript] = useState('');
@@ -237,7 +227,7 @@ export default function AudioPage() {
         updateAudioData({
             recordedAudio: selectedFiles[0].url, // Use first selected for backward compatibility
         });
-
+        clearVideoCaptionData();
         router.push('/create-video/caption');
     };
 
@@ -304,6 +294,7 @@ export default function AudioPage() {
             });
 
             const result = await response.json();
+            console.log(result);
 
             if (result.status === 200) {
                 // Add generated audio to files list with duration if available
@@ -627,11 +618,11 @@ export default function AudioPage() {
                                                 <SelectValue placeholder="Select speed" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {SPEED_OPTIONS.map((speed) => (
-                                                    <SelectItem key={speed.value} value={speed.value}>
-                                                        {speed.label}
-                                                    </SelectItem>
-                                                ))}
+                                                <SelectItem value="0.75">Slow (0.75x)</SelectItem>
+                                                <SelectItem value="1.0">Normal (1.0x)</SelectItem>
+                                                <SelectItem value="1.25">Fast (1.25x)</SelectItem>
+                                                <SelectItem value="1.5">Very Fast (1.5x)</SelectItem>
+                                                <SelectItem value="2.0">Ultra Fast (2.0x)</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>

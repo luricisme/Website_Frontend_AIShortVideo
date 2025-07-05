@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
     Download,
     Youtube,
@@ -16,13 +17,17 @@ import {
     CheckCircle,
     AlertCircle,
     Share2,
-    Copy, ArrowLeft, Home
+    Copy,
+    ArrowLeft,
+    Home,
+    XCircle
 } from 'lucide-react';
 import {
     loadVideoAudioData,
     loadVideoImageData,
     loadVideoScriptData,
-    loadVideoCaptionData, clearAllVideoData
+    loadVideoCaptionData,
+    clearAllVideoData
 } from '@/app/create-video/_utils/videoStorage';
 import { VideoData } from '@/app/create-video/_types/video';
 import StepNavigation from "@/app/create-video/_components/StepNavigation";
@@ -41,11 +46,18 @@ interface RenderStatus {
     progress?: number;
 }
 
+interface UploadResult {
+    success: boolean;
+    message: string;
+    videoId?: string;
+}
+
 export default function VideoExportPage() {
     const [videoData, setVideoData] = useState<VideoData | null>(null);
     const [renderStatus, setRenderStatus] = useState<RenderStatus | null>(null);
     const [isRendering, setIsRendering] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
 
     // YouTube upload form data
     const [youtubeData, setYoutubeData] = useState({
@@ -120,7 +132,7 @@ export default function VideoExportPage() {
                 setIsRendering(false);
                 clearInterval(pollInterval);
             }
-        }, 3000); // Poll every 3 seconds
+        }, 3000);
     };
 
     const getProgressFromStatus = (status: string): number => {
@@ -189,30 +201,62 @@ export default function VideoExportPage() {
         }
     };
 
+    // Updated uploadToYouTube function to use localhost:9090 endpoint with FormData
     const uploadToYouTube = async () => {
         if (!renderStatus?.url) return;
+        if (!youtubeData.title.trim()) {
+            setUploadResult({
+                success: false,
+                message: 'Please enter a video title'
+            });
+            return;
+        }
 
         setIsUploading(true);
+        setUploadResult(null);
+
         try {
-            const response = await fetch('/api/youtube/upload', {
+            // Create FormData object
+            const formData = new FormData();
+            formData.append('videoUrl', renderStatus.url);
+            formData.append('title', youtubeData.title);
+            formData.append('description', youtubeData.description);
+            formData.append('userId', '33');
+
+            console.log(formData);
+
+            const response = await fetch('http://localhost:9090/publish/youtube/upload_url', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    videoUrl: renderStatus.url,
-                    ...youtubeData
-                })
+                body: formData // Send as FormData, no Content-Type header needed
             });
 
-            const result = await response.json();
+            const data = await response.json();
 
-            if (result.success) {
-                alert(`Video uploaded successfully! Video ID: ${result.videoId}`);
+            if (response.ok) {
+                setUploadResult({
+                    success: true,
+                    message: 'Video uploaded successfully to YouTube!',
+                    videoId: data.videoId
+                });
+                // Reset form after successful upload
+                setYoutubeData(prev => ({
+                    ...prev,
+                    title: '',
+                    description: '',
+                    tags: ''
+                }));
             } else {
-                throw new Error(result.error || 'Upload failed');
+                setUploadResult({
+                    success: false,
+                    message: data.error || 'Failed to upload video to YouTube'
+                });
             }
         } catch (error) {
             console.error('YouTube upload error:', error);
-            alert('Failed to upload to YouTube: ' + error);
+            setUploadResult({
+                success: false,
+                message: 'Network error. Please check your connection and try again.'
+            });
         } finally {
             setIsUploading(false);
         }
@@ -288,8 +332,8 @@ export default function VideoExportPage() {
                                                     renderStatus.status === 'failed' ? 'text-red-500' :
                                                         'text-yellow-500'
                                             }`}>
-                                        {renderStatus.status}
-                                    </span>
+                                                {renderStatus.status}
+                                            </span>
                                         </div>
 
                                         {renderStatus.error && (
@@ -298,7 +342,6 @@ export default function VideoExportPage() {
                                             </div>
                                         )}
                                     </div>
-
                                 )}
                             </CardContent>
                         </Card>
@@ -317,7 +360,7 @@ export default function VideoExportPage() {
                                         <div className="space-y-4">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <Label htmlFor="title" className={"mb-2"}>Video Title</Label>
+                                                    <Label htmlFor="title" className="mb-3">Video Title</Label>
                                                     <Input
                                                         id="title"
                                                         value={youtubeData.title}
@@ -327,20 +370,10 @@ export default function VideoExportPage() {
                                                     />
                                                 </div>
 
-                                                <div>
-                                                    <Label htmlFor="tags" className={"mb-2"}>Tags (comma separated)</Label>
-                                                    <Input
-                                                        id="tags"
-                                                        value={youtubeData.tags}
-                                                        onChange={(e) => setYoutubeData(prev => ({...prev, tags: e.target.value}))}
-                                                        className="bg-neutral-700 border-neutral-600"
-                                                        placeholder="AI, Video, Education"
-                                                    />
-                                                </div>
                                             </div>
 
                                             <div>
-                                                <Label htmlFor="description" className={"mb-2"}>Description</Label>
+                                                <Label htmlFor="description" className="mb-3">Description</Label>
                                                 <Textarea
                                                     id="description"
                                                     value={youtubeData.description}
@@ -348,20 +381,6 @@ export default function VideoExportPage() {
                                                     className="bg-neutral-700 border-neutral-600 min-h-24"
                                                     placeholder="Video description..."
                                                 />
-                                            </div>
-
-                                            <div>
-                                                <Label htmlFor="privacy" className={"mb-2"}>Privacy</Label>
-                                                <select
-                                                    id="privacy"
-                                                    value={youtubeData.privacy}
-                                                    onChange={(e) => setYoutubeData(prev => ({...prev, privacy: e.target.value as never}))}
-                                                    className="w-full bg-neutral-700 border border-neutral-600 rounded-md px-3 py-2 text-white"
-                                                >
-                                                    <option value="private">Private</option>
-                                                    <option value="unlisted">Unlisted</option>
-                                                    <option value="public">Public</option>
-                                                </select>
                                             </div>
 
                                             <Button
@@ -381,13 +400,33 @@ export default function VideoExportPage() {
                                                     </>
                                                 )}
                                             </Button>
+
+                                            {/* Upload Result */}
+                                            {uploadResult && (
+                                                <Alert className={`mt-4 ${uploadResult.success ? 'border-green-500 bg-green-500/10' : 'border-red-500 bg-red-500/10'}`}>
+                                                    <AlertDescription className={`flex items-center gap-2 ${uploadResult.success ? 'text-green-300' : 'text-red-300'}`}>
+                                                        {uploadResult.success ? (
+                                                            <CheckCircle className="h-4 w-4 text-green-500" />
+                                                        ) : (
+                                                            <XCircle className="h-4 w-4 text-red-500" />
+                                                        )}
+                                                        {uploadResult.message}
+                                                        {uploadResult.videoId && (
+                                                            <span className="block mt-1 text-sm opacity-80">
+                                                                Video ID: {uploadResult.videoId}
+                                                            </span>
+                                                        )}
+                                                    </AlertDescription>
+                                                </Alert>
+                                            )}
                                         </div>
                                     </AccordionContent>
                                 </AccordionItem>
                             </Accordion>
                         )}
+
                         {/* Back Button */}
-                        <div className={"flex justify-between mb-2"}>
+                        <div className="flex justify-between mb-2">
                             <Button
                                 variant="outline"
                                 onClick={() => router.back()}

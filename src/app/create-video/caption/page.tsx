@@ -28,15 +28,15 @@ export default function CaptionPage() {
     const getFontFamily = (style: string) => {
         switch (style) {
             case 'modern':
-                return 'Inter, system-ui, sans-serif';
+                return 'Roboto, system-ui, sans-serif';
             case 'classic':
-                return 'Georgia, Times New Roman, serif';
+                return 'Montserrat SemiBold, sans-serif';
             case 'minimal':
-                return 'JetBrains Mono, Consolas, monospace';
+                return 'OpenSans Bold, sans-serif';
             case 'elegant':
-                return 'Playfair Display, Georgia, serif';
+                return 'Didact Gothic, serif';
             default:
-                return 'Inter, system-ui, sans-serif';
+                return 'Roboto, system-ui, sans-serif';
         }
     };
 
@@ -45,7 +45,7 @@ export default function CaptionPage() {
         style: '',
         position: 'bottom',
         fontSize: 'medium',
-        color: '#ffffff',
+        color: '#000000',
         background: false,
         fontFamily: '' // Thêm fontFamily vào state
     };
@@ -227,16 +227,16 @@ export default function CaptionPage() {
                             </div>
                         </div>
 
-                        <div className="flex items-center space-x-3">
-                            <Checkbox
-                                id="background"
-                                checked={captionData.background}
-                                onCheckedChange={(checked) => updateCaptionData({ background: !!checked })}
-                            />
-                            <Label htmlFor="background" className="text-sm font-medium">
-                                Add background to subtitles
-                            </Label>
-                        </div>
+                        {/*<div className="flex items-center space-x-3">*/}
+                        {/*    <Checkbox*/}
+                        {/*        id="background"*/}
+                        {/*        checked={captionData.background}*/}
+                        {/*        onCheckedChange={(checked) => updateCaptionData({ background: !!checked })}*/}
+                        {/*    />*/}
+                        {/*    <Label htmlFor="background" className="text-sm font-medium">*/}
+                        {/*        Add background to subtitles*/}
+                        {/*    </Label>*/}
+                        {/*</div>*/}
 
                         {/* Preview Section */}
                         <div className="space-y-4">
@@ -253,7 +253,7 @@ export default function CaptionPage() {
                                     }`}
                                     style={{
                                         color: captionData.color,
-                                        textShadow: captionData.background ? 'none' : '2px 2px 4px rgba(0,0,0,0.8)',
+                                        // textShadow: captionData.background ? 'none' : '2px 2px 4px rgba(0,0,0,0.8)',
                                         fontFamily: captionData.style ? getFontFamily(captionData.style) : 'inherit'
                                     }}
                                 >
