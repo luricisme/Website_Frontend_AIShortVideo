@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,15 +16,22 @@ import {
     CheckCircle,
     AlertCircle,
     Share2,
-    Copy
+    Copy, ArrowLeft, Home
 } from 'lucide-react';
 import {
     loadVideoAudioData,
     loadVideoImageData,
     loadVideoScriptData,
-    loadVideoCaptionData
+    loadVideoCaptionData, clearAllVideoData
 } from '@/app/create-video/_utils/videoStorage';
 import { VideoData } from '@/app/create-video/_types/video';
+import StepNavigation from "@/app/create-video/_components/StepNavigation";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion"
 
 interface RenderStatus {
     id: string;
@@ -157,6 +164,11 @@ export default function VideoExportPage() {
         }
     };
 
+    const handleBackHome = () => {
+        clearAllVideoData();
+        router.push('/');
+    }
+
     const downloadVideo = async () => {
         if (!renderStatus?.url) return;
 
@@ -200,7 +212,7 @@ export default function VideoExportPage() {
             }
         } catch (error) {
             console.error('YouTube upload error:', error);
-            alert('Failed to upload to YouTube: ' + error.message);
+            alert('Failed to upload to YouTube: ' + error);
         } finally {
             setIsUploading(false);
         }
@@ -225,216 +237,222 @@ export default function VideoExportPage() {
     }
 
     return (
-        <div className="min-h-screen p-6 bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white">
-            <div className="max-w-4xl mx-auto space-y-6">
-                {/* Header */}
-                <div className="text-center space-y-2">
-                    <h1 className="text-4xl font-bold">
-                        Export Your AI Video
-                    </h1>
-                    <p className="text-neutral-400">Render and share your AI-generated video</p>
-                </div>
-
-                {/* Render Status Card */}
-                <Card className="bg-neutral-900">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            {isRendering ? (
-                                <Loader2 className="animate-spin h-5 w-5" />
-                            ) : renderStatus?.status === 'done' ? (
-                                <CheckCircle className="h-5 w-5 text-green-500" />
-                            ) : renderStatus?.status === 'failed' ? (
-                                <AlertCircle className="h-5 w-5 text-red-500" />
-                            ) : null}
-                            Render Status
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {!renderStatus && !isRendering && (
-                            <div className="text-center space-y-4">
-                                <p className="text-neutral-400">Ready to render your video</p>
-                                <Button
-                                    onClick={handleExport}
-                                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                                    size="lg"
-                                >
-                                    <Play className="mr-2 h-4 w-4" />
-                                    Start Rendering
-                                </Button>
-                            </div>
-                        )}
-
-                        {renderStatus && (
-                            <div className="space-y-4">
-                                <div>
-                                    <div className="flex justify-between text-sm mb-2">
-                                        <span>Progress</span>
-                                        <span>{renderStatus.progress || 0}%</span>
+        <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white">
+            <div className="max-w-6xl mx-auto space-y-6">
+                <StepNavigation />
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-6">
+                        {/* Render Status Card */}
+                        <Card className="bg-neutral-900">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    {isRendering ? (
+                                        <Loader2 className="animate-spin h-5 w-5" />
+                                    ) : renderStatus?.status === 'done' ? (
+                                        <CheckCircle className="h-5 w-5 text-green-500" />
+                                    ) : renderStatus?.status === 'failed' ? (
+                                        <AlertCircle className="h-5 w-5 text-red-500" />
+                                    ) : null}
+                                    Render Status
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {!renderStatus && !isRendering && (
+                                    <div className="text-center space-y-4">
+                                        <p className="text-neutral-400">Ready to render your video</p>
+                                        <Button
+                                            onClick={handleExport}
+                                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                                            size="lg"
+                                        >
+                                            <Play className="mr-2 h-4 w-4" />
+                                            Start Rendering
+                                        </Button>
                                     </div>
-                                    <Progress value={renderStatus.progress || 0} className="h-2" />
-                                </div>
+                                )}
 
-                                <div className="flex justify-between items-center">
-                                    <span>Status:</span>
-                                    <span className={`capitalize font-medium ${
-                                        renderStatus.status === 'done' ? 'text-green-500' :
-                                            renderStatus.status === 'failed' ? 'text-red-500' :
-                                                'text-yellow-500'
-                                    }`}>
+                                {renderStatus && (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <div className="flex justify-between text-sm mb-2">
+                                                <span>Progress</span>
+                                                <span>{renderStatus.progress || 0}%</span>
+                                            </div>
+                                            <Progress value={renderStatus.progress || 0} className="h-2" />
+                                        </div>
+
+                                        <div className="flex justify-between items-center">
+                                            <span>Status:</span>
+                                            <span className={`capitalize font-medium ${
+                                                renderStatus.status === 'done' ? 'text-green-500' :
+                                                    renderStatus.status === 'failed' ? 'text-red-500' :
+                                                        'text-yellow-500'
+                                            }`}>
                                         {renderStatus.status}
                                     </span>
-                                </div>
+                                        </div>
 
-                                {renderStatus.error && (
-                                    <div className="text-red-400 text-sm">
-                                        Error: {renderStatus.error}
+                                        {renderStatus.error && (
+                                            <div className="text-red-400 text-sm">
+                                                Error: {renderStatus.error}
+                                            </div>
+                                        )}
                                     </div>
+
                                 )}
-                            </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* YouTube Upload Form */}
+                        {renderStatus?.status === 'done' && renderStatus.url && (
+                            <Accordion type="single" collapsible className="w-full">
+                                <AccordionItem value="youtube-upload" className="bg-neutral-900 border-neutral-700 rounded-lg">
+                                    <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                                        <div className="flex items-center gap-2">
+                                            <Youtube className="h-5 w-5 text-red-500" />
+                                            <span className="font-semibold">Upload to YouTube</span>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="px-6 pb-6">
+                                        <div className="space-y-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <Label htmlFor="title" className={"mb-2"}>Video Title</Label>
+                                                    <Input
+                                                        id="title"
+                                                        value={youtubeData.title}
+                                                        onChange={(e) => setYoutubeData(prev => ({...prev, title: e.target.value}))}
+                                                        className="bg-neutral-700 border-neutral-600"
+                                                        placeholder="Enter video title"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <Label htmlFor="tags" className={"mb-2"}>Tags (comma separated)</Label>
+                                                    <Input
+                                                        id="tags"
+                                                        value={youtubeData.tags}
+                                                        onChange={(e) => setYoutubeData(prev => ({...prev, tags: e.target.value}))}
+                                                        className="bg-neutral-700 border-neutral-600"
+                                                        placeholder="AI, Video, Education"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <Label htmlFor="description" className={"mb-2"}>Description</Label>
+                                                <Textarea
+                                                    id="description"
+                                                    value={youtubeData.description}
+                                                    onChange={(e) => setYoutubeData(prev => ({...prev, description: e.target.value}))}
+                                                    className="bg-neutral-700 border-neutral-600 min-h-24"
+                                                    placeholder="Video description..."
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label htmlFor="privacy" className={"mb-2"}>Privacy</Label>
+                                                <select
+                                                    id="privacy"
+                                                    value={youtubeData.privacy}
+                                                    onChange={(e) => setYoutubeData(prev => ({...prev, privacy: e.target.value as never}))}
+                                                    className="w-full bg-neutral-700 border border-neutral-600 rounded-md px-3 py-2 text-white"
+                                                >
+                                                    <option value="private">Private</option>
+                                                    <option value="unlisted">Unlisted</option>
+                                                    <option value="public">Public</option>
+                                                </select>
+                                            </div>
+
+                                            <Button
+                                                onClick={uploadToYouTube}
+                                                disabled={isUploading || !youtubeData.title.trim()}
+                                                className="bg-red-700 hover:bg-red-800 text-white mt-2 w-full"
+                                            >
+                                                {isUploading ? (
+                                                    <>
+                                                        <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                                                        Uploading...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Youtube className="mr-2 h-4 w-4" />
+                                                        Upload to YouTube
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
                         )}
-                    </CardContent>
-                </Card>
-
-                {/* Video Preview & Actions */}
-                {renderStatus?.status === 'done' && renderStatus.url && (
-                    <Card className="bg-neutral-900">
-                        <CardHeader>
-                            <CardTitle>Your Video is Ready!</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            {/* Video Preview */}
-                            <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                                <video
-                                    src={renderStatus.url}
-                                    controls
-                                    className="w-full h-full"
-                                    preload="metadata"
-                                >
-                                    Your browser does not support the video tag.
-                                </video>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex flex-wrap gap-3">
-                                <Button
-                                    onClick={downloadVideo}
-                                    className="bg-green-600 hover:bg-green-700"
-                                >
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Download
-                                </Button>
-
-                                <Button
-                                    onClick={copyVideoUrl}
-                                    variant="outline"
-                                    className="border-neutral-600 hover:bg-neutral-700"
-                                >
-                                    <Copy className="mr-2 h-4 w-4" />
-                                    Copy URL
-                                </Button>
-
-                                <Button
-                                    onClick={() => window.open(renderStatus.url, '_blank')}
-                                    variant="outline"
-                                    className="border-neutral-600 hover:bg-neutral-700"
-                                >
-                                    <Share2 className="mr-2 h-4 w-4" />
-                                    Open in New Tab
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* YouTube Upload Form */}
-                {renderStatus?.status === 'done' && renderStatus.url && (
-                    <Card className="bg-neutral-900">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Youtube className="h-5 w-5 text-red-500" />
-                                Upload to YouTube
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="title">Video Title</Label>
-                                    <Input
-                                        id="title"
-                                        value={youtubeData.title}
-                                        onChange={(e) => setYoutubeData(prev => ({...prev, title: e.target.value}))}
-                                        className="bg-neutral-700 border-neutral-600"
-                                        placeholder="Enter video title"
-                                    />
-                                </div>
-
-                                <div>
-                                    <Label htmlFor="tags">Tags (comma separated)</Label>
-                                    <Input
-                                        id="tags"
-                                        value={youtubeData.tags}
-                                        onChange={(e) => setYoutubeData(prev => ({...prev, tags: e.target.value}))}
-                                        className="bg-neutral-700 border-neutral-600"
-                                        placeholder="AI, Video, Education"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <Label htmlFor="description">Description</Label>
-                                <Textarea
-                                    id="description"
-                                    value={youtubeData.description}
-                                    onChange={(e) => setYoutubeData(prev => ({...prev, description: e.target.value}))}
-                                    className="bg-neutral-700 border-neutral-600 min-h-24"
-                                    placeholder="Video description..."
-                                />
-                            </div>
-
-                            <div>
-                                <Label htmlFor="privacy">Privacy</Label>
-                                <select
-                                    id="privacy"
-                                    value={youtubeData.privacy}
-                                    onChange={(e) => setYoutubeData(prev => ({...prev, privacy: e.target.value as any}))}
-                                    className="w-full bg-neutral-700 border border-neutral-600 rounded-md px-3 py-2 text-white"
-                                >
-                                    <option value="private">Private</option>
-                                    <option value="unlisted">Unlisted</option>
-                                    <option value="public">Public</option>
-                                </select>
-                            </div>
-
+                        {/* Back Button */}
+                        <div className={"flex justify-between mb-2"}>
                             <Button
-                                onClick={uploadToYouTube}
-                                disabled={isUploading || !youtubeData.title.trim()}
-                                className="bg-red-600 hover:bg-red-700 w-full"
+                                variant="outline"
+                                onClick={() => router.back()}
+                                className="border-neutral-600 hover:bg-neutral-700"
                             >
-                                {isUploading ? (
-                                    <>
-                                        <Loader2 className="animate-spin mr-2 h-4 w-4" />
-                                        Uploading...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Youtube className="mr-2 h-4 w-4" />
-                                        Upload to YouTube
-                                    </>
-                                )}
+                                <ArrowLeft className="w-4 h-4" />
+                                Back
                             </Button>
-                        </CardContent>
-                    </Card>
-                )}
+                            <Button onClick={handleBackHome}>
+                                <Home className="w-4 h-4" />
+                                Home
+                            </Button>
+                        </div>
+                    </div>
 
-                {/* Back Button */}
-                <div className="text-center">
-                    <Button
-                        variant="outline"
-                        onClick={() => router.back()}
-                        className="border-neutral-600 hover:bg-neutral-700"
-                    >
-                        ← Back to Editor
-                    </Button>
+                    {/* Video Preview & Actions */}
+                    {renderStatus?.status === 'done' && renderStatus.url && (
+                        <Card className="bg-neutral-900">
+                            <CardHeader>
+                                <CardTitle>Your Video is Ready!</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {/* Video Preview */}
+                                <div className="aspect-video bg-black rounded-lg w-full h-150 overflow-hidden">
+                                    <video
+                                        src={renderStatus.url}
+                                        controls
+                                        className="w-full h-150"
+                                        preload="metadata"
+                                    >
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex flex-wrap gap-3">
+                                    <Button
+                                        onClick={downloadVideo}
+                                        className="bg-sky-600 hover:bg-sky-700"
+                                    >
+                                        <Download className="h-4 w-4" />
+                                        Download
+                                    </Button>
+
+                                    <Button
+                                        onClick={copyVideoUrl}
+                                        variant="outline"
+                                        className="border-neutral-600 hover:bg-neutral-700"
+                                    >
+                                        <Copy className="h-4 w-4" />
+                                        Copy URL
+                                    </Button>
+
+                                    <Button
+                                        onClick={() => window.open(renderStatus.url, '_blank')}
+                                        variant="outline"
+                                        className="border-neutral-600 hover:bg-neutral-700"
+                                    >
+                                        <Share2 className="h-4 w-4" />
+                                        Open in New Tab
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
             </div>
         </div>

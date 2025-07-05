@@ -16,13 +16,38 @@ export default function CaptionPage() {
     const router = useRouter();
     const { state, dispatch } = useVideoCreation();
 
+    // Font mapping cho từng subtitle type
+    const fontMapping = {
+        modern: 'font-sans', // Sans-serif modern
+        classic: 'font-serif', // Serif classic
+        minimal: 'font-mono', // Monospace minimal
+        elegant: 'font-serif' // Serif elegant với style khác
+    };
+
+    // Font family CSS cho export
+    const getFontFamily = (style: string) => {
+        switch (style) {
+            case 'modern':
+                return 'Inter, system-ui, sans-serif';
+            case 'classic':
+                return 'Georgia, Times New Roman, serif';
+            case 'minimal':
+                return 'JetBrains Mono, Consolas, monospace';
+            case 'elegant':
+                return 'Playfair Display, Georgia, serif';
+            default:
+                return 'Inter, system-ui, sans-serif';
+        }
+    };
+
     // Initialize captionData with default values if not present
     const captionData = state.captionData || {
         style: '',
         position: 'bottom',
         fontSize: 'medium',
         color: '#ffffff',
-        background: false
+        background: false,
+        fontFamily: '' // Thêm fontFamily vào state
     };
 
     // Load saved caption data on component mount
@@ -36,13 +61,18 @@ export default function CaptionPage() {
         }
     }, [dispatch]);
 
-    const updateCaptionData = (updates: Partial<typeof captionData>) => {
+    const updateCaptionData = (updates: { style?: string; position?: string; fontSize?: string; color?: string; background?: boolean; }) => {
         const newCaptionData = { ...captionData, ...updates };
+
+        // Nếu style thay đổi, cập nhật fontFamily
+        if (updates.style) {
+            newCaptionData.fontFamily = getFontFamily(updates.style);
+        }
 
         // Update context state
         dispatch({
             type: 'SET_CAPTION_DATA',
-            payload: updates
+            payload: newCaptionData
         });
 
         // Save to localStorage
@@ -51,13 +81,21 @@ export default function CaptionPage() {
 
     const handleContinue = () => {
         // Ensure data is saved before navigation
-        saveVideoCaptionData(captionData);
+        const dataToSave = {
+            ...captionData,
+            fontFamily: getFontFamily(captionData.style)
+        };
+        saveVideoCaptionData(dataToSave);
         router.push('/create-video/preview');
     };
 
     const handleBack = () => {
         // Save current state before going back
-        saveVideoCaptionData(captionData);
+        const dataToSave = {
+            ...captionData,
+            fontFamily: getFontFamily(captionData.style)
+        };
+        saveVideoCaptionData(dataToSave);
         router.push('/create-video/audio');
     };
 
@@ -96,10 +134,15 @@ export default function CaptionPage() {
                 positionClass = 'items-end pb-8';
         }
 
-        return { sizeClass, positionClass };
+        // Thêm font class
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        const fontClass = captionData.style ? fontMapping[captionData.style] : 'font-sans';
+
+        return { sizeClass, positionClass, fontClass };
     };
 
-    const { sizeClass, positionClass } = getPreviewStyles();
+    const { sizeClass, positionClass, fontClass } = getPreviewStyles();
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-950 py-20 px-4">
@@ -124,10 +167,10 @@ export default function CaptionPage() {
                                         <SelectValue placeholder="Select subtitle type" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="modern">Modern</SelectItem>
-                                        <SelectItem value="classic">Classic</SelectItem>
-                                        <SelectItem value="minimal">Minimal</SelectItem>
-                                        <SelectItem value="elegant">Elegant</SelectItem>
+                                        <SelectItem value="modern">Modern (Sans-serif)</SelectItem>
+                                        <SelectItem value="classic">Classic (Serif)</SelectItem>
+                                        <SelectItem value="minimal">Minimal (Monospace)</SelectItem>
+                                        <SelectItem value="elegant">Elegant (Serif)</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -188,7 +231,7 @@ export default function CaptionPage() {
                             <Checkbox
                                 id="background"
                                 checked={captionData.background}
-                                onCheckedChange={(checked: boolean) => updateCaptionData({ background: !!checked })}
+                                onCheckedChange={(checked) => updateCaptionData({ background: !!checked })}
                             />
                             <Label htmlFor="background" className="text-sm font-medium">
                                 Add background to subtitles
@@ -203,14 +246,15 @@ export default function CaptionPage() {
                                 <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 opacity-50" />
 
                                 <p
-                                    className={`relative z-10 transition-all duration-300 ${sizeClass} font-semibold max-w-4xl px-4 ${
+                                    className={`relative z-10 transition-all duration-300 ${sizeClass} ${fontClass} font-semibold max-w-4xl px-4 ${
                                         captionData.background
                                             ? 'bg-black px-5 py-1 rounded-md'
                                             : 'drop-shadow-lg'
                                     }`}
                                     style={{
                                         color: captionData.color,
-                                        textShadow: captionData.background ? 'none' : '2px 2px 4px rgba(0,0,0,0.8)'
+                                        textShadow: captionData.background ? 'none' : '2px 2px 4px rgba(0,0,0,0.8)',
+                                        fontFamily: captionData.style ? getFontFamily(captionData.style) : 'inherit'
                                     }}
                                 >
                                     Here is a sample subtitle for you to preview.
@@ -242,6 +286,11 @@ export default function CaptionPage() {
                                                     captionData.fontSize === 'extra-large' ? 'Extra large' : 'Medium'
                                     }
                                 </span>
+                                {captionData.style && (
+                                    <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                                        Font: {getFontFamily(captionData.style)}
+                                    </span>
+                                )}
                             </div>
                         </div>
 

@@ -21,6 +21,7 @@ export interface AudioData {
     speed?: string;
     customText: string;
     audioFile: File | null;
+    duration?: number;
     isRecording: boolean;
     recordedAudio: string | null;
     isGenerating?: boolean;
@@ -32,6 +33,7 @@ export interface CaptionData {
     fontSize: string;
     color: string;
     background: boolean;
+    fontFamily: string;
 }
 
 export interface FetchedData {
@@ -85,6 +87,7 @@ export interface VideoAudioData {
         duration?: number;
         isSelected: boolean;
     }>;
+    totalDuration?: number;
     voiceType?: string;
     speed?: string;
     customText?: string;

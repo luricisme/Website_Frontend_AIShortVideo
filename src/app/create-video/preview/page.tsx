@@ -52,8 +52,9 @@ export default function VideoPreviewCreator () {
                         style: "classic",
                         position: "center",
                         fontSize: "large",
-                        color: "#cdab8f",
-                        background: false
+                        color: "#ffffff ",
+                        background: false,
+                        fontFamily: ""
                     }
                 };
 
@@ -85,6 +86,11 @@ export default function VideoPreviewCreator () {
     const handleEdit = () => {
         router.push('/create-video/edit');
     }
+
+    // Tính toán durationInFrames từ totalDuration
+    const fps = 60;
+    const totalDuration = videoData?.videoAudioData?.totalDuration || 30; // Default 30 giây
+    const durationInFrames = Math.ceil(totalDuration * fps);
 
     if (isLoading) {
         return (
@@ -140,6 +146,9 @@ export default function VideoPreviewCreator () {
                                 </div>
                                 <div>
                                     <strong>Tốc độ:</strong> {videoData.videoAudioData?.selectedAudioFiles?.[0]?.speed || '1'}x
+                                </div>
+                                <div>
+                                    <strong>Thời lượng:</strong> {totalDuration.toFixed(1)}s
                                 </div>
                             </CardContent>
                         </Card>
@@ -204,10 +213,10 @@ export default function VideoPreviewCreator () {
                                     <Player
                                         component={VideoComposition}
                                         inputProps={{ videoData }}
-                                        durationInFrames={1000} // 30 giây @ 60fps
+                                        durationInFrames={durationInFrames}
                                         compositionWidth={540}
                                         compositionHeight={960}
-                                        fps={60}
+                                        fps={fps}
                                         style={{ width: '100%', height: '100%' }}
                                         controls
                                         loop

@@ -30,26 +30,26 @@ import API_URL from "@/config";
 // Voice types with descriptions organized by language
 const VOICE_TYPES = {
     Vietnamese: [
-        { value: 'vi-VN-HoaiMyNeural', label: 'Hoài My (Nữ)', description: 'Giọng Bắc, tự nhiên, phù hợp đọc tin tức' },
-        { value: 'vi-VN-NamMinhNeural', label: 'Nam Minh (Nam)', description: 'Giọng Bắc, trầm ấm' },
+        { value: 'vi-VN-HoaiMyNeural', label: 'Hoai My (Female)', description: 'Northern accent, natural, suitable for news reading' },
+        { value: 'vi-VN-NamMinhNeural', label: 'Nam Minh (Male)', description: 'Northern accent, warm and deep' },
     ],
     English: [
-        { value: 'en-US-JennyNeural', label: 'Jenny (Nữ)', description: 'Giọng Mỹ phổ thông, đa dụng' },
-        { value: 'en-US-DavisNeural', label: 'Davis (Nam)', description: 'Giọng trầm, chuyên nghiệp' },
+        { value: 'en-US-JennyNeural', label: 'Jenny (Female)', description: 'Standard American accent, versatile' },
+        { value: 'en-US-DavisNeural', label: 'Davis (Male)', description: 'Deep voice, professional' },
     ],
     Chinese: [
-        { value: 'zh-CN-XiaoxiaoNeural', label: 'Xiaoxiao (Nữ)', description: 'Giọng nữ trẻ trung, có thể đa cảm xúc' },
-        { value: 'zh-CN-YunyangNeural', label: 'Yunyang (Nam)', description: 'Giọng phát thanh viên' }
+        { value: 'zh-CN-XiaoxiaoNeural', label: 'Xiaoxiao (Female)', description: 'Young female voice, emotionally expressive' },
+        { value: 'zh-CN-YunyangNeural', label: 'Yunyang (Male)', description: 'Broadcaster voice' }
     ]
 };
 
 // Speed options
 const SPEED_OPTIONS = [
-    { value: '0.75', label: 'Chậm (0.75x)' },
-    { value: '1.0', label: 'Bình thường (1.0x)' },
-    { value: '1.25', label: 'Nhanh (1.25x)' },
-    { value: '1.5', label: 'Rất nhanh (1.5x)' },
-    { value: '2.0', label: 'Cực nhanh (2.0x)' }
+    { value: '0.75', label: 'Slow (0.75x)' },
+    { value: '1.0', label: 'Normal (1.0x)' },
+    { value: '1.25', label: 'Fast (1.25x)' },
+    { value: '1.5', label: 'Very Fast (1.5x)' },
+    { value: '2.0', label: 'Ultra Fast (2.0x)' }
 ];
 
 export default function AudioPage() {
@@ -65,6 +65,9 @@ export default function AudioPage() {
     const [recordingTime, setRecordingTime] = useState(0);
     const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
+    const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+    const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
+
 
     // Get script and language from localStorage
     const [script, setScript] = useState('');
@@ -125,7 +128,7 @@ export default function AudioPage() {
         const updatedFiles = [...audioFiles, newFile];
         setAudioFiles(updatedFiles);
 
-        // Auto-save to localStorage
+        // Auto-save to localStorage with duration
         saveVideoAudioData({
             audioFiles: updatedFiles,
             selectedAudioFiles: getSelectedAudioFiles(),
@@ -214,9 +217,11 @@ export default function AudioPage() {
     const handleContinue = () => {
         const selectedFiles = getSelectedAudioFiles();
         if (selectedFiles.length === 0) {
-            alert("Vui lòng chọn ít nhất một file audio trước khi tiếp tục");
+            alert("Please select at least one audio file before continuing");
             return;
         }
+
+        const totalDuration = getTotalDuration();
 
         // Save audio data to localStorage
         saveVideoAudioData({
@@ -224,10 +229,11 @@ export default function AudioPage() {
             selectedAudioFiles: selectedFiles,
             voiceType: audioData.voiceType,
             speed: audioData.speed,
-            customText: audioData.customText
+            customText: audioData.customText,
+            totalDuration: totalDuration // Save total duration
         });
 
-        // Update audio data with selected files
+        // Update audio data with selected files and total duration
         updateAudioData({
             recordedAudio: selectedFiles[0].url, // Use first selected for backward compatibility
         });
@@ -253,7 +259,7 @@ export default function AudioPage() {
 
             // Add recorded audio to files list
             addAudioFile({
-                name: `Ghi âm ${formatTime(recordingTime)}`,
+                name: `Recording ${formatTime(recordingTime)}`,
                 url: 'mock-recorded-audio.mp3', // In real app, this would be the actual recording
                 type: 'recorded'
             });
@@ -271,13 +277,13 @@ export default function AudioPage() {
 
     const handleGenerateAudio = async () => {
         if (!audioData.voiceType) {
-            alert('Vui lòng chọn giọng đọc');
+            alert('Please select a voice type');
             return;
         }
 
         const textToConvert = audioData.customText || script;
         if (!textToConvert.trim()) {
-            alert('Vui lòng nhập nội dung cần chuyển đổi');
+            alert('Please enter content to convert');
             return;
         }
 
@@ -300,7 +306,7 @@ export default function AudioPage() {
             const result = await response.json();
 
             if (result.status === 200) {
-                // Add generated audio to files list
+                // Add generated audio to files list with duration if available
                 const availableVoices = getAvailableVoiceTypes();
                 const selectedVoice = availableVoices.find(v => v.value === audioData.voiceType);
                 addAudioFile({
@@ -308,7 +314,8 @@ export default function AudioPage() {
                     url: result.data.audio,
                     type: 'generated',
                     voiceType: audioData.voiceType,
-                    speed: audioData.speed
+                    speed: audioData.speed,
+                    duration: result.data.duration || undefined // Save duration if API returns it
                 });
 
                 updateAudioData({
@@ -316,42 +323,87 @@ export default function AudioPage() {
                     recordedAudio: null
                 });
             } else {
-                throw new Error(result.message || 'Lỗi khi tạo audio');
+                throw new Error(result.message || 'Error generating audio');
             }
         } catch (error) {
             console.error('Error generating audio:', error);
-            alert('Có lỗi xảy ra khi tạo audio. Vui lòng thử lại.');
+            alert('An error occurred while generating audio. Please try again.');
             updateAudioData({ isGenerating: false });
         }
     };
 
-    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (file) {
-            // Validate file type
-            const allowedTypes = ['audio/mp3', 'audio/wav', 'audio/m4a', 'audio/mpeg'];
-            if (!allowedTypes.includes(file.type)) {
-                alert('Vui lòng chọn file audio hợp lệ (MP3, WAV, M4A)');
-                return;
-            }
+        if (!file) return;
 
-            // Validate file size (50MB max)
-            if (file.size > 50 * 1024 * 1024) {
-                alert('File không được vượt quá 50MB');
-                return;
-            }
+        // Validate file type
+        const allowedTypes = ['audio/mp3', 'audio/wav', 'audio/m4a', 'audio/mpeg'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Please select a valid audio file (MP3, WAV, M4A)');
+            return;
+        }
 
+        // Validate file size (50MB max)
+        if (file.size > 50 * 1024 * 1024) {
+            alert('File size must not exceed 50MB');
+            return;
+        }
+
+        // Create temporary file ID to track upload
+        const tempFileId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+        // Add file to list with uploading status
+        const tempAudioFile: AudioFile = {
+            id: tempFileId,
+            name: file.name,
+            url: URL.createObjectURL(file), // Temporary URL for preview
+            type: 'uploaded',
+            isSelected: false
+        };
+
+        setAudioFiles(prev => [...prev, tempAudioFile]);
+        setUploadingFiles(prev => new Set(prev).add(tempFileId));
+
+        try {
+            // Upload file to server
+            const uploadedUrl = await uploadAudioFile(file);
+
+            // Update with real URL after successful upload
+            setAudioFiles(prev =>
+                prev.map(audioFile =>
+                    audioFile.id === tempFileId
+                        ? { ...audioFile, url: uploadedUrl }
+                        : audioFile
+                )
+            );
+
+            // Update audioData if needed
             updateAudioData({
                 audioFile: file,
                 recordedAudio: null
             });
 
-            // Add uploaded file to files list
-            addAudioFile({
-                name: file.name,
-                url: URL.createObjectURL(file),
-                type: 'uploaded'
+            // Show success message
+            alert('Audio file uploaded successfully!');
+
+        } catch (error) {
+            console.error('Upload failed:', error);
+            alert('File upload failed. Please try again.');
+
+            // Remove file from list if upload failed
+            setAudioFiles(prev => prev.filter(audioFile => audioFile.id !== tempFileId));
+        } finally {
+            // Remove from uploading state
+            setUploadingFiles(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(tempFileId);
+                return newSet;
             });
+
+            // Reset file input
+            if (event.target) {
+                event.target.value = '';
+            }
         }
     };
 
@@ -376,6 +428,25 @@ export default function AudioPage() {
         }
     };
 
+    const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+
+        const files = Array.from(e.dataTransfer.files);
+        const audioFile = files.find(file => file.type.startsWith('audio/'));
+
+        if (audioFile) {
+            // Create event object like file input
+            const mockEvent = {
+                target: {files: [audioFile]}
+            } as unknown as React.ChangeEvent<HTMLInputElement>;
+
+            await handleFileUpload(mockEvent);
+        } else {
+            alert('Please select a valid audio file');
+        }
+    };
+
     const handleTimeUpdate = (audioId: string) => {
         const audioElement = audioRefs.current[audioId];
         if (audioElement) {
@@ -389,9 +460,58 @@ export default function AudioPage() {
     const handleLoadedMetadata = (audioId: string) => {
         const audioElement = audioRefs.current[audioId];
         if (audioElement) {
-            setAudioDurations(prev => ({ ...prev, [audioId]: audioElement.duration }));
+            const duration = audioElement.duration;
+            setAudioDurations(prev => ({ ...prev, [audioId]: duration }));
+
+            // Update duration in audioFiles array
+            setAudioFiles(prev => prev.map(file =>
+                file.id === audioId
+                    ? { ...file, duration: duration }
+                    : file
+            ));
         }
     };
+
+    const getTotalDuration = () => {
+        const selectedFiles = getSelectedAudioFiles();
+        if (selectedFiles.length === 0) return 0;
+
+        return selectedFiles.reduce((total, file) => {
+            return total + (file.duration || audioDurations[file.id] || 0);
+        }, 0);
+    };
+
+    const formatDuration = (seconds: number) => {
+        if (isNaN(seconds) || seconds === 0) return '0:00';
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    };
+
+    const uploadAudioFile = async (file: File): Promise<string> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'audio');
+
+        try {
+            const response = await fetch(`${API_URL.NEXT_PUBLIC_API_URL}/create-video/save-file`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.status === 200) {
+                return result.data.fileURL;
+            } else {
+                throw new Error(result.message || 'Upload failed');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            throw error;
+        }
+    };
+
 
     const handleAudioEnded = (audioId: string) => {
         setIsPlaying(null);
@@ -441,14 +561,14 @@ export default function AudioPage() {
                 customText: audioData.customText
             });
         }
-    }, [audioData.voiceType, audioData.speed, audioData.customText]);
+    }, [audioFiles, audioData.voiceType, audioData.speed, audioData.customText]);
 
     // Get current language display name
     const getLanguageDisplayName = () => {
         const languageMap = {
-            'Vietnamese': 'Tiếng Việt',
+            'Vietnamese': 'Vietnamese',
             'English': 'English',
-            'Chinese': '中文'
+            'Chinese': 'Chinese'
         };
         return languageMap[selectedLanguage as keyof typeof languageMap] || selectedLanguage;
     };
@@ -459,31 +579,31 @@ export default function AudioPage() {
                 <StepNavigation />
                 <Card className="max-w-4xl mx-auto px-4">
                     <CardHeader className="text-center">
-                        <CardTitle className="text-2xl font-bold">Tạo và chọn âm thanh</CardTitle>
+                        <CardTitle className="text-2xl font-bold">Create and Select Audio</CardTitle>
                         <CardDescription>
-                            Tạo giọng đọc từ script ({getLanguageDisplayName()}) hoặc tải lên file audio của bạn
+                            Generate voice from script ({getLanguageDisplayName()}) or upload your own audio files
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Tabs defaultValue="generate" className="w-full">
                             <TabsList className="grid w-full grid-cols-3">
-                                <TabsTrigger value="generate">Tạo audio</TabsTrigger>
-                                <TabsTrigger value="upload">Tải lên file</TabsTrigger>
-                                <TabsTrigger value="record">Ghi âm</TabsTrigger>
+                                <TabsTrigger value="generate">Generate Audio</TabsTrigger>
+                                <TabsTrigger value="upload">Upload File</TabsTrigger>
+                                <TabsTrigger value="record">Record Audio</TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="generate" className="space-y-6 mt-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className={"col-span-2"}>
                                         <Label className="text-sm font-medium mb-2 block">
-                                            Giọng đọc ({getLanguageDisplayName()})
+                                            Voice Type ({getLanguageDisplayName()})
                                         </Label>
                                         <Select
                                             value={audioData.voiceType}
                                             onValueChange={(value) => updateAudioData({ voiceType: value })}
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Chọn giọng đọc" />
+                                                <SelectValue placeholder="Select voice type" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {getAvailableVoiceTypes().map((voice) => (
@@ -498,13 +618,13 @@ export default function AudioPage() {
                                         </Select>
                                     </div>
                                     <div>
-                                        <Label className="text-sm font-medium mb-2 block">Tốc độ</Label>
+                                        <Label className="text-sm font-medium mb-2 block">Speed</Label>
                                         <Select
                                             value={audioData.speed}
                                             onValueChange={(value) => updateAudioData({ speed: value })}
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Chọn tốc độ" />
+                                                <SelectValue placeholder="Select speed" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {SPEED_OPTIONS.map((speed) => (
@@ -518,11 +638,11 @@ export default function AudioPage() {
                                 </div>
 
                                 <div>
-                                    <Label className="text-sm font-medium mb-2 block">Nội dung</Label>
+                                    <Label className="text-sm font-medium mb-2 block">Content</Label>
                                     <Textarea
                                         value={audioData.customText || script}
                                         onChange={(e) => updateAudioData({ customText: e.target.value })}
-                                        placeholder="Nhập nội dung cần chuyển đổi thành giọng nói hoặc sử dụng script đã tạo"
+                                        placeholder="Enter content to convert to speech or use the generated script"
                                         className="min-h-32"
                                     />
                                 </div>
@@ -535,12 +655,12 @@ export default function AudioPage() {
                                     {audioData.isGenerating ? (
                                         <>
                                             <div className="animate-spin w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full" />
-                                            Đang tạo...
+                                            Generating...
                                         </>
                                     ) : (
                                         <>
                                             <Volume2 className="w-4 h-4 mr-2" />
-                                            Tạo audio
+                                            Generate Audio
                                         </>
                                     )}
                                 </Button>
@@ -557,27 +677,19 @@ export default function AudioPage() {
                                     onDragLeave={(e) => {
                                         e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
                                     }}
-                                    onDrop={(e) => {
-                                        e.preventDefault();
-                                        e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
-                                        const files = e.dataTransfer.files;
-                                        if (files.length > 0) {
-                                            const event = { target: { files } } as never;
-                                            handleFileUpload(event);
-                                        }
-                                    }}
+                                    onDrop={handleDrop}
                                 >
                                     <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                                     <p className="text-lg font-medium text-gray-600 mb-2">
-                                        Kéo thả file audio vào đây
+                                        Drag and drop audio files here
                                     </p>
-                                    <p className="text-sm text-gray-500 mb-4">Hoặc nhấp để chọn file</p>
+                                    <p className="text-sm text-gray-500 mb-4">Or click to select files</p>
                                     <Button variant="outline" type="button">
                                         <Upload className="w-4 h-4 mr-2" />
-                                        Chọn file
+                                        Select Files
                                     </Button>
                                     <p className="text-xs text-gray-400 mt-2">
-                                        Hỗ trợ: MP3, WAV, M4A (tối đa 50MB)
+                                        Supported: MP3, WAV, M4A (max 50MB)
                                     </p>
                                 </div>
                                 <input
@@ -588,14 +700,22 @@ export default function AudioPage() {
                                     className="hidden"
                                 />
 
-                                {audioData.audioFile && (
-                                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center">
-                                        <Check className={"text-emerald-500 me-2"}/>
-                                        <p className="text-green-600">
-                                            Đã tải lên: {audioData.audioFile.name}
-                                        </p>
+                                {audioFiles.some(f => f.isSelected) && (
+                                    <div className="mt-4 p-3 border border-blue-200 rounded-lg">
+                                        <div className="flex items-center mb-2">
+                                            <Check className="text-emerald-500 mr-2"/>
+                                            <p>
+                                                Selected {getSelectedAudioFiles().length} audio file(s)
+                                            </p>
+                                        </div>
+                                        {getSelectedAudioFiles().length > 1 && (
+                                            <div className="text-sm text-gray-600">
+                                                <p>Total duration: {formatDuration(getTotalDuration())}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
+
                             </TabsContent>
 
                             <TabsContent value="record" className="space-y-6 mt-6">
@@ -613,7 +733,7 @@ export default function AudioPage() {
                                     {audioData.isRecording && (
                                         <div className="text-center">
                                             <div className="text-red-500 font-medium text-lg mb-2">
-                                                🔴 Đang ghi âm...
+                                                🔴 Recording...
                                             </div>
                                             <div className="text-gray-600">
                                                 {formatTime(recordingTime)}
@@ -631,12 +751,12 @@ export default function AudioPage() {
                                             {audioData.isRecording ? (
                                                 <>
                                                     <Square className="w-4 h-4 mr-2" />
-                                                    Dừng ghi âm
+                                                    Stop Recording
                                                 </>
                                             ) : (
                                                 <>
                                                     <Mic className="w-4 h-4 mr-2" />
-                                                    Bắt đầu ghi âm
+                                                    Start Recording
                                                 </>
                                             )}
                                         </Button>
@@ -649,7 +769,7 @@ export default function AudioPage() {
                         {audioFiles.length > 0 && (
                             <div className="mt-8 p-6 rounded-lg border">
                                 <div className="flex items-center justify-between mb-4">
-                                    <Label className="text-lg font-semibold">Danh sách Audio ({audioFiles.length})</Label>
+                                    <Label className="text-lg font-semibold">Audio list ({audioFiles.length})</Label>
                                     <div className="flex gap-2">
                                         {audioFiles.length > 1 && (
                                             <>
@@ -658,14 +778,14 @@ export default function AudioPage() {
                                                     variant="outline"
                                                     onClick={selectAllAudio}
                                                 >
-                                                    Chọn tất cả
+                                                    Select all
                                                 </Button>
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
                                                     onClick={deselectAllAudio}
                                                 >
-                                                    Bỏ chọn tất cả
+                                                    Unselect all
                                                 </Button>
                                             </>
                                         )}
@@ -684,18 +804,24 @@ export default function AudioPage() {
                                                         checked={audioFile.isSelected}
                                                         onChange={() => toggleAudioSelection(audioFile.id)}
                                                         className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                                        disabled={uploadingFiles.has(audioFile.id)}
                                                     />
                                                     <div>
                                                         <div className="flex items-center gap-4">
                                                             <h4 className="font-medium">{audioFile.name}</h4>
                                                             <span className={`px-2 py-1 rounded text-xs ${
-                                                                audioFile.type === 'generated' ? 'bg-purple-100 text-purple-700' :
-                                                                    audioFile.type === 'uploaded' ? 'bg-green-100 text-green-700' :
-                                                                        'bg-orange-100 text-orange-700'
+                                                                uploadingFiles.has(audioFile.id) ? 'bg-yellow-100 text-yellow-700' :
+                                                                    audioFile.type === 'generated' ? 'bg-purple-100 text-purple-700' :
+                                                                        audioFile.type === 'uploaded' ? 'bg-green-100 text-green-700' :
+                                                                            'bg-orange-100 text-orange-700'
                                                             }`}>
-                                                                {audioFile.type === 'generated' ? 'Đã tạo' :
-                                                                    audioFile.type === 'uploaded' ? 'Đã tải lên' : 'Đã ghi âm'}
+                                                                {uploadingFiles.has(audioFile.id) ? 'Đang upload...' :
+                                                                    audioFile.type === 'generated' ? 'Đã tạo' :
+                                                                        audioFile.type === 'uploaded' ? 'Đã tải lên' : 'Đã ghi âm'}
                                                             </span>
+                                                            {uploadingFiles.has(audioFile.id) && (
+                                                                <div className="animate-spin w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full" />
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -704,6 +830,7 @@ export default function AudioPage() {
                                                     variant="outline"
                                                     onClick={() => removeAudioFile(audioFile.id)}
                                                     className="text-red-400 hover:text-red-600 hover:bg-red-50"
+                                                    disabled={uploadingFiles.has(audioFile.id)}
                                                 >
                                                     <Trash />
                                                 </Button>
@@ -762,7 +889,7 @@ export default function AudioPage() {
                                     <div className="mt-4 p-3 border border-blue-200 rounded-lg flex items-center">
                                         <Check className={"text-emerald-500"}/>
                                         <p className="ms-2">
-                                            Đã chọn {getSelectedAudioFiles().length} file audio
+                                            Selected {getSelectedAudioFiles().length} file audio
                                         </p>
                                     </div>
                                 )}
@@ -772,13 +899,13 @@ export default function AudioPage() {
                         <div className="flex justify-between mt-8">
                             <Button variant="outline" onClick={handleBack}>
                                 <ArrowLeft className="w-4 h-4" />
-                                Quay lại
+                                Back
                             </Button>
                             <Button
                                 onClick={handleContinue}
                                 disabled={getSelectedAudioFiles().length === 0}
                             >
-                                Tiếp tục
+                                Next
                                 <ArrowRight className="w-4 h-4" />
                             </Button>
                         </div>

@@ -22,43 +22,51 @@ export async function POST(req: NextRequest) {
             : videoData.videoScriptData;
 
         // Get selected images in order
-        const selectedImages = imageData.selectedImages.map(id =>
-            imageData.generatedImages.find(img => img.id === id)
+        const selectedImages = imageData.selectedImages.map((id: number) =>
+            imageData.generatedImages.find((img: { id: number; }) => img.id === id)
         ).filter(Boolean);
 
-        // Calculate timing based on script and audio speed
         const script = scriptData.script;
-        const audioSpeed = Number(audioData?.speed) || 1.0;
-        const sentences = script.split('.').filter(s => s.trim().length > 0);
+        const selectedAudioFiles = audioData?.selectedAudioFiles || [];
+        const language = scriptData.language;
 
-        // Calculate reading time for each sentence
-        const calculateReadingTime = (text, speed) => {
-            const wordCount = text.trim().split(/\s+/).length;
-            const baseTimePerWord = 0.3; // 0.3s per word at 1.0x speed
-            const adjustedTime = (baseTimePerWord * wordCount) / speed;
-            return Math.max(adjustedTime, 1); // Minimum 1 second
-        };
+        // Sử dụng totalDuration từ videoAudioData
+        const totalDuration = audioData?.totalDuration || 0;
 
-        // Create sentence timeline
-        const sentenceTimeline = [];
-        let currentTime = 0;
+        // Chia script theo thời gian: 3.8 giây cho 10 từ
+        const words = script.split(/\s+/).filter((ww: { trim: () => { (): never; new(): never; length: number; }; }) => ww.trim().length > 0);
+        const wordsPerSegment = 10;
+        let timePerSegment = 3.8;
 
-        sentences.forEach((sentence, index) => {
-            const readingTime = calculateReadingTime(sentence, audioSpeed);
-            sentenceTimeline.push({
-                text: sentence.trim() + '.',
-                startTime: currentTime,
-                endTime: currentTime + readingTime,
-                duration: readingTime
+        if (language === 'Vietnamese') {
+            timePerSegment = 2.5;
+        } else if (language === 'English') {
+            timePerSegment = 3.8;
+        } else if (language === 'Chinese') {
+            timePerSegment = 3.0;
+        }
+
+        // Tạo các đoạn script
+        const scriptSegments = [];
+        for (let i = 0; i < words.length; i += wordsPerSegment) {
+            const segmentWords = words.slice(i, i + wordsPerSegment);
+            const segmentIndex = Math.floor(i / wordsPerSegment);
+            const startTime = segmentIndex * timePerSegment;
+            const endTime = startTime + timePerSegment;
+
+            scriptSegments.push({
+                text: segmentWords.join(' '),
+                startTime,
+                endTime,
+                duration: timePerSegment
             });
-            currentTime += readingTime;
-        });
+        }
 
-        const totalDuration = currentTime;
+        // Tính thời lượng cho mỗi hình ảnh
         const timePerImage = totalDuration / selectedImages.length;
 
         // Create image clips with smooth transitions
-        const imageClips = selectedImages.map((image, index) => {
+        const imageClips = selectedImages.map((image: { url: string; }, index: number) => {
             const startTime = index * timePerImage;
             const length = timePerImage;
 
@@ -79,64 +87,135 @@ export async function POST(req: NextRequest) {
             };
         });
 
-        // Create subtitle clips synchronized with sentences
-        const subtitleClips = sentenceTimeline.map((sentence, index) => ({
-            asset: {
-                type: 'title',
-                text: sentence.text,
-                style: 'minimal',
-                color: captionData.color || '#ffffff',
-                size: captionData.fontSize === 'large' ? 'x-large' :
-                    captionData.fontSize === 'medium' ? 'large' : 'medium',
-                // background: captionData.background || '#80000000',
-                position: captionData.position || 'bottom'
-            },
-            start: sentence.startTime,
-            length: sentence.duration,
-            transition: {
-                in: 'fade',
-                out: 'fade'
+        // Helper function to get font family based on style
+        const getFontFamily = (style: string) => {
+            switch (style) {
+                case 'modern':
+                    return 'Roboto';
+                case 'classic':
+                    return 'Montserrat SemiBold';
+                case 'minimal':
+                    return 'OpenSans Bold';
+                case 'elegant':
+                    return 'Didact Gothic';
+                default:
+                    return 'Roboto';
             }
-        }));
+        };
+
+        // Helper function to get font weight
+        const getFontWeight = (style: string) => {
+            switch (style) {
+                case 'modern':
+                    return 600;
+                case 'classic':
+                    return 700; // SemiBold
+                case 'minimal':
+                    return 800; // Bold
+                case 'elegant':
+                    return 400;
+                default:
+                    return 700;
+            }
+        };
+
+        // Helper function to get font size in pixels
+        const getFontSize = (fontSize: string) => {
+            switch (fontSize) {
+                case 'small': return 32;
+                case 'medium': return 40;
+                case 'large': return 48;
+                case 'extra-large': return 56;
+                default: return 40;
+            }
+        };
+
+        // Helper function to get vertical alignment
+        const getVerticalAlignment = (position: string) => {
+            switch(position) {
+                case 'top':
+                    return 'top';
+                case 'bottom':
+                    return 'bottom';
+                case 'center':
+                default:
+                    return 'center';
+            }
+        };
+
+        // Create subtitle clips using text asset format
+        const subtitleClips = scriptSegments.map((segment) => {
+            const fontSize = getFontSize(captionData.fontSize);
+            const color = captionData.color || '#FFFFFF';
+            const fontFamily = getFontFamily(captionData.style);
+            const fontWeight = getFontWeight(captionData.style);
+            const verticalAlignment = getVerticalAlignment(captionData.position);
+
+            return {
+                asset: {
+                    type: 'text',
+                    text: segment.text,
+                    alignment: {
+                        horizontal: 'center',
+                        vertical: verticalAlignment
+                    },
+                    font: {
+                        family: fontFamily,
+                        size: fontSize,
+                        color: color,
+                        weight: fontWeight,
+                        lineHeight: 1.4
+                    },
+                    stroke: {
+                        color: '#000000',
+                        width: 1
+                    },
+                    width: 900,
+                    height: 1700
+                },
+                start: segment.startTime,
+                length: segment.duration,
+                transition: {
+                    in: 'fade',
+                    out: 'fade'
+                }
+            };
+        });
 
         // Create tracks
         const tracks = [
-            // Background track (black)
-            {
-                clips: [{
-                    asset: {
-                        type: 'html',
-                        html: '<div style="width:100%;height:100%;background-color:#000000;"></div>'
-                    },
-                    start: 0,
-                    length: totalDuration
-                }]
-            },
-            // Image track
-            {
-                clips: imageClips
-            },
             // Subtitle track
             {
                 clips: subtitleClips
             },
-            // Hashtag track
-            // ...(hashtagClip.length > 0 ? [{ clips: hashtagClip }] : [])
+            // Image track
+            {
+                clips: imageClips
+            }
         ];
 
-        // Add audio track if available
-        const audio = audioData?.selectedAudioFiles?.[0];
-        if (audio && audio.url) {
-            tracks.push({
-                clips: [{
-                    asset: {
-                        type: 'audio',
-                        src: audio.url,
-                        volume: 1.0
-                    },
-                    start: 0,
-                    length: totalDuration
-                }]
+        // Add audio tracks - phát lần lượt audio[1], audio[2]
+        if (selectedAudioFiles && selectedAudioFiles.length > 0) {
+            let audioStartTime = 0;
+
+            selectedAudioFiles.forEach((audioFile: { duration: number; url: string; }) => {
+                const audioDuration = audioFile.duration || 0;
+
+                if (audioStartTime < totalDuration) {
+                    tracks.push({
+                        clips: [{
+                            asset: {
+                                type: 'audio',
+                                src: audioFile.url,
+                                volume: 1.0
+                            },
+                            start: audioStartTime,
+                            length: Math.min(audioDuration, totalDuration - audioStartTime)
+                        }]
+                    });
+
+                    audioStartTime += audioDuration;
+                }
             });
         }
 
@@ -144,12 +223,7 @@ export async function POST(req: NextRequest) {
         const payload = {
             timeline: {
                 background: '#000000',
-                tracks: tracks,
-                fonts: [
-                    {
-                        src: 'https://fonts.gstatic.com/s/opensans/v18/mem8YaGs126MiZpBA-UFVZ0bf8pkAg.woff2'
-                    }
-                ]
+                tracks: tracks
             },
             output: {
                 format: 'mp4',
@@ -158,15 +232,9 @@ export async function POST(req: NextRequest) {
                     width: 1080,
                     height: 1920
                 },
-                fps: 30,
+                fps: 60,
                 scaleTo: 'preview' // For faster processing, use 'render' for final
-            },
-            merge: [
-                {
-                    find: 'audio',
-                    replace: audio?.url || ''
-                }
-            ]
+            }
         };
 
         console.log("Sending Shotstack payload:", JSON.stringify(payload, null, 2));
@@ -197,17 +265,17 @@ export async function POST(req: NextRequest) {
             data: responseData,
             timeline: {
                 totalDuration,
-                sentenceCount: sentences.length,
-                imageCount: selectedImages.length
+                scriptSegmentCount: scriptSegments.length,
+                imageCount: selectedImages.length,
+                audioFileCount: selectedAudioFiles.length
             }
         });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Server error:', error);
         return NextResponse.json({
             success: false,
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            error: error,
         }, { status: 500 });
     }
 }
