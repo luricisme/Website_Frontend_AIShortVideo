@@ -56,7 +56,6 @@ export default function AudioPage() {
     const [recordingTime, setRecordingTime] = useState(0);
     const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
-    const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
     const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
 
     // Get script and language from localStorage
@@ -503,7 +502,6 @@ export default function AudioPage() {
         }
     };
 
-
     const handleAudioEnded = (audioId: string) => {
         setIsPlaying(null);
         setCurrentPlayingAudio(null);
@@ -690,23 +688,6 @@ export default function AudioPage() {
                                     onChange={handleFileUpload}
                                     className="hidden"
                                 />
-
-                                {audioFiles.some(f => f.isSelected) && (
-                                    <div className="mt-4 p-3 border border-blue-200 rounded-lg">
-                                        <div className="flex items-center mb-2">
-                                            <Check className="text-emerald-500 mr-2"/>
-                                            <p>
-                                                Selected {getSelectedAudioFiles().length} audio file(s)
-                                            </p>
-                                        </div>
-                                        {getSelectedAudioFiles().length > 1 && (
-                                            <div className="text-sm text-gray-600">
-                                                <p>Total duration: {formatDuration(getTotalDuration())}</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
                             </TabsContent>
 
                             <TabsContent value="record" className="space-y-6 mt-6">
@@ -875,16 +856,22 @@ export default function AudioPage() {
                                         </div>
                                     ))}
                                 </div>
-
                                 {audioFiles.some(f => f.isSelected) && (
-                                    <div className="mt-4 p-3 border border-blue-200 rounded-lg flex items-center">
-                                        <Check className={"text-emerald-500"}/>
-                                        <p className="ms-2">
-                                            Selected {getSelectedAudioFiles().length} file audio
-                                        </p>
+                                    <div className="mt-4 p-3 border border-blue-200 rounded-lg">
+                                        <div className="flex items-center mb-2">
+                                            <Check className="text-emerald-500 mr-2"/>
+                                            <p>
+                                                Selected {getSelectedAudioFiles().length} audio file(s)
+                                            </p>
+                                        </div>
+                                        <div className="text-sm text-gray-600">
+                                            <p>Total duration: {formatDuration(getTotalDuration())}</p>
+                                        </div>
+
                                     </div>
                                 )}
                             </div>
+
                         )}
 
                         <div className="flex justify-between mt-8">

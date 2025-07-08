@@ -38,7 +38,7 @@ export default function VideoComposition({ videoData }: { videoData: VideoData }
     let timePerSegment = 3.8;
 
     if (language === 'Vietnamese') {
-        timePerSegment = 2.5;
+        timePerSegment = 3.5;
     } else if (language === 'English') {
         timePerSegment = 3.8;
     } else if (language === 'Chinese') {

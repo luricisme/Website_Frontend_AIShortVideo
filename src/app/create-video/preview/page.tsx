@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Player } from '@remotion/player';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {ArrowLeft, ArrowRight, BookOpenCheck, FileText, Images, Pencil} from 'lucide-react';
+import {ArrowLeft, ArrowRight, BookOpenCheck, FileText, Images, Pencil, Video} from 'lucide-react';
 import StepNavigation from "@/app/create-video/_components/StepNavigation";
 import Image from "next/image";
 import {useRouter} from "next/navigation";
@@ -142,12 +142,6 @@ export default function VideoPreviewCreator () {
                                     <strong>Số hình ảnh:</strong> {videoData.videoImageData?.selectedImages?.length || 0}
                                 </div>
                                 <div>
-                                    <strong>Giọng đọc:</strong> {videoData.videoAudioData?.selectedAudioFiles?.[0]?.voiceType || 'N/A'}
-                                </div>
-                                <div>
-                                    <strong>Tốc độ:</strong> {videoData.videoAudioData?.selectedAudioFiles?.[0]?.speed || '1'}x
-                                </div>
-                                <div>
                                     <strong>Thời lượng:</strong> {totalDuration.toFixed(1)}s
                                 </div>
                             </CardContent>
@@ -205,11 +199,12 @@ export default function VideoPreviewCreator () {
                         <Card className="bg-neutral-900">
                             <CardHeader>
                                 <CardTitle className="text-white flex items-center gap-2">
-                                    🎥 Video Preview
+                                    <Video className={"text-slate-400"} />
+                                    Video Preview
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4 h-120 w-full">
+                                <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4 h-123 w-full">
                                     <Player
                                         component={VideoComposition}
                                         inputProps={{ videoData }}
