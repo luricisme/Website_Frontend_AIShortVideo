@@ -185,6 +185,7 @@ export default function UserProfileApp() {
                 user={user}
                 isFetching={isLoading}
                 isOtherUser={currentUser?.id !== user.id ? true : false} // Check if the profile is of another user
+                currentUser={currentUser ? currentUser : undefined} // Pass current user if available
             />
         </div>
     );

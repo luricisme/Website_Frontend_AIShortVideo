@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
@@ -23,6 +22,7 @@ import {
     DropdownMenuShortcut,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import SearchInput from "@/app/(user)/_components/search-input";
 
 const AvatarDropdownMenu = ({
     image,
@@ -38,8 +38,6 @@ const AvatarDropdownMenu = ({
     const handleLogout = async () => {
         try {
             clearUser();
-
-            
 
             await signOut({ redirect: false });
 
@@ -162,17 +160,7 @@ const SearchBar = () => {
         <div className="h-[76px] flex items-center w-full gap-2 py-4 sticky top-0 z-50 bg-background">
             <SidebarTrigger />
             <div className="flex items-center justify-between w-full">
-                <div className="relative flex items-center justify-center w-full max-w-[400px]">
-                    <button className="absolute left-3" aria-label="Search">
-                        <Search color="#786E6E" size={20} strokeWidth={3} />
-                    </button>
-                    <input
-                        type="text"
-                        placeholder="Search..."
-                        className="w-full py-2 pl-10 pr-4 border rounded-full focus:outline-none bg-sidebar"
-                        aria-label="Search input"
-                    />
-                </div>
+                <SearchInput />
                 <div className="flex items-center gap-2">
                     {status === "loading" || isUserInfoLoading ? (
                         <div className="flex items-center gap-2">

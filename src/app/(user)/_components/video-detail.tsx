@@ -81,7 +81,7 @@ const VideoDetail = ({
         data: followStatusData,
         // isLoading: isFollowStatusLoading,
         refetch: refetchFollowStatus,
-    } = useCheckFollowStatusQuery(video.user.id ?? "");
+    } = useCheckFollowStatusQuery(video.user.id ?? "", !!video.user.id);
 
     const [isFollowing, setIsFollowing] = useState<boolean>(followStatusData?.data ?? false);
 

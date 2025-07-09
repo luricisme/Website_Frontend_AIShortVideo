@@ -72,6 +72,7 @@ const VideoCard = ({ video }: { video: Video }) => {
                     {!isHovering && (
                         <Image
                             src={
+                                video.thumbnail ??
                                 "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8"
                             }
                             alt={video.title}
@@ -121,7 +122,10 @@ const VideoCard = ({ video }: { video: Video }) => {
                                 videoRef.current.pause();
                             }
                         }}
-                    className="line-clamp-2 text-white text-sm">{video.title}</Link>
+                        className="line-clamp-2 text-white text-sm"
+                    >
+                        {video.title}
+                    </Link>
                     <span className="text-white">
                         {formatNumberToSocialStyle(video.viewCnt)} views
                     </span>

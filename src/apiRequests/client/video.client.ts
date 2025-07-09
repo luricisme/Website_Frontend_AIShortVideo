@@ -3,7 +3,9 @@ import {
     videoLikeDislikeCommentCountSchema,
     videoLikeStatusResponseSchema,
     videoListByCategoryNameSchema,
+    videoListBySearchQuerySchema,
     videoListByTagNameSchema,
+    videoListByUserIdSchema,
     videoListResponseSchema,
     videoSchema,
     videoTopPopularTagListResponseSchema,
@@ -102,7 +104,6 @@ export const getVideoLikeDislikeCommentCount = (videoId: number | string) => {
 export const incrementVideoViewCount = async (videoId: number | string) => {
     console.log(">>> Calling Next.js route handler for video:", videoId);
 
-    // Gọi route handler thay vì backend trực tiếp
     const response = await fetch(`/api/videos/${videoId}/view`, {
         method: "POST",
         headers: {
@@ -171,5 +172,66 @@ export const getVideosByCategoryName = async ({
     return http.get(`${URL}/category/${categoryName}?${params.toString()}`, {
         requireAuth: false,
         responseSchema: apiResponseSchema(videoListByCategoryNameSchema),
+    });
+};
+
+export const searchVideos = async ({
+    query,
+    pageNo = 1,
+    pageSize = 10,
+}: {
+    query: string;
+    pageNo?: number;
+    pageSize?: number;
+}) => {
+    const params = new URLSearchParams({
+        search: `title:${query},category:${query}`,
+        pageNo: pageNo.toString(),
+        pageSize: pageSize.toString(),
+    });
+
+    return http.get(`${URL}/search?${params.toString()}`, {
+        requireAuth: false,
+        responseSchema: apiResponseSchema(videoListBySearchQuerySchema),
+    });
+};
+
+export const getVideosByUserId = async ({
+    userId,
+    pageNo = 1,
+    pageSize = 10,
+}: {
+    userId: number | string;
+    pageNo?: number;
+    pageSize?: number;
+}) => {
+    const params = new URLSearchParams({
+        pageNo: pageNo.toString(),
+        pageSize: pageSize.toString(),
+    });
+
+    return http.get(`${URL}/my-video/${userId}?${params.toString()}`, {
+        requireAuth: false,
+        responseSchema: apiResponseSchema(videoListByUserIdSchema),
+    });
+};
+
+export const getLikedVideosByUserId = async ({
+    userId,
+    pageNo = 1,
+    pageSize = 10,
+}: {
+    userId: number | string;
+    pageNo?: number;
+    pageSize?: number;
+}) => {
+    const params = new URLSearchParams({
+        pageNo: pageNo.toString(),
+        pageSize: pageSize.toString(),
+    });
+
+    return http.get(`${URL}/my-liked-video/${userId}?${params.toString()}`, {
+        requireAuth: false,
+        responseSchema: apiResponseSchema(videoListByUserIdSchema),
     });
 };

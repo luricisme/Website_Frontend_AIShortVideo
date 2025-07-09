@@ -34,6 +34,18 @@ export const icons = {
     logo: {
         png: "/logo.png",
     },
+
+    instagram: {
+        svg: "/icon/instagram-icon.svg",
+    },
+
+    tiktok: {
+        svg: "/icon/tiktok-icon.svg",
+    },
+
+    youtube: {
+        svg: "/icon/youtube-icon.svg",
+    },
 } as const;
 
 export type Icons = keyof typeof icons;
