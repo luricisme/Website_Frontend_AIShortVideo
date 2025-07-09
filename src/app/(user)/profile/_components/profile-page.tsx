@@ -1,3 +1,4 @@
+import TikTokButton from "@/app/(auth)/user/_components/tiktok-button";
 import VideoCard from "@/app/(user)/_components/video-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -89,6 +90,10 @@ const ProfilePage = ({
                         </div>
                     </div>
                 </div>
+
+                {/* >>>>>>>>>>> Test TikTok <<<<<<<<<<< */}
+                <TikTokButton></TikTokButton>
+                {/* >>>>>>>>>>> Test TikTok <<<<<<<<<<< */}
 
                 {/* Bio and Links */}
                 <div className="mb-8">
