@@ -1,5 +1,6 @@
 'use client';
 
+import API_URL from "@/config";
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,7 @@ import {
     Copy,
     ArrowLeft,
     Home,
-    XCircle
+    XCircle, ExternalLink
 } from 'lucide-react';
 import {
     loadVideoAudioData,
@@ -50,6 +51,7 @@ interface UploadResult {
     success: boolean;
     message: string;
     videoId?: string;
+    data?: string;
 }
 
 export default function VideoExportPage() {
@@ -57,7 +59,7 @@ export default function VideoExportPage() {
     const [renderStatus, setRenderStatus] = useState<RenderStatus | null>(null);
     const [isRendering, setIsRendering] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+    const [uploadResult, setUploadResult] = useState<UploadResult>();
 
     // YouTube upload form data
     const [youtubeData, setYoutubeData] = useState({
@@ -109,6 +111,7 @@ export default function VideoExportPage() {
                         'x-api-key': process.env.NEXT_PUBLIC_SHOTSTACK_API_KEY || 'aZdNfmHr7uXO8xnoMPnG9k8vbASkHLHIwMjM6fjH'
                     }
                 });
+
                 const data = await res.json();
 
                 if (data.response) {
@@ -213,7 +216,6 @@ export default function VideoExportPage() {
         }
 
         setIsUploading(true);
-        setUploadResult(null);
 
         try {
             // Create FormData object
@@ -223,27 +225,27 @@ export default function VideoExportPage() {
             formData.append('description', youtubeData.description);
             formData.append('userId', '33');
 
-            console.log(formData);
-
-            const response = await fetch('http://localhost:9090/publish/youtube/upload_url', {
+            const response = await fetch(`${API_URL.NEXT_PUBLIC_API_URL}/publish/youtube/upload_url`, {
                 method: 'POST',
-                body: formData // Send as FormData, no Content-Type header needed
+                body: formData
             });
 
+            console.log("response", response);
+
             const data = await response.json();
+            console.log(data);
 
             if (response.ok) {
                 setUploadResult({
                     success: true,
                     message: 'Video uploaded successfully to YouTube!',
-                    videoId: data.videoId
+                    data: data.data
                 });
                 // Reset form after successful upload
                 setYoutubeData(prev => ({
                     ...prev,
                     title: '',
-                    description: '',
-                    tags: ''
+                    description: ''
                 }));
             } else {
                 setUploadResult({
@@ -403,19 +405,28 @@ export default function VideoExportPage() {
 
                                             {/* Upload Result */}
                                             {uploadResult && (
-                                                <Alert className={`mt-4 ${uploadResult.success ? 'border-green-500 bg-green-500/10' : 'border-red-500 bg-red-500/10'}`}>
-                                                    <AlertDescription className={`flex items-center gap-2 ${uploadResult.success ? 'text-green-300' : 'text-red-300'}`}>
-                                                        {uploadResult.success ? (
-                                                            <CheckCircle className="h-4 w-4 text-green-500" />
-                                                        ) : (
-                                                            <XCircle className="h-4 w-4 text-red-500" />
-                                                        )}
-                                                        {uploadResult.message}
-                                                        {uploadResult.videoId && (
-                                                            <span className="block mt-1 text-sm opacity-80">
-                                                                Video ID: {uploadResult.videoId}
-                                                            </span>
-                                                        )}
+                                                <Alert className={`mt-2 ${uploadResult.success ? 'border-green-500 bg-green-500/10' : 'border-red-500 bg-red-500/10'}`}>
+                                                    <AlertDescription className={`gap-2 ${uploadResult.success ? 'text-green-300' : 'text-red-300'}`}>
+                                                        <div className={"flex items-center gap-2"}>
+                                                            {uploadResult.success ? (
+                                                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                                            ) : (
+                                                                <XCircle className="h-4 w-4 text-red-500" />
+                                                            )}
+                                                            {uploadResult.message}
+                                                        </div>
+                                                        <div className={"flex items-center gap-2"}>
+                                                            Watch here:
+                                                            <a
+                                                                href={uploadResult.data}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="block text-sm opacity-80 text-emerald-100 font-semibold"
+                                                            >
+                                                                {uploadResult.data}
+                                                            </a>
+                                                            <ExternalLink className={"w-4 h-4 text-emerald-200"} />
+                                                        </div>
                                                     </AlertDescription>
                                                 </Alert>
                                             )}

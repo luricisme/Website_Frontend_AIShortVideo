@@ -545,9 +545,6 @@ export default function AudioPage() {
             saveVideoAudioData({
                 audioFiles,
                 selectedAudioFiles: getSelectedAudioFiles(),
-                voiceType: audioData.voiceType,
-                speed: audioData.speed,
-                customText: audioData.customText
             });
         }
     }, [audioFiles, audioData.voiceType, audioData.speed, audioData.customText]);

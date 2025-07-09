@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Player } from '@remotion/player';
-import { ArrowLeft, ArrowRight, Trash2 } from 'lucide-react';
+import {ArrowLeft, ArrowRight, GripVertical, Pause, Play, Plus, Trash2} from 'lucide-react';
 import {
     loadVideoAudioData,
     loadVideoCaptionData,
@@ -20,16 +20,18 @@ import Image from "next/image";
 import VideoComposition from "@/app/create-video/_components/VideoComposition";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import {Textarea} from "@/components/ui/textarea";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 
 export default function VideoEditor() {
-    const [videoData, setVideoData] = useState<VideoData | null>(null);
+    const [videoData, setVideoData] = useState<VideoData>();
     const [isLoading, setIsLoading] = useState(true);
+    const [draggedAudio, setDraggedAudio] = useState();
+    const [playingAudio, setPlayingAudio] = useState();
+    const [currentAudio, setCurrentAudio] = useState();
     const router = useRouter();
     // Tính toán durationInFrames từ totalDuration
-    const fps = 60;
+    const fps = 120;
     const totalDuration = videoData?.videoAudioData?.totalDuration || 30; // Default 30 giây
     const durationInFrames = Math.ceil(totalDuration * fps);
 
@@ -97,7 +99,7 @@ export default function VideoEditor() {
     };
 
     // Cập nhật function handleRemoveImage
-    const handleRemoveImage = (imageId: string) => {
+    const handleRemoveImage = (imageId: number) => {
         if (!videoData) return;
 
         const newSelectedImages = videoData.videoImageData.selectedImages.filter(id => id !== imageId);
@@ -118,7 +120,7 @@ export default function VideoEditor() {
     };
 
 // Cập nhật function handleAddImage
-    const handleAddImage = (imageId: string) => {
+    const handleAddImage = (imageId: number) => {
         if (!videoData) return;
 
         if (!videoData.videoImageData.selectedImages.includes(imageId)) {
@@ -182,7 +184,7 @@ export default function VideoEditor() {
         saveVideoScriptData(newScriptData);
     };
 
-    const handleCaptionChange = (field: string, value: any) => {
+    const handleCaptionChange = (field: string, value: never) => {
         if (!videoData) return;
 
         const newCaptionData = {
@@ -220,6 +222,130 @@ export default function VideoEditor() {
         saveVideoCaptionData(newCaptionData);
     };
 
+    // Cập nhật audioData và lưu vào localStorage
+    const updateAudioData = (newAudioData: { selectedAudioFiles: { id?: string; name: string; url: string; type: "generated" | "uploaded" | "recorded"; voiceType?: string; speed?: string; duration: number; isSelected?: boolean; }[] }) => {
+        const updatedVideoData = {
+            ...videoData,
+            videoAudioData: newAudioData
+        };
+        setVideoData(updatedVideoData);
+        saveVideoAudioData(newAudioData);
+    };
+
+    // Toggle select/deselect audio
+    const handleToggleSelect = (audioId: string) => {
+        const audioData = videoData.videoAudioData;
+        const targetAudio = audioData.audioFiles.find(audio => audio.id === audioId);
+
+        if (!targetAudio) return;
+
+        let newSelectedAudioFiles = [...audioData.selectedAudioFiles];
+        const isCurrentlySelected = newSelectedAudioFiles.some(audio => audio.id === audioId);
+
+        if (isCurrentlySelected) {
+            // Deselect
+            newSelectedAudioFiles = newSelectedAudioFiles.filter(audio => audio.id !== audioId);
+        } else {
+            // Select
+            newSelectedAudioFiles.push(targetAudio);
+        }
+
+        // Tính lại totalDuration
+        const newTotalDuration = newSelectedAudioFiles.reduce((sum, audio) => sum + audio.duration, 0);
+
+        const newAudioData = {
+            ...audioData,
+            selectedAudioFiles: newSelectedAudioFiles,
+            totalDuration: newTotalDuration
+        };
+
+        updateAudioData(newAudioData);
+    };
+
+    // Xóa audio
+    const handleRemoveAudio = (audioId: string | undefined) => {
+        const audioData = videoData.videoAudioData;
+
+        const newAudioFiles = audioData.audioFiles.filter(audio => audio.id !== audioId);
+        const newSelectedAudioFiles = audioData.selectedAudioFiles.filter(audio => audio.id !== audioId);
+
+        // Tính lại totalDuration
+        const newTotalDuration = newSelectedAudioFiles.reduce((sum, audio) => sum + audio.duration, 0);
+
+        const newAudioData = {
+            ...audioData,
+            audioFiles: newAudioFiles,
+            selectedAudioFiles: newSelectedAudioFiles,
+            totalDuration: newTotalDuration
+        };
+
+        updateAudioData(newAudioData);
+    };
+
+    // Play/Pause audio
+    const handlePlayAudio = (audio: { id: number; name?: string; url: string; type?: "generated" | "uploaded" | "recorded"; voiceType?: string | undefined; speed?: string | undefined; duration?: number | undefined; isSelected?: boolean | undefined; }) => {
+        if (playingAudio === audio.id) {
+            // Pause
+            if (currentAudio) {
+                currentAudio.pause();
+            }
+            setPlayingAudio(null);
+        } else {
+            // Play
+            if (currentAudio) {
+                currentAudio.pause();
+            }
+
+            const audioElement = new Audio(audio.url);
+            audioElement.play();
+            setCurrentAudio(audioElement);
+            setPlayingAudio(audio.id);
+
+            audioElement.onended = () => {
+                setPlayingAudio(null);
+                setCurrentAudio(null);
+            };
+        }
+    };
+
+    // Drag and drop handlers
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, audio: React.SetStateAction<undefined>) => {
+        setDraggedAudio(audio);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleDragOver = (e: { preventDefault: () => void; dataTransfer: { dropEffect: string; }; }) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetAudio: { id: number; name?: string; url?: string; type?: "generated" | "uploaded" | "recorded"; voiceType?: string | undefined; speed?: string | undefined; duration?: number; isSelected?: boolean | undefined; }) => {
+        e.preventDefault();
+
+        if (!draggedAudio || draggedAudio.id === targetAudio.id) return;
+
+        const audioData = videoData.videoAudioData;
+        const newSelectedAudioFiles = [...audioData.selectedAudioFiles];
+
+        const draggedIndex = newSelectedAudioFiles.findIndex(audio => audio.id === draggedAudio.id);
+        const targetIndex = newSelectedAudioFiles.findIndex(audio => audio.id === targetAudio.id);
+
+        if (draggedIndex !== -1 && targetIndex !== -1) {
+            // Swap positions
+            [newSelectedAudioFiles[draggedIndex], newSelectedAudioFiles[targetIndex]] =
+                [newSelectedAudioFiles[targetIndex], newSelectedAudioFiles[draggedIndex]];
+
+            const newAudioData = {
+                ...audioData,
+                selectedAudioFiles: newSelectedAudioFiles
+            };
+
+            updateAudioData(newAudioData);
+        }
+
+        setDraggedAudio(null);
+    };
+
     const handleContinue = () => {
         router.push('/create-video/export');
     };
@@ -227,6 +353,9 @@ export default function VideoEditor() {
     const handleBack = () => {
         router.push('/create-video/preview');
     };
+
+    const audioData = videoData.videoAudioData;
+    const selectedAudioIds = audioData.selectedAudioFiles.map(audio => audio.id);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-black p-6">
@@ -343,21 +472,142 @@ export default function VideoEditor() {
                                     </div>
                                 </TabsContent>
 
-                                <TabsContent value={"audio"}>
-                                    <div className="bg-neutral-900 rounded-lg p-4">
-                                        <h3 className="text-white font-medium mb-3">Audio Settings</h3>
-                                        <div className="space-y-3">
-                                            <div>
-                                                <label className="text-neutral-300 text-sm">Voice Type</label>
-                                                <div className="text-white">
-                                                    {videoData.videoAudioData?.selectedAudioFiles?.[0]?.voiceType || 'Default'}
+                                <TabsContent value="audio">
+                                    <div className="space-y-4">
+                                        {/* Selected Audio Section */}
+                                        <div className="bg-neutral-900 rounded-lg p-6">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="text-white font-medium text-lg">Selected Audio ({audioData.selectedAudioFiles.length})</h3>
+                                                <div className="text-sm text-neutral-400">
+                                                    Total Duration: {Math.floor(audioData.totalDuration / 60)}:{Math.floor(audioData.totalDuration % 60).toString().padStart(2, '0')}
                                                 </div>
                                             </div>
-                                            <div>
-                                                <label className="text-neutral-300 text-sm">Speed</label>
-                                                <div className="text-white">
-                                                    {videoData.videoAudioData?.selectedAudioFiles?.[0]?.speed || '1.0'}x
-                                                </div>
+
+                                            <div className="space-y-3 max-h-96 overflow-y-auto">
+                                                {audioData.selectedAudioFiles.length === 0 ? (
+                                                    <div className="text-center py-8 text-neutral-500">
+                                                        No audio selected. Select from available audio files.
+                                                    </div>
+                                                ) : (
+                                                    audioData.selectedAudioFiles.map((audio, index) => (
+                                                        <div
+                                                            key={audio.id}
+                                                            draggable
+                                                            onDragStart={(e) => handleDragStart(e, audio)}
+                                                            onDragOver={handleDragOver}
+                                                            onDrop={(e) => handleDrop(e, audio)}
+                                                            className="border border-blue-500 bg-blue-900/20 rounded-lg p-4 cursor-move hover:bg-blue-900/30 transition-colors"
+                                                        >
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex items-center space-x-3">
+                                                                    <GripVertical className="w-4 h-4 text-neutral-400" />
+                                                                    <div className="flex items-center space-x-2">
+                                                            <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                                                                {index + 1}
+                                                            </span>
+                                                                        <div>
+                                                                            <h4 className="font-medium text-white">{audio.name}</h4>
+                                                                            <div className="text-sm text-neutral-400">
+                                                                                {Math.floor(audio.duration / 60)}:{Math.floor(audio.duration % 60).toString().padStart(2, '0')} | {audio.voiceType} | {audio.speed}x
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="flex items-center space-x-2">
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        onClick={() => handlePlayAudio(audio)}
+                                                                        className="text-neutral-300 hover:text-white"
+                                                                    >
+                                                                        {playingAudio === audio.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                                                    </Button>
+
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        onClick={() => handleToggleSelect(audio.id)}
+                                                                        className="text-red-400 hover:text-red-300"
+                                                                    >
+                                                                        Remove
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Available Audio Section */}
+                                        <div className="bg-neutral-900 rounded-lg p-6">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="text-white font-medium text-lg">Available Audio ({audioData.audioFiles.length})</h3>
+                                                <Button size="sm" variant="outline" className="text-neutral-300 border-neutral-700">
+                                                    <Plus className="w-4 h-4 mr-2" />
+                                                    Add Audio
+                                                </Button>
+                                            </div>
+
+                                            <div className="space-y-3 max-h-96 overflow-y-auto">
+                                                {audioData.audioFiles.length === 0 ? (
+                                                    <div className="text-center py-8 text-neutral-500">
+                                                        No audio files available. Generate or upload audio files first.
+                                                    </div>
+                                                ) : (
+                                                    audioData.audioFiles.map((audio) => {
+                                                        const isSelected = selectedAudioIds.includes(audio.id);
+                                                        return (
+                                                            <div
+                                                                key={audio.id}
+                                                                className={`border rounded-lg p-4 transition-all duration-200 ${
+                                                                    isSelected
+                                                                        ? 'border-blue-500 bg-blue-900/20'
+                                                                        : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-750'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center justify-between">
+                                                                    <div className="flex-1">
+                                                                        <h4 className="font-medium text-white">{audio.name}</h4>
+                                                                        <div className="text-sm text-neutral-400 mt-1">
+                                                                            {Math.floor(audio.duration / 60)}:{Math.floor(audio.duration % 60).toString().padStart(2, '0')} | {audio.voiceType} | {audio.speed}x
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="ghost"
+                                                                            onClick={() => handlePlayAudio(audio)}
+                                                                            className="text-neutral-300 hover:text-white"
+                                                                        >
+                                                                            {playingAudio === audio.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                                                        </Button>
+
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="ghost"
+                                                                            onClick={() => handleToggleSelect(audio.id)}
+                                                                            className={isSelected ? 'text-blue-400' : 'text-neutral-400'}
+                                                                        >
+                                                                            {isSelected ? 'Remove' : 'Select'}
+                                                                        </Button>
+
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="ghost"
+                                                                            onClick={() => handleRemoveAudio(audio.id)}
+                                                                            className="text-red-400 hover:text-red-300"
+                                                                        >
+                                                                            <Trash2 className="w-4 h-4" />
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -423,7 +673,7 @@ export default function VideoEditor() {
                                                     type="color"
                                                     value={videoData.videoCaptionData?.color || '#cdab8f'}
                                                     onChange={(e) => handleCaptionChange('color', e.target.value)}
-                                                    className="w-12 h-12 rounded-lg border-2 border-gray-300 cursor-pointer hover:border-gray-400 transition-colors"
+                                                    className="w-12 h-12 rounded-lg border-2 border-neutral-300 cursor-pointer hover:border-neutral-400 transition-colors"
                                                 />
                                             </div>
                                             {/*<div className="flex items-center gap-2">*/}
