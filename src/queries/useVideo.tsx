@@ -9,7 +9,13 @@ import {
     VideoListResponse,
     VideoTopTrendingCategoryListResponse,
 } from "@/types/video.types";
-import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+    QueryClient,
+    useInfiniteQuery,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from "@tanstack/react-query";
 
 import {
     dislikeVideo,
@@ -23,16 +29,24 @@ import {
     getVideosByTagName,
     incrementVideoViewCount,
     likeVideo,
+    searchVideos,
     undislikeVideo,
     unlikeVideo,
 } from "@/apiRequests/client";
 
-export const useVideoListQuery = ({ retryKey }: { retryKey?: string | number }) => {
+export const useVideoListQuery = ({
+    retryKey,
+    enabled = true,
+}: {
+    retryKey?: string | number;
+    enabled?: boolean;
+}) => {
     const key = retryKey ? ["videos", retryKey] : ["videos"];
 
     return useQuery({
         queryKey: ["videos", key],
         queryFn: getVideos,
+        enabled: enabled, // Chỉ chạy khi enabled là true
     });
 };
 
@@ -647,7 +661,7 @@ export const useDeleteCommentMutation = () => {
     });
 };
 
-export const useCheckFollowStatusQuery = (userId: number | string) => {
+export const useCheckFollowStatusQuery = (userId: number | string, enabled?: b) => {
     return useQuery({
         queryKey: ["follow-status", userId],
         queryFn: () => {
@@ -755,5 +769,37 @@ export const useGetTrendingVideosQuery = (
         enabled: !!enabled, // Wait for categories
         staleTime: 1000 * 60 * 5, // 5 minutes
         gcTime: 1000 * 60 * 10, // 10 minutes
+    });
+};
+
+export const useVideoSearchQuery = ({
+    query,
+    pageSize = 10,
+    enabled = true,
+}: {
+    query: string;
+    pageSize?: number;
+    enabled?: boolean;
+}) => {
+    return useInfiniteQuery({
+        queryKey: ["search-videos-infinite", query, pageSize],
+        queryFn: ({ pageParam = 1 }) =>
+            searchVideos({
+                query,
+                pageSize,
+                pageNo: pageParam as number,
+            }),
+        enabled: enabled && !!query,
+        getNextPageParam: (lastPage) => {
+            // Nếu có trang tiếp theo thì trả về số trang, ngược lại trả về undefined
+            return lastPage.data.pageNo < lastPage.data.totalPage
+                ? lastPage.data.pageNo + 1
+                : undefined;
+        },
+        getPreviousPageParam: (firstPage) => {
+            return firstPage.data.pageNo > 1 ? firstPage.data.pageNo - 1 : undefined;
+        },
+        staleTime: 5 * 60 * 1000, // 5 phút
+        initialPageParam: 1,
     });
 };

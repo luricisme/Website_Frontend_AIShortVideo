@@ -83,6 +83,15 @@ export const videoListByCategoryNameSchema = z.object({
     items: z.array(videoSchema),
 });
 
+// VideoListBySearchQuery schema
+export const videoListBySearchQuerySchema = z.object({
+    pageNo: z.number(),
+    pageSize: z.number(),
+    totalPage: z.number(),
+    totalElements: z.number(),
+    items: z.array(videoSchema),
+});
+
 // Type
 export type VideoTag = z.infer<typeof videoTagSchema>;
 export type Video = z.infer<typeof videoSchema>;

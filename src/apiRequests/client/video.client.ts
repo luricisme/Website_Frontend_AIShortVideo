@@ -3,6 +3,7 @@ import {
     videoLikeDislikeCommentCountSchema,
     videoLikeStatusResponseSchema,
     videoListByCategoryNameSchema,
+    videoListBySearchQuerySchema,
     videoListByTagNameSchema,
     videoListResponseSchema,
     videoSchema,
@@ -171,5 +172,26 @@ export const getVideosByCategoryName = async ({
     return http.get(`${URL}/category/${categoryName}?${params.toString()}`, {
         requireAuth: false,
         responseSchema: apiResponseSchema(videoListByCategoryNameSchema),
+    });
+};
+
+export const searchVideos = async ({
+    query,
+    pageNo = 1,
+    pageSize = 10,
+}: {
+    query: string;
+    pageNo?: number;
+    pageSize?: number;
+}) => {
+    const params = new URLSearchParams({
+        search: `title:${query},category:${query}`,
+        pageNo: pageNo.toString(),
+        pageSize: pageSize.toString(),
+    });
+
+    return http.get(`${URL}/search?${params.toString()}`, {
+        requireAuth: false,
+        responseSchema: apiResponseSchema(videoListBySearchQuerySchema),
     });
 };
