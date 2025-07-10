@@ -194,10 +194,6 @@ export const useBodyScrollSimple = (disabled = true) => {
     }, [pathname]);
 };
 
-/**
- * 🛡️ Defensive Hook với Error Handling
- * Cho production environments
- */
 export const useBodyScrollProduction = (disabled = true) => {
     const pathname = usePathname();
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -249,9 +245,6 @@ export const useBodyScrollProduction = (disabled = true) => {
     }, [cleanup]);
 };
 
-/**
- * 🎪 Enhanced Scroll Container Hook
- */
 type ScrollContainerOptions = {
     height?: string;
     hideScrollbar?: boolean;
@@ -276,7 +269,4 @@ export const useScrollContainer = (options: ScrollContainerOptions = {}) => {
     return [height, scrollbarClasses, snapClasses, className].filter(Boolean).join(" ").trim();
 };
 
-/**
- * 🎯 Default Export - Recommended cho Next.js
- */
 export default useBodyScrollSimple;

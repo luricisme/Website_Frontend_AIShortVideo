@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        // console.log(">>> Received Google OAuth code:", code);
+        console.log(">>> Received Google OAuth code:", code);
         // console.log(">>> Received state:", state);
 
         // Parse state để lấy returnTo URL
