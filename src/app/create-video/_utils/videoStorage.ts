@@ -4,6 +4,8 @@ type VideoScriptData = {
     category: string;
     tag: string;
     language: string;
+    target: string;
+    style: string
 };
 
 type VideoImageData = {

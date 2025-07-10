@@ -1,6 +1,7 @@
 'use client';
 
-import API_URL  from "@/config";
+import { envPublic } from "@/constants/env.public";
+
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,11 +15,13 @@ import { RefreshCw, Sparkles, ArrowRight, Database, CheckCircle } from 'lucide-r
 import { useVideoCreation } from '../_context/VideoCreationContext';
 import StepNavigation from '../_components/StepNavigation';
 import { saveVideoScriptData, clearVideoImageData } from "../_utils/videoStorage";
+import {TagInput, validateTags} from "@/app/create-video/_components/TagValidation";
 
 export default function ScriptsPage() {
     const router = useRouter();
     const { state, dispatch } = useVideoCreation();
     const { scriptData, generatedScript, isGenerating, fetchedData, isFetchingData } = state;
+    const API_URL = envPublic.NEXT_PUBLIC_API_URL;
 
     // Only auto fetch data when topic, language, and dataSource are selected AND we don't have data yet
     useEffect(() => {
@@ -39,10 +42,9 @@ export default function ScriptsPage() {
     const handleDataFetch = async () => {
         dispatch({ type: 'SET_FETCHING_DATA', payload: true });
 
-        console.log(API_URL.NEXT_PUBLIC_API_URL);
         try {
             // API call to collect data
-            const response = await fetch(`${API_URL.NEXT_PUBLIC_API_URL}/create-video/collect-data`, {
+            const response = await fetch(`${API_URL}/create-video/collect-data`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -86,7 +88,7 @@ export default function ScriptsPage() {
 
     // Step 2: Generate script using /create-video/generate-script with collected data
     const handleScriptGeneration = async () => {
-        if (!fetchedData || !scriptData.style || !scriptData.audience || !scriptData.language) {
+        if (!fetchedData || !scriptData.style || !scriptData.target || !scriptData.language) {
             alert("Vui lòng điền đầy đủ thông tin trước khi tạo script");
             return;
         }
@@ -95,7 +97,7 @@ export default function ScriptsPage() {
         dispatch({ type: 'SET_GENERATING', payload: true });
 
         try {
-            const response = await fetch(`${API_URL.NEXT_PUBLIC_API_URL}/create-video/generate-script`, {
+            const response = await fetch(`${API_URL}/create-video/generate-script`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -103,10 +105,12 @@ export default function ScriptsPage() {
                 body: JSON.stringify({
                     data: fetchedData.text,
                     style: scriptData.style,
-                    audience: scriptData.audience,
+                    audience: scriptData.target,
                     lang: scriptData.language
                 }),
             });
+
+            console.log("response:", response);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -129,9 +133,17 @@ export default function ScriptsPage() {
         }
     };
 
+// Update your handleContinue function to use validation:
     const handleContinue = () => {
         if (!generatedScript) {
             alert("Vui lòng tạo script trước khi tiếp tục");
+            return;
+        }
+
+        // Validate tags before saving
+        const tagValidation = validateTags(scriptData.tag || '');
+        if (!tagValidation.isValid) {
+            alert(`Tag không hợp lệ: ${tagValidation.error}`);
             return;
         }
 
@@ -140,6 +152,8 @@ export default function ScriptsPage() {
             category: scriptData.category || '',
             tag: scriptData.tag || '',
             language: scriptData.language || '',
+            target: scriptData.target || '',
+            style: scriptData.style || '',
         });
 
         clearVideoImageData();
@@ -148,7 +162,7 @@ export default function ScriptsPage() {
 
     // Form validation helpers
     const isBasicFormValid = scriptData.topic && scriptData.dataSource && scriptData.language;
-    const isFullFormValid = isBasicFormValid && scriptData.style && scriptData.audience;
+    const isFullFormValid = isBasicFormValid && scriptData.style && scriptData.target;
     const hasDataToGenerateScript = fetchedData && isFullFormValid;
 
     return (
@@ -307,16 +321,13 @@ export default function ScriptsPage() {
                                     </div>
 
                                     <div>
-                                        <Label className="text-sm font-medium mb-3 block">Tag</Label>
-                                        <Input
-                                            id="tag"
-                                            placeholder="Ex. #anime, #cooking,..."
-                                            value={scriptData.tag}
-                                            onChange={(e) => dispatch({
+                                        <TagInput
+                                            value={scriptData.tag || ''}
+                                            onChange={(value: never) => dispatch({
                                                 type: 'SET_SCRIPT_DATA',
-                                                payload: { tag: e.target.value }
+                                                payload: { tag: value }
                                             })}
-                                            className="mt-1"
+                                            placeholder="Ex. #anime, #cooking, #tutorial"
                                         />
                                     </div>
                                 </div>
@@ -351,10 +362,10 @@ export default function ScriptsPage() {
                                 <div className={"col-span-2"}>
                                     <Label className="text-sm font-medium mb-3 block">Audience</Label>
                                     <RadioGroup
-                                        value={scriptData.audience}
+                                        value={scriptData.target}
                                         onValueChange={(value) => dispatch({
                                             type: 'SET_SCRIPT_DATA',
-                                            payload: { audience: value }
+                                            payload: { target: value }
                                         })}
                                     >
                                         <div className="flex items-center space-x-2">
@@ -398,7 +409,7 @@ export default function ScriptsPage() {
                         )}
 
                         {/* Generated Script */}
-                        {generatedScript && (
+                        {(generatedScript !== null || fetchedData) && (
                             <div className="mt-8 p-6 rounded-lg border">
                                 <Label className="text-sm font-medium mb-2 block">Generated script</Label>
                                 <Textarea

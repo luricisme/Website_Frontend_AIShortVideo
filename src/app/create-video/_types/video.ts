@@ -5,7 +5,7 @@ export interface ScriptData {
     dataSource: string;
     language: string;
     style: string;
-    audience: string;
+    target: string;
     category: string;
     tag: string;
 }
@@ -59,6 +59,8 @@ export interface VideoScriptData {
     category: string;
     tag: string;
     language: string;
+    target: string;
+    style: string;
 }
 
 export interface VideoImageData {

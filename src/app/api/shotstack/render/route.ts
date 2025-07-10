@@ -113,43 +113,29 @@ export async function POST(req: NextRequest) {
                 case 'minimal':
                     return 800; // Bold
                 case 'elegant':
-                    return 400;
+                    return 500;
                 default:
-                    return 700;
+                    return 800;
             }
         };
 
         // Helper function to get font size in pixels
         const getFontSize = (fontSize: string) => {
             switch (fontSize) {
-                case 'small': return 32;
-                case 'medium': return 40;
-                case 'large': return 48;
-                case 'extra-large': return 56;
-                default: return 40;
-            }
-        };
-
-        // Helper function to get vertical alignment
-        const getVerticalAlignment = (position: string) => {
-            switch(position) {
-                case 'top':
-                    return 'top';
-                case 'bottom':
-                    return 'bottom';
-                case 'center':
-                default:
-                    return 'center';
+                case 'small': return 42;
+                case 'medium': return 50;
+                case 'large': return 58;
+                case 'extra-large': return 66;
+                default: return 50;
             }
         };
 
         // Create subtitle clips using text asset format
         const subtitleClips = scriptSegments.map((segment) => {
             const fontSize = getFontSize(captionData.fontSize);
-            const color = captionData.color || '#FFFFFF';
+            const color = captionData.color || '#000000';
             const fontFamily = getFontFamily(captionData.style);
             const fontWeight = getFontWeight(captionData.style);
-            const verticalAlignment = getVerticalAlignment(captionData.position);
 
             return {
                 asset: {
@@ -157,7 +143,7 @@ export async function POST(req: NextRequest) {
                     text: segment.text,
                     alignment: {
                         horizontal: 'center',
-                        vertical: verticalAlignment
+                        vertical: 'bottom'
                     },
                     font: {
                         family: fontFamily,
@@ -166,12 +152,8 @@ export async function POST(req: NextRequest) {
                         weight: fontWeight,
                         lineHeight: 1.4
                     },
-                    stroke: {
-                        color: '#000000',
-                        width: 1
-                    },
-                    width: 900,
-                    height: 1700
+                    width: 1000,
+                    height: 200
                 },
                 start: segment.startTime,
                 length: segment.duration,
@@ -227,7 +209,7 @@ export async function POST(req: NextRequest) {
             },
             output: {
                 format: 'mp4',
-                aspectRatio: '16:9',
+                // aspectRatio: '16:9',
                 size: {
                     width: 1080,
                     height: 1920

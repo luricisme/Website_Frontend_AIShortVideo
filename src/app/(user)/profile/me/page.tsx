@@ -19,6 +19,8 @@ export default function UserProfileApp() {
     const { status } = useSession();
     const { user, isFetching, error } = useUserStore((state) => state);
 
+    console.log("user", user);
+
     useEffect(() => {
         if (user) {
             setUserProfile(user);

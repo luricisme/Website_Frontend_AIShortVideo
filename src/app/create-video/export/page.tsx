@@ -1,6 +1,5 @@
 'use client';
 
-import API_URL from "@/config";
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,9 @@ import {
     Copy,
     ArrowLeft,
     Home,
-    XCircle, ExternalLink
+    XCircle,
+    ExternalLink,
+    Save
 } from 'lucide-react';
 import {
     loadVideoAudioData,
@@ -38,6 +39,9 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion"
+import {envPublic} from "@/constants/env.public";
+import { useUserStore } from "@/providers/user-store-provider";
+import {useSession} from "next-auth/react";
 
 interface RenderStatus {
     id: string;
@@ -54,12 +58,29 @@ interface UploadResult {
     data?: string;
 }
 
+interface SaveVideoResult {
+    success: boolean;
+    message: string;
+    videoId?: string;
+}
+
 export default function VideoExportPage() {
     const [videoData, setVideoData] = useState<VideoData | null>(null);
     const [renderStatus, setRenderStatus] = useState<RenderStatus | null>(null);
     const [isRendering, setIsRendering] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [uploadResult, setUploadResult] = useState<UploadResult>();
+    const [saveResult, setSaveResult] = useState<SaveVideoResult>();
+    const [videoTitle, setVideoTitle] = useState('');
+    const [totalDuration, setTotalDuration] = useState(0);
+    const API_URL = envPublic.NEXT_PUBLIC_API_URL;
+    const { user } = useUserStore((state) => state);
+    console.log("user", user);
+
+    const { data: session, status } = useSession();
+    console.log("session", session);
+    console.log("status", status);
 
     // YouTube upload form data
     const [youtubeData, setYoutubeData] = useState({
@@ -82,18 +103,32 @@ export default function VideoExportPage() {
                 };
                 setVideoData(video);
 
-                // Pre-fill YouTube form with script data
+                // Parse script data and set initial title
                 if (video.videoScriptData) {
                     const scriptData = typeof video.videoScriptData === 'string'
                         ? JSON.parse(video.videoScriptData)
                         : video.videoScriptData;
 
+                    const initialTitle = `AI Generated Video - ${scriptData.category || 'Education'}`;
+                    setVideoTitle(initialTitle);
+
                     setYoutubeData(prev => ({
                         ...prev,
-                        title: `AI Generated Video - ${scriptData.category || 'Education'}`,
+                        title: initialTitle,
                         description: scriptData.script || '',
                         tags: scriptData.tag ? scriptData.tag.replace('#', '') : 'AI,Video,Education'
                     }));
+                }
+
+                // Calculate total duration from audio data
+                if (video.videoAudioData) {
+                    const audioData = typeof video.videoAudioData === 'string'
+                        ? JSON.parse(video.videoAudioData)
+                        : video.videoAudioData;
+
+                    if (audioData.totalDuration) {
+                        setTotalDuration(audioData.totalDuration);
+                    }
                 }
             } catch (err) {
                 console.error("Failed to load video data:", err);
@@ -125,7 +160,12 @@ export default function VideoExportPage() {
 
                     setRenderStatus(status);
 
-                    if (status.status === 'done' || status.status === 'failed') {
+                    if (status.status === 'done') {
+                        setIsRendering(false);
+                        clearInterval(pollInterval);
+                        // Automatically save video data after rendering is complete
+                        await saveVideoData(status.url!);
+                    } else if (status.status === 'failed') {
                         setIsRendering(false);
                         clearInterval(pollInterval);
                     }
@@ -150,8 +190,94 @@ export default function VideoExportPage() {
         }
     };
 
+    const saveVideoData = async (videoUrl: string) => {
+        console.log(videoData)
+        console.log(videoTitle)
+        console.log(session?.user?.id);
+        if (!videoData || !session.user?.id || !videoTitle.trim()) {
+            setSaveResult({
+                success: false,
+                message: 'Missing required data for saving video'
+            });
+            return;
+        }
+
+        setIsSaving(true);
+        setSaveResult(undefined);
+
+        try {
+            // Parse video data
+            const scriptData = typeof videoData.videoScriptData === 'string'
+                ? JSON.parse(videoData.videoScriptData)
+                : videoData.videoScriptData;
+
+            const imageData = typeof videoData.videoImageData === 'string'
+                ? JSON.parse(videoData.videoImageData)
+                : videoData.videoImageData;
+
+            // Prepare tags array
+            const tagsArray = scriptData.tag
+                ? scriptData.tag.split(',').map((tag: string) => tag.trim().replace('#', ''))
+                : [];
+
+            // Prepare image URLs array
+            const imageUrls = imageData.generatedImages
+                ? imageData.generatedImages.map((img) => img.url)
+                : [];
+
+            const saveData = {
+                title: videoTitle,
+                category: scriptData.category || 'Education',
+                style: scriptData.style || 'default',
+                target: scriptData.target || 'general',
+                script: scriptData.script || '',
+                videoUrl: videoUrl,
+                length: totalDuration,
+                userId: session.user?.id,
+                tags: tagsArray,
+                imageUrls: imageUrls
+            };
+
+            const response = await fetch(`${API_URL}/video/save`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(saveData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setSaveResult({
+                    success: true,
+                    message: 'Video saved successfully!',
+                    videoId: result.id
+                });
+            } else {
+                setSaveResult({
+                    success: false,
+                    message: result.error || 'Failed to save video'
+                });
+            }
+        } catch (error) {
+            console.error('Save video error:', error);
+            setSaveResult({
+                success: false,
+                message: 'Network error. Please try again.'
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const handleExport = async () => {
         if (!videoData) return;
+        if (!videoTitle.trim()) {
+            alert('Please enter a video title before rendering');
+            return;
+        }
+
         setIsRendering(true);
         setRenderStatus(null);
 
@@ -223,9 +349,9 @@ export default function VideoExportPage() {
             formData.append('videoUrl', renderStatus.url);
             formData.append('title', youtubeData.title);
             formData.append('description', youtubeData.description);
-            formData.append('userId', '33');
+            formData.append('userId', session?.user.id);
 
-            const response = await fetch(`${API_URL.NEXT_PUBLIC_API_URL}/publish/youtube/upload_url`, {
+            const response = await fetch(`${API_URL}/publish/youtube/upload_url`, {
                 method: 'POST',
                 body: formData
             });
@@ -288,6 +414,46 @@ export default function VideoExportPage() {
                 <StepNavigation />
                 <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-6">
+                        {/* Video Title Input */}
+                        <Card className="bg-neutral-900">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Save className="h-5 w-5" />
+                                    Video Details
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div>
+                                    <Label htmlFor="video-title" className="mb-2 block">
+                                        Video Title <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Input
+                                        id="video-title"
+                                        value={videoTitle}
+                                        onChange={(e) => setVideoTitle(e.target.value)}
+                                        className="bg-neutral-700 border-neutral-600"
+                                        placeholder="Enter your video title"
+                                    />
+                                </div>
+
+                                {/* Save Status */}
+                                {saveResult && (
+                                    <Alert className={`${saveResult.success ? 'border-green-500 bg-green-500/10' : 'border-red-500 bg-red-500/10'}`}>
+                                        <AlertDescription className={`gap-2 ${saveResult.success ? 'text-green-300' : 'text-red-300'}`}>
+                                            <div className="flex items-center gap-2">
+                                                {saveResult.success ? (
+                                                    <CheckCircle className="h-4 w-4 text-green-500" />
+                                                ) : (
+                                                    <XCircle className="h-4 w-4 text-red-500" />
+                                                )}
+                                                {saveResult.message}
+                                            </div>
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                            </CardContent>
+                        </Card>
+
                         {/* Render Status Card */}
                         <Card className="bg-neutral-900">
                             <CardHeader>
@@ -308,12 +474,16 @@ export default function VideoExportPage() {
                                         <p className="text-neutral-400">Ready to render your video</p>
                                         <Button
                                             onClick={handleExport}
-                                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                                            disabled={!videoTitle.trim()}
+                                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50"
                                             size="lg"
                                         >
                                             <Play className="mr-2 h-4 w-4" />
                                             Start Rendering
                                         </Button>
+                                        {!videoTitle.trim() && (
+                                            <p className="text-sm text-yellow-500">Please enter a video title first</p>
+                                        )}
                                     </div>
                                 )}
 
@@ -341,6 +511,14 @@ export default function VideoExportPage() {
                                         {renderStatus.error && (
                                             <div className="text-red-400 text-sm">
                                                 Error: {renderStatus.error}
+                                            </div>
+                                        )}
+
+                                        {/* Show saving status */}
+                                        {isSaving && (
+                                            <div className="flex items-center gap-2 text-blue-400">
+                                                <Loader2 className="animate-spin h-4 w-4" />
+                                                <span>Saving video data...</span>
                                             </div>
                                         )}
                                     </div>
@@ -415,18 +593,20 @@ export default function VideoExportPage() {
                                                             )}
                                                             {uploadResult.message}
                                                         </div>
-                                                        <div className={"flex items-center gap-2"}>
-                                                            Watch here:
-                                                            <a
-                                                                href={uploadResult.data}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="block text-sm opacity-80 text-emerald-100 font-semibold"
-                                                            >
-                                                                {uploadResult.data}
-                                                            </a>
-                                                            <ExternalLink className={"w-4 h-4 text-emerald-200"} />
-                                                        </div>
+                                                        {uploadResult.success && uploadResult.data && (
+                                                            <div className={"flex items-center gap-2"}>
+                                                                Watch here:
+                                                                <a
+                                                                    href={uploadResult.data}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="block text-sm opacity-80 text-emerald-100 font-semibold"
+                                                                >
+                                                                    {uploadResult.data}
+                                                                </a>
+                                                                <ExternalLink className={"w-4 h-4 text-emerald-200"} />
+                                                            </div>
+                                                        )}
                                                     </AlertDescription>
                                                 </Alert>
                                             )}

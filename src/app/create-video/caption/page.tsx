@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectItem, SelectContent } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import StepNavigation from '../_components/StepNavigation';
 import { useVideoCreation } from '../_context/VideoCreationContext';
 import { saveVideoCaptionData, loadVideoCaptionData } from '../_utils/videoStorage';
+import {Checkbox} from "@/components/ui/checkbox";
 
 export default function CaptionPage() {
     const router = useRouter();
@@ -174,23 +174,6 @@ export default function CaptionPage() {
                                 </div>
 
                                 <div>
-                                    <Label className=" font-medium mb-2 block">Position</Label>
-                                    <Select
-                                        value={captionData.position}
-                                        onValueChange={(value) => updateCaptionData({ position: value })}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select position" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="bottom">Bottom</SelectItem>
-                                            <SelectItem value="top">Top</SelectItem>
-                                            <SelectItem value="center">Center</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div>
                                     <Label className=" font-medium mb-2 block">Size</Label>
                                     <Select
                                         value={captionData.fontSize}
@@ -223,18 +206,17 @@ export default function CaptionPage() {
                                         </div>
                                     </div>
                                 </div>
+                                <div className="flex items-center space-x-3">
+                                    <Checkbox
+                                        id="background"
+                                        checked={captionData.background}
+                                        onCheckedChange={(checked) => updateCaptionData({ background: !!checked })}
+                                    />
+                                    <Label htmlFor="background" className=" font-medium">
+                                        Add background to subtitles
+                                    </Label>
+                                </div>
                             </div>
-
-                            {/*<div className="flex items-center space-x-3">*/}
-                            {/*    <Checkbox*/}
-                            {/*        id="background"*/}
-                            {/*        checked={captionData.background}*/}
-                            {/*        onCheckedChange={(checked) => updateCaptionData({ background: !!checked })}*/}
-                            {/*    />*/}
-                            {/*    <Label htmlFor="background" className=" font-medium">*/}
-                            {/*        Add background to subtitles*/}
-                            {/*    </Label>*/}
-                            {/*</div>*/}
 
                             {/* Preview Section */}
                             <div className="space-y-2">

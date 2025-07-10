@@ -25,7 +25,7 @@ interface AudioFile {
 }
 import StepNavigation from '../_components/StepNavigation';
 import { useVideoCreation } from '../_context/VideoCreationContext';
-import API_URL from "@/config";
+import {envPublic} from "@/constants/env.public";
 
 // Voice types with descriptions organized by language
 const VOICE_TYPES = {
@@ -57,10 +57,14 @@ export default function AudioPage() {
     const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
     const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
+    const API_URL = envPublic.NEXT_PUBLIC_API_URL;
 
     // Get script and language from localStorage
     const [script, setScript] = useState('');
     const [selectedLanguage, setSelectedLanguage] = useState<string>('English');
+
+    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+    const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
 
     useEffect(() => {
         const storedData = localStorage.getItem('videoScriptData');
@@ -203,6 +207,29 @@ export default function AudioPage() {
         }
     }, []);
 
+    useEffect(() => {
+        return () => {
+            // Cleanup recording interval
+            if (recordingIntervalRef.current) {
+                clearInterval(recordingIntervalRef.current);
+            }
+
+            // Stop media recorder if still recording
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+        };
+    }, [mediaRecorder]);
+
+    useEffect(() => {
+        if (audioFiles.length > 0) {
+            saveVideoAudioData({
+                audioFiles,
+                selectedAudioFiles: getSelectedAudioFiles(),
+            });
+        }
+    }, [audioFiles, audioData.voiceType, audioData.speed, audioData.customText, recordedChunks]);
+
     const handleContinue = () => {
         const selectedFiles = getSelectedAudioFiles();
         if (selectedFiles.length === 0) {
@@ -234,35 +261,122 @@ export default function AudioPage() {
         router.push('/create-video/image');
     };
 
-    const handleRecording = () => {
+    const handleRecording = async () => {
         if (audioData.isRecording) {
-            // Stop recording and add to files list
-            updateAudioData({
-                isRecording: false,
-                recordedAudio: null
-            });
+            // Stop recording
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+
+            updateAudioData({ isRecording: false });
+
             if (recordingIntervalRef.current) {
                 clearInterval(recordingIntervalRef.current);
                 recordingIntervalRef.current = null;
             }
 
-            // Add recorded audio to files list
-            addAudioFile({
-                name: `Recording ${formatTime(recordingTime)}`,
-                url: 'mock-recorded-audio.mp3', // In real app, this would be the actual recording
-                type: 'recorded'
-            });
-
             setRecordingTime(0);
         } else {
             // Start recording
-            updateAudioData({ isRecording: true });
-            setRecordingTime(0);
-            recordingIntervalRef.current = setInterval(() => {
-                setRecordingTime(prev => prev + 1);
-            }, 1000);
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const recorder = new MediaRecorder(stream);
+
+                // Reset recorded chunks
+                setRecordedChunks([]);
+
+                recorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        setRecordedChunks(prev => [...prev, event.data]);
+                    }
+                };
+
+                recorder.onstop = async () => {
+                    // Stop all tracks to release microphone
+                    stream.getTracks().forEach(track => track.stop());
+
+                    // Process recorded audio
+                    await processRecordedAudio();
+                };
+
+                recorder.start();
+                setMediaRecorder(recorder);
+
+                updateAudioData({ isRecording: true });
+                setRecordingTime(0);
+
+                recordingIntervalRef.current = setInterval(() => {
+                    setRecordingTime(prev => prev + 1);
+                }, 1000);
+
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                alert('Cannot access microphone. Please check permissions.');
+            }
         }
     };
+
+    const processRecordedAudio = async () => {
+        if (recordedChunks.length === 0) return;
+
+        try {
+            // Create blob from recorded chunks
+            const audioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
+
+            // Create file from blob
+            const audioFile = new File([audioBlob], `recording_${Date.now()}.wav`, {
+                type: 'audio/wav'
+            });
+
+            // Create temporary audio file entry
+            const tempFileId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const tempAudioFile: AudioFile = {
+                id: tempFileId,
+                name: `Recording ${formatTime(recordingTime)}`,
+                url: URL.createObjectURL(audioBlob), // Temporary URL for preview
+                type: 'recorded',
+                isSelected: false
+            };
+
+            // Add to list with uploading status
+            setAudioFiles(prev => [...prev, tempAudioFile]);
+            setUploadingFiles(prev => new Set(prev).add(tempFileId));
+
+            // Upload to server
+            const uploadedUrl = await uploadAudioFile(audioFile);
+
+            // Update with real URL after successful upload
+            setAudioFiles(prev =>
+                prev.map(audioFileItem =>
+                    audioFileItem.id === tempFileId
+                        ? { ...audioFileItem, url: uploadedUrl }
+                        : audioFileItem
+                )
+            );
+
+            // Clear recorded chunks
+            setRecordedChunks([]);
+
+            alert('Recording saved successfully!');
+
+        } catch (error) {
+            console.error('Error processing recorded audio:', error);
+            alert('Failed to save recording. Please try again.');
+
+            // Remove from list if processing failed
+            const tempFileId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            setAudioFiles(prev => prev.filter(audioFile => audioFile.id !== tempFileId));
+        } finally {
+            // Remove from uploading state
+            setUploadingFiles(prev => {
+                const newSet = new Set(prev);
+                const tempFileId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                newSet.delete(tempFileId);
+                return newSet;
+            });
+        }
+    };
+
 
     const handleGenerateAudio = async () => {
         if (!audioData.voiceType) {
@@ -279,7 +393,7 @@ export default function AudioPage() {
         updateAudioData({ isGenerating: true });
 
         try {
-            const response = await fetch(`${API_URL.NEXT_PUBLIC_API_URL}/create-video/generate-audio`, {
+            const response = await fetch(`${API_URL}/create-video/generate-audio`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -484,7 +598,7 @@ export default function AudioPage() {
         formData.append('type', 'audio');
 
         try {
-            const response = await fetch(`${API_URL.NEXT_PUBLIC_API_URL}/create-video/save-file`, {
+            const response = await fetch(`${API_URL}/create-video/save-file`, {
                 method: 'POST',
                 body: formData
             });
@@ -539,15 +653,6 @@ export default function AudioPage() {
         link.click();
         document.body.removeChild(link);
     };
-
-    useEffect(() => {
-        if (audioFiles.length > 0) {
-            saveVideoAudioData({
-                audioFiles,
-                selectedAudioFiles: getSelectedAudioFiles(),
-            });
-        }
-    }, [audioFiles, audioData.voiceType, audioData.speed, audioData.customText]);
 
     // Get current language display name
     const getLanguageDisplayName = () => {
