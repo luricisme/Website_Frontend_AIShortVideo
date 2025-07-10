@@ -221,9 +221,29 @@ const http = {
     },
 
     async post<Req extends JsonValue | FormData, Res>(
-        endpoint: string,
-        options: HttpRequestOptions<Req, Res> = {}
-    ): Promise<Res> {
+        endpoint: string, formData: FormData, p0: {
+            requireAuth: boolean;
+            responseSchema: z.ZodObject<{
+                status: z.ZodNumber;
+                message: z.ZodString;
+                data: any;
+                errors: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                    code: z.ZodOptional<z.ZodString>;
+                    field: z.ZodOptional<z.ZodString>;
+                    message: z.ZodString;
+                }, "strip", z.ZodTypeAny, { message: string; code?: string | undefined; field?: string | undefined; }, {
+                    message: string;
+                    code?: string | undefined;
+                    field?: string | undefined;
+                }>, "many">>;
+            }, "strip", z.ZodTypeAny, {
+                [x: string]: any;
+                status?: unknown;
+                message?: unknown;
+                data?: unknown;
+                errors?: unknown;
+            }, { [x: string]: any; status?: unknown; message?: unknown; data?: unknown; errors?: unknown; }>;
+        }, options: HttpRequestOptions<Req, Res> = {}    ): Promise<Res> {
         try {
             const {
                 body,

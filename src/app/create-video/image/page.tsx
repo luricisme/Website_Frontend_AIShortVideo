@@ -22,7 +22,7 @@ export default function ImagesPage() {
     const router = useRouter();
     const { state, dispatch } = useVideoCreation();
     const { generatedImages, selectedImages, isGenerating, generatedScript } = state;
-
+    const API_URL = envPublic.NEXT_PUBLIC_API_URL;
     // Load data từ localStorage khi component mount
     useEffect(() => {
         dispatch({ type: "SET_GENERATED_IMAGES", payload: [] });
@@ -49,7 +49,7 @@ export default function ImagesPage() {
 
         try {
             const response = await fetch(
-                `${envPublic.NEXT_PUBLIC_API_URL}/create-video/generate-image`,
+                `${API_URL}/create-video/generate-image`,
                 {
                     method: "POST",
                     headers: {
@@ -227,7 +227,6 @@ export default function ImagesPage() {
                                         </div>
                                     ))}
                                 </div>
-
                                 <div className="flex justify-between">
                                     <Button variant="outline" onClick={handleBack}>
                                         <ArrowLeft className="w-4 h-4 mr-1" />
@@ -246,6 +245,7 @@ export default function ImagesPage() {
                         )}
                     </CardContent>
                 </Card>
+
             </div>
         </div>
     );

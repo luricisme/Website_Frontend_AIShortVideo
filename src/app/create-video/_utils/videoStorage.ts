@@ -4,6 +4,8 @@ type VideoScriptData = {
     category: string;
     tag: string;
     language: string;
+    target: string;
+    style: string
 };
 
 type VideoImageData = {
@@ -35,6 +37,7 @@ type VideoAudioData = {
         voiceType?: string;
         speed?: string;
     }>;
+    totalDuration?: number;
     voiceType?: string;
     speed?: string;
     customText?: string;
@@ -46,6 +49,7 @@ type VideoCaptionData = {
     fontSize: string;
     color: string;
     background: boolean;
+    fontFamily: string;
 };
 
 const STORAGE_SCRIPT = 'videoScriptData';
