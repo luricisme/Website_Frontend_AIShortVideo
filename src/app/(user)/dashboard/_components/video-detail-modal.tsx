@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { VideoStats } from "@/hooks/use-dashboard-data";
-import { Eye, Facebook, MessageSquare, Share2, ThumbsUp, Youtube } from "lucide-react";
+// import { Progress } from "@/components/ui/progress";
+import { Video } from "@/types/video.types";
+import { Eye, Facebook, MessageSquare, ThumbsUp, Youtube } from "lucide-react";
 import Image from "next/image";
 
 interface VideoDetailModalProps {
-    video: VideoStats;
+    video: Video;
     onClose: () => void;
 }
 
@@ -17,7 +17,7 @@ export const VideoDetailModal = ({ video, onClose }: VideoDetailModalProps) => {
                 <div>
                     <CardTitle className="text-lg font-semibold">{video.title}</CardTitle>
                     <CardDescription className="text-zinc-400">
-                        Phát hành: {video.publishDate}
+                        {/* Phát hành: {video.publishDate} */}
                     </CardDescription>
                 </div>
                 <Button
@@ -25,7 +25,7 @@ export const VideoDetailModal = ({ video, onClose }: VideoDetailModalProps) => {
                     className="border-zinc-700 hover:bg-zinc-800"
                     onClick={onClose}
                 >
-                    Đóng
+                    Close
                 </Button>
             </CardHeader>
             <CardContent>
@@ -46,34 +46,34 @@ export const VideoDetailModal = ({ video, onClose }: VideoDetailModalProps) => {
                             <div className="bg-zinc-800 p-4 rounded-lg">
                                 <div className="flex items-center text-zinc-400 mb-1">
                                     <Eye className="w-4 h-4 mr-2" />
-                                    <span className="text-sm">Lượt xem</span>
+                                    <span className="text-sm">Views</span>
                                 </div>
                                 <div className="text-xl font-bold">
-                                    {video.views.toLocaleString()}
+                                    {video.viewCnt.toLocaleString()}
                                 </div>
                             </div>
 
                             <div className="bg-zinc-800 p-4 rounded-lg">
                                 <div className="flex items-center text-zinc-400 mb-1">
                                     <ThumbsUp className="w-4 h-4 mr-2" />
-                                    <span className="text-sm">Lượt thích</span>
+                                    <span className="text-sm">Likes</span>
                                 </div>
                                 <div className="text-xl font-bold">
-                                    {video.likes.toLocaleString()}
+                                    {video.likeCnt.toLocaleString()}
                                 </div>
                             </div>
 
                             <div className="bg-zinc-800 p-4 rounded-lg">
                                 <div className="flex items-center text-zinc-400 mb-1">
                                     <MessageSquare className="w-4 h-4 mr-2" />
-                                    <span className="text-sm">Bình luận</span>
+                                    <span className="text-sm">Comments</span>
                                 </div>
                                 <div className="text-xl font-bold">
-                                    {video.comments.toLocaleString()}
+                                    {video.commentCnt.toLocaleString()}
                                 </div>
                             </div>
 
-                            <div className="bg-zinc-800 p-4 rounded-lg">
+                            {/* <div className="bg-zinc-800 p-4 rounded-lg">
                                 <div className="flex items-center text-zinc-400 mb-1">
                                     <Share2 className="w-4 h-4 mr-2" />
                                     <span className="text-sm">Chia sẻ</span>
@@ -81,7 +81,7 @@ export const VideoDetailModal = ({ video, onClose }: VideoDetailModalProps) => {
                                 <div className="text-xl font-bold">
                                     {video.shares.toLocaleString()}
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
 
@@ -96,13 +96,13 @@ export const VideoDetailModal = ({ video, onClose }: VideoDetailModalProps) => {
                                     <Youtube className="w-4 h-4 text-red-600 mr-2" />
                                     <span>YouTube</span>
                                 </div>
-                                <span>{video.platforms.youtube.toLocaleString()}</span>
+                                {/* <span>{video.platforms.youtube.toLocaleString()}</span> */}
                             </div>
-                            <Progress
+                            {/* <Progress
                                 value={(video.platforms.youtube / video.views) * 100}
                                 className="h-2 bg-zinc-800"
                                 indicatorClassName="bg-red-600"
-                            />
+                            /> */}
                         </div>
 
                         {/* Facebook */}
@@ -112,13 +112,13 @@ export const VideoDetailModal = ({ video, onClose }: VideoDetailModalProps) => {
                                     <Facebook className="w-4 h-4 text-blue-600 mr-2" />
                                     <span>Facebook</span>
                                 </div>
-                                <span>{video.platforms.facebook.toLocaleString()}</span>
+                                {/* <span>{video.platforms.facebook.toLocaleString()}</span> */}
                             </div>
-                            <Progress
+                            {/* <Progress
                                 value={(video.platforms.facebook / video.views) * 100}
                                 className="h-2 bg-zinc-800"
                                 indicatorClassName="bg-blue-600"
-                            />
+                            /> */}
                         </div>
 
                         {/* TikTok */}
@@ -134,13 +134,13 @@ export const VideoDetailModal = ({ video, onClose }: VideoDetailModalProps) => {
                                     </svg>
                                     <span>TikTok</span>
                                 </div>
-                                <span>{video.platforms.tiktok.toLocaleString()}</span>
+                                {/* <span>{video.platforms.tiktok.toLocaleString()}</span> */}
                             </div>
-                            <Progress
+                            {/* <Progress
                                 value={(video.platforms.tiktok / video.views) * 100}
                                 className="h-2 bg-zinc-800"
                                 indicatorClassName="bg-zinc-300"
-                            />
+                            /> */}
                         </div>
                     </div>
                 </div>

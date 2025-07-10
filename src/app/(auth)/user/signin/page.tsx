@@ -4,7 +4,7 @@ import { z } from "zod";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { getSession, signIn, useSession } from "next-auth/react";
-import React, { useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -233,7 +233,13 @@ export default function LoginPage() {
                                 </div>
                             </div>
 
-                            <GoogleLoginButton isDisabled={isLoading} />
+                            <Suspense
+                                fallback={
+                                    <LoaderCircle className="animate-spin h-5 w-5 text-gray-800 mx-auto" />
+                                }
+                            >
+                                <GoogleLoginButton isDisabled={isLoading} />
+                            </Suspense>
 
                             <div className="text-center text-xs sm:text-sm">
                                 <span className="text-[#786E6E]">Don&apos;t have an account? </span>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LoaderCircle, CheckCircle } from "lucide-react";
@@ -7,7 +8,7 @@ import { LoaderCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-export default function TikTokLinkHandler() {
+function TikTokLinkHandler() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [isProcessing, setIsProcessing] = useState(false);
@@ -127,7 +128,38 @@ export default function TikTokLinkHandler() {
     };
 
     if (!tiktokCode) {
-        return null;
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-background px-4">
+                <div className="w-full max-w-md space-y-6">
+                    <Card className="border-border/50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+                        <CardContent className="p-8">
+                            <div className="text-center space-y-6">
+                                <div className="space-y-4">
+                                    <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                                        <span className="text-destructive text-2xl">⚠</span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                                            Invalid Request
+                                        </h2>
+                                        <p className="text-sm text-destructive font-medium">
+                                            No authorization code found
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button
+                                    onClick={() => router.replace("/")}
+                                    className="w-full"
+                                    variant="default"
+                                >
+                                    Back to Home
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -260,5 +292,45 @@ export default function TikTokLinkHandler() {
                 </div>
             </div>
         </div>
+    );
+}
+
+function TikTokCallbackLoading() {
+    return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background px-4">
+            <div className="w-full max-w-md space-y-6">
+                <Card className="border-border/50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+                    <CardContent className="p-8">
+                        <div className="text-center space-y-6">
+                            <div className="space-y-4">
+                                <div className="mx-auto w-12 h-12 relative">
+                                    <LoaderCircle className="w-12 h-12 animate-spin text-primary" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                                        Loading...
+                                    </h2>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                        Preparing TikTok callback
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="text-center">
+                    <p className="text-xs text-muted-foreground/60">Secured by TikTok API</p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default function TikTokCallbackPage() {
+    return (
+        <Suspense fallback={<TikTokCallbackLoading />}>
+            <TikTokLinkHandler />
+        </Suspense>
     );
 }

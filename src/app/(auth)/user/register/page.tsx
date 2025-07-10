@@ -1,7 +1,7 @@
 "use client";
 
 import { z } from "zod";
-import React from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
@@ -274,7 +274,16 @@ export default function RegisterPage() {
                             </div>
                         </div>
 
-                        <GoogleLoginButton isDisabled={isLoading} content="Sign up with Google" />
+                        <Suspense
+                            fallback={
+                                <LoaderCircle className="animate-spin h-5 w-5 text-gray-800 mx-auto" />
+                            }
+                        >
+                            <GoogleLoginButton
+                                isDisabled={isLoading}
+                                content="Sign up with Google"
+                            />
+                        </Suspense>
 
                         <div className="text-center text-xs sm:text-sm">
                             <span className="text-[#786E6E]">Already have an account? </span>

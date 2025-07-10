@@ -254,3 +254,20 @@ export const getVideosTrendingMonthly = async ({
         responseSchema: apiResponseSchema(videoTrendingMonthlySchema),
     });
 };
+
+export const updateVideoTitle = async ({
+    videoId,
+    title,
+}: {
+    videoId: number | string;
+    title: string;
+}) => {
+    return http.patch(`${URL}/update-title/${videoId}`, {
+        requireAuth: true,
+        body: { title },
+    });
+};
+
+export const deleteVideo = async (videoId: number | string) => {
+    return http.delete(`${URL}/delete-video/${videoId}`)
+}

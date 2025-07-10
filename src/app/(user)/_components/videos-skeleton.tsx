@@ -266,8 +266,8 @@ export default function VideosSkeleton() {
             {/* Enhanced Loading indicator */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
                 <div className="flex flex-col items-center space-y-4 bg-black/80 backdrop-blur-sm rounded-xl p-6 border border-neutral-700/50">
-                    <div className="animate-spin rounded-full h-12 w-12 border-2 border-neutral-600 border-t-white"></div>
-                    <div className="text-white text-sm font-medium">Đang tải video...</div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                    <p className="text-white">Loading</p>
                 </div>
             </div>
         </div>

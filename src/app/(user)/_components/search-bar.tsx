@@ -3,7 +3,7 @@
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,14 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import SearchInput from "@/app/(user)/_components/search-input";
+
+function SearchInputLoading() {
+    return (
+        <div className="flex-1 max-w-lg">
+            <Skeleton className="h-10 w-full rounded-md" />
+        </div>
+    );
+}
 
 const AvatarDropdownMenu = ({
     image,
@@ -160,7 +168,9 @@ const SearchBar = () => {
         <div className="h-[76px] flex items-center w-full gap-2 py-4 sticky top-0 z-50 bg-background">
             <SidebarTrigger />
             <div className="flex items-center justify-between w-full">
-                <SearchInput />
+                <Suspense fallback={<SearchInputLoading />}>
+                    <SearchInput />
+                </Suspense>
                 <div className="flex items-center gap-2">
                     {status === "loading" || isUserInfoLoading ? (
                         <div className="flex items-center gap-2">
