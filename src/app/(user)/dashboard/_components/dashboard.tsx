@@ -2,8 +2,8 @@
 
 import PlatformStats from "@/app/(user)/dashboard/_components/platform-stats";
 import StatsOverview from "@/app/(user)/dashboard/_components/stats-overview";
-import { VideoDetailModal } from "@/app/(user)/dashboard/_components/video-detail-modal";
-import VideoTable from "@/app/(user)/dashboard/_components/video-table";
+import { VideoDetailModal } from "@/app/(user)/dashboard/_components/video-detail-model/video-detail-modal";
+import VideoTable from "@/app/(user)/dashboard/_components/video-table/video-table";
 import UnauthorizedProfile from "@/app/(user)/profile/_components/unauthorized-profile";
 import { PlatformPieChart, ViewsTrendChart } from "@/components/charts/dashboard-charts";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -177,7 +177,7 @@ const Dashboard = () => {
                             videos={videos}
                             isLoading={isVideosLoading}
                             error={videosError}
-                            onVideoSelect={() => {}}
+                            onVideoSelect={setSelectedVideo}
                             onRefresh={refetchVideos}
                             currentPage={currentPage}
                             totalPages={totalPages}

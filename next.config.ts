@@ -28,8 +28,26 @@ const nextConfig: NextConfig = {
                 port: "",
                 pathname: "/**",
             },
+            {
+                protocol: "https",
+                hostname: "res.cloudinary.com",
+                port: "",
+                pathname: "/**",
+            },
+            {
+                protocol: "https",
+                hostname: "images.pexels.com",
+                port: "",
+                pathname: "/**",
+            },
+            {
+                protocol: "https",
+                hostname: "img.example.com", // Thay thế bằng hostname thực tế của bạn nếu cần
+                port: "",
+                pathname: "/**",
+            },
         ],
-        domains: ['res.cloudinary.com'],
+        domains: ["res.cloudinary.com"],
     },
 };
 

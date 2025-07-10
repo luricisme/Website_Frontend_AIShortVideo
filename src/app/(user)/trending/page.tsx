@@ -53,7 +53,7 @@ export default function TrendingPage() {
             activeCategory: activeCategory,
             activeTag: activeTag,
             currentPage: currentPage,
-            pageSize: 1,
+            pageSize: 5,
         },
         {
             enabled: shouldFetchVideos,

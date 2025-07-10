@@ -158,7 +158,7 @@ const Pagination = ({
                                 onValueChange={(value) => onItemsPerPageChange(Number(value))}
                                 disabled={isLoading}
                             >
-                                <SelectTrigger className="h-8 w-[60px] text-xs">
+                                <SelectTrigger className="h-8 w-[65px] text-xs">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
