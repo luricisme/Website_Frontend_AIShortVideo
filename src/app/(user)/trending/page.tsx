@@ -5,16 +5,13 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import VideoCard from "@/app/(user)/_components/video-card";
-import {
-    FiltersLoadingSkeleton,
-    Pagination,
-    VideoGridSkeleton,
-} from "@/app/(user)/trending/_components";
+import { FiltersLoadingSkeleton, VideoGridSkeleton } from "@/app/(user)/trending/_components";
 import {
     useGetCategoriesQuery,
     useGetPopularTagsQuery,
     useGetTrendingVideosQuery,
 } from "@/queries/useVideo";
+import Pagination from "@/components/table/pagination";
 
 export default function TrendingPage() {
     const router = useRouter();
@@ -44,7 +41,8 @@ export default function TrendingPage() {
     const { data: tagsData, isLoading: tagsLoading } = useGetPopularTagsQuery();
 
     const hasRequiredData = Boolean(categoriesData?.data?.length);
-    const shouldFetchVideos = hasRequiredData || activeCategory || activeTag;
+    const shouldFetchVideos =
+        hasRequiredData || activeCategory || activeTag || (!activeCategory && !activeTag);
 
     const {
         data: videosData,
@@ -55,7 +53,7 @@ export default function TrendingPage() {
             activeCategory: activeCategory,
             activeTag: activeTag,
             currentPage: currentPage,
-            pageSize: 1,
+            pageSize: 5,
         },
         {
             enabled: shouldFetchVideos,
@@ -228,7 +226,7 @@ export default function TrendingPage() {
                             ? `${activeCategory} Videos`
                             : activeTag
                             ? `Videos with ${activeTag}`
-                            : "Top Trending Today"}
+                            : "Top Trending Monthly Videos"}
                     </h2>
                     {isFetching && (
                         <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
@@ -247,11 +245,14 @@ export default function TrendingPage() {
 
                         {/* Pagination */}
                         <Pagination
-                            currentPage={videosData?.data?.pageNo || 1}
+                            currentPage={currentPage}
                             totalPages={videosData?.data?.totalPage || 1}
-                            totalCount={videosData?.data?.totalElements || 0}
                             onPageChange={handlePageChange}
+                            totalItems={videosData?.data?.totalElements || 0}
+                            itemsPerPage={12}
+                            showFullInfo={false} // Hide left side info
                             isLoading={isPending || isFetching}
+                            itemType="videos"
                         />
                     </>
                 ) : shouldFetchVideos ? (

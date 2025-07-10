@@ -3,16 +3,19 @@ import { commentApiRequests } from "@/apiRequests/comment";
 import VideoDetail from "@/app/(user)/_components/video-detail";
 import { checkFollowing } from "@/apiRequests/client/user.client";
 import { Comment, CommentListResponse } from "@/types/comment.types";
+import { Video, VideoLikeStatus, VideoListByUserId, VideoListResponse } from "@/types/video.types";
 import {
-    Video,
-    VideoLikeStatus,
-    VideoListResponse,
-    VideoTopTrendingCategoryListResponse,
-} from "@/types/video.types";
-import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+    QueryClient,
+    useInfiniteQuery,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from "@tanstack/react-query";
 
 import {
+    deleteVideo,
     dislikeVideo,
+    getLikedVideosByUserId,
     getTopPopularTags,
     getTopTrendingCategories,
     getVideoById,
@@ -21,18 +24,29 @@ import {
     getVideos,
     getVideosByCategoryName,
     getVideosByTagName,
+    getVideosByUserId,
+    getVideosTrendingMonthly,
     incrementVideoViewCount,
     likeVideo,
+    searchVideos,
     undislikeVideo,
     unlikeVideo,
+    updateVideoTitle,
 } from "@/apiRequests/client";
 
-export const useVideoListQuery = ({ retryKey }: { retryKey?: string | number }) => {
+export const useVideoListQuery = ({
+    retryKey,
+    enabled = true,
+}: {
+    retryKey?: string | number;
+    enabled?: boolean;
+}) => {
     const key = retryKey ? ["videos", retryKey] : ["videos"];
 
     return useQuery({
         queryKey: ["videos", key],
         queryFn: getVideos,
+        enabled: enabled, // Chỉ chạy khi enabled là true
     });
 };
 
@@ -647,7 +661,7 @@ export const useDeleteCommentMutation = () => {
     });
 };
 
-export const useCheckFollowStatusQuery = (userId: number | string) => {
+export const useCheckFollowStatusQuery = (userId: number | string, enabled?: boolean) => {
     return useQuery({
         queryKey: ["follow-status", userId],
         queryFn: () => {
@@ -656,7 +670,7 @@ export const useCheckFollowStatusQuery = (userId: number | string) => {
             }
             return checkFollowing(userId);
         },
-        enabled: !!userId, // Only run if userId is provided
+        enabled: enabled, // Only run if userId is provided
     });
 };
 
@@ -696,7 +710,7 @@ export const useGetTrendingVideosQuery = (
         enabled: boolean | string | null | undefined;
     }
 ) => {
-    const queryClient = useQueryClient();
+    // const queryClient = useQueryClient();
     // const categories =
     //     (
     //         queryClient.getQueryData([
@@ -704,10 +718,10 @@ export const useGetTrendingVideosQuery = (
     //         ]) as ApiResponse<VideoTopTrendingCategoryListResponse>
     //     ).data || [];
 
-    const categories =
-        queryClient.getQueryData<ApiResponse<VideoTopTrendingCategoryListResponse>>([
-            "trending-categories",
-        ])?.data || [];
+    // const categories =
+    //     queryClient.getQueryData<ApiResponse<VideoTopTrendingCategoryListResponse>>([
+    //         "trending-categories",
+    //     ])?.data || [];
 
     // console.log("useGetTrendingVideosQuery categories:", categories);
     // console.log(">>> is enabled:", enabled);
@@ -728,32 +742,300 @@ export const useGetTrendingVideosQuery = (
                     pageSize: pageSize,
                 });
             } else {
-                // default use first category
-                if (categories?.length > 0) {
-                    return getVideosByCategoryName({
-                        categoryName: categories[0].category,
-                        pageNo: currentPage,
-                        pageSize: pageSize,
-                    });
-                }
-
-                // If no category or tag is active, return empty response with correct shape
-                return Promise.resolve({
-                    status: 200,
-                    message: "No category or tag selected",
-                    data: {
-                        pageNo: currentPage,
-                        pageSize: pageSize,
-                        totalPage: 0,
-                        totalElements: 0,
-                        items: [] as Video[],
-                    },
-                    errors: [],
+                return getVideosTrendingMonthly({
+                    pageNo: currentPage,
+                    pageSize: pageSize,
                 });
             }
         },
         enabled: !!enabled, // Wait for categories
         staleTime: 1000 * 60 * 5, // 5 minutes
         gcTime: 1000 * 60 * 10, // 10 minutes
+    });
+};
+
+export const useVideoSearchQuery = ({
+    query,
+    pageSize = 10,
+    enabled = true,
+}: {
+    query: string;
+    pageSize?: number;
+    enabled?: boolean;
+}) => {
+    return useInfiniteQuery({
+        queryKey: ["search-videos-infinite", query, pageSize],
+        queryFn: ({ pageParam = 1 }) =>
+            searchVideos({
+                query,
+                pageSize,
+                pageNo: pageParam as number,
+            }),
+        enabled: enabled && !!query,
+        getNextPageParam: (lastPage) => {
+            // Nếu có trang tiếp theo thì trả về số trang, ngược lại trả về undefined
+            return lastPage.data.pageNo < lastPage.data.totalPage
+                ? lastPage.data.pageNo + 1
+                : undefined;
+        },
+        getPreviousPageParam: (firstPage) => {
+            return firstPage.data.pageNo > 1 ? firstPage.data.pageNo - 1 : undefined;
+        },
+        staleTime: 5 * 60 * 1000, // 5 phút
+        initialPageParam: 1,
+    });
+};
+
+export const useGetVideosByUserIdQuery = ({
+    userId,
+    pageNo = 1,
+    pageSize = 10,
+    enabled = true,
+}: {
+    userId: number | string;
+    pageNo?: number;
+    pageSize?: number;
+    enabled?: boolean;
+}) => {
+    return useQuery({
+        queryKey: ["my-videos", userId, pageNo, pageSize],
+        queryFn: () => getVideosByUserId({ userId, pageNo, pageSize }),
+        enabled: !!userId && enabled,
+        staleTime: 5 * 60 * 1000, // 5 phút
+        gcTime: 10 * 60 * 1000, // 10 phút
+    });
+};
+
+export const useUpdateVideoTitleMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (data: { videoId: number | string; title: string }) => {
+            return updateVideoTitle(data);
+        },
+        onMutate: async ({ videoId, title }) => {
+            // Cancel outgoing refetches
+            await queryClient.cancelQueries({ queryKey: ["my-videos"] });
+            await queryClient.cancelQueries({ queryKey: ["video", videoId] });
+
+            // Snapshot previous values
+            const previousMyVideos = queryClient.getQueryData([
+                "my-videos",
+            ]) as ApiResponse<VideoListByUserId>;
+
+            const previousVideoDetail = queryClient.getQueryData([
+                "video",
+                videoId,
+            ]) as ApiResponse<Video>;
+
+            // Optimistically update my videos list
+            queryClient.setQueriesData(
+                { queryKey: ["my-videos"] },
+                (old: ApiResponse<VideoListByUserId>) => {
+                    if (!old?.data?.items) return old;
+
+                    return {
+                        ...old,
+                        data: {
+                            ...old.data,
+                            items: old.data.items.map((video: Video) =>
+                                video.id === videoId ? { ...video, title } : video
+                            ),
+                        },
+                    };
+                }
+            );
+
+            // Optimistically update video detail
+            queryClient.setQueryData(["video", videoId], (old: ApiResponse<Video>) => {
+                if (!old?.data) return old;
+
+                return {
+                    ...old,
+                    data: {
+                        ...old.data,
+                        title,
+                    },
+                };
+            });
+
+            return { previousMyVideos, previousVideoDetail };
+        },
+        onError: (err, { videoId }, context) => {
+            // Rollback optimistic updates
+            if (context?.previousMyVideos) {
+                queryClient.setQueriesData({ queryKey: ["my-videos"] }, context.previousMyVideos);
+            }
+            if (context?.previousVideoDetail) {
+                queryClient.setQueryData(["video", videoId], context.previousVideoDetail);
+            }
+        },
+        onSuccess: (response, { videoId }) => {
+            // Invalidate related queries
+            queryClient.invalidateQueries({
+                queryKey: ["my-videos"],
+                exact: false, // Include all variations with different params
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["video", videoId],
+            });
+
+            // Optional: Also invalidate general videos list if this video might appear there
+            queryClient.invalidateQueries({
+                queryKey: ["videos"],
+                exact: false,
+            });
+        },
+    });
+};
+
+export const useDeleteVideoMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (videoId: number | string) => {
+            return deleteVideo(videoId);
+        },
+        onMutate: async (videoId) => {
+            // Cancel outgoing refetches
+            await queryClient.cancelQueries({ queryKey: ["my-videos"] });
+            await queryClient.cancelQueries({ queryKey: ["video", videoId] });
+            await queryClient.cancelQueries({ queryKey: ["videos"] });
+
+            // Snapshot previous values
+            const previousMyVideos = queryClient.getQueryData(["my-videos"]) as
+                | ApiResponse<VideoListByUserId>
+                | undefined;
+            const previousVideos = queryClient.getQueryData(["videos"]) as
+                | ApiResponse<VideoListResponse>
+                | undefined;
+
+            // Optimistically remove from my videos list
+            queryClient.setQueriesData(
+                { queryKey: ["my-videos"] },
+                (old: ApiResponse<VideoListByUserId>) => {
+                    if (!old?.data?.items) return old;
+
+                    return {
+                        ...old,
+                        data: {
+                            ...old.data,
+                            items: old.data.items.filter((video: Video) => video.id !== videoId),
+                            totalElements: Math.max((old.data.totalElements || 1) - 1, 0),
+                        },
+                    };
+                }
+            );
+
+            // Optimistically remove from general videos list
+            queryClient.setQueryData(["videos"], (old: ApiResponse<VideoListResponse>) => {
+                if (!old?.data?.items) return old;
+
+                return {
+                    ...old,
+                    data: {
+                        ...old.data,
+                        items: old.data.items.filter((video: Video) => video.id !== videoId),
+                        totalElements: Math.max((old.data.totalElements || 1) - 1, 0),
+                    },
+                };
+            });
+
+            // Remove video detail from cache
+            queryClient.removeQueries({ queryKey: ["video", videoId] });
+
+            return { previousMyVideos, previousVideos };
+        },
+        onError: (err, videoId, context) => {
+            // Rollback optimistic updates
+            if (context?.previousMyVideos) {
+                queryClient.setQueriesData({ queryKey: ["my-videos"] }, context.previousMyVideos);
+            }
+            if (context?.previousVideos) {
+                queryClient.setQueryData(["videos"], context.previousVideos);
+            }
+        },
+        onSuccess: (response, videoId) => {
+            // Invalidate all related queries
+            queryClient.invalidateQueries({
+                queryKey: ["my-videos"],
+                exact: false,
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["videos"],
+                exact: false,
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["my-liked-videos"],
+                exact: false,
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["trending-videos"],
+                exact: false,
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["trending-monthly-videos"],
+                exact: false,
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["search-videos-infinite"],
+                exact: false,
+            });
+
+            // Remove video detail completely
+            queryClient.removeQueries({ queryKey: ["video", videoId] });
+
+            // Remove any comments related to this video
+            queryClient.removeQueries({ queryKey: ["comments", videoId] });
+
+            // Remove video like status
+            queryClient.removeQueries({
+                queryKey: ["video-like-status", videoId],
+                exact: false,
+            });
+
+            // Remove video counts
+            queryClient.removeQueries({
+                queryKey: ["video-like-dislike-comment-count", videoId],
+            });
+        },
+    });
+};
+
+export const useGetLikedVideosByUserIdQuery = ({
+    userId,
+    pageNo = 1,
+    pageSize = 10,
+    enabled = true,
+}: {
+    userId: number | string;
+    pageNo?: number;
+    pageSize?: number;
+    enabled?: boolean;
+}) => {
+    return useQuery({
+        queryKey: ["my-liked-videos", userId, pageNo, pageSize],
+        queryFn: () => getLikedVideosByUserId({ userId, pageNo, pageSize }),
+        enabled: !!userId && enabled,
+        staleTime: 5 * 60 * 1000, // 5 phút
+        gcTime: 10 * 60 * 1000, // 10 phút
+    });
+};
+
+export const useGetVideosTrendingMonthlyQuery = ({
+    pageNo = 1,
+    pageSize = 10,
+    enabled = true,
+}: {
+    pageNo?: number;
+    pageSize?: number;
+    enabled?: boolean;
+}) => {
+    return useQuery({
+        queryKey: ["trending-monthly-videos", pageNo, pageSize],
+        queryFn: () => getVideosTrendingMonthly({ pageNo, pageSize }),
+        enabled: enabled,
+        staleTime: 5 * 60 * 1000, // 5 phút
+        gcTime: 10 * 60 * 1000, // 10 phút
     });
 };

@@ -7,6 +7,7 @@ const serverSchema = z.object({
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     BACKEND_URL: z.string().url(),
     NEXT_PUBLIC_API_URL: z.string().url(),
+    TIKTOK_CLIENT_ID: z.string().min(1).optional(),
 });
 
 const rawServer = {
@@ -16,6 +17,7 @@ const rawServer = {
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     BACKEND_URL: process.env.BACKEND_URL,
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    TIKTOK_CLIENT_ID: process.env.TIKTOK_CLIENT_ID || "",
 };
 
 const serverEnv = serverSchema.safeParse(rawServer);

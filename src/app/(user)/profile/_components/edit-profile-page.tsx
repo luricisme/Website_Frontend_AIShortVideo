@@ -42,6 +42,8 @@ export default function EditProfilePage({
             twitter: userProfile?.twitter || "",
             youtube: userProfile?.youtube || "",
             email: userProfile?.email || "",
+            facebook: userProfile?.facebook || "",
+            tiktok: userProfile?.tiktok || "",
         },
     });
 
@@ -280,6 +282,31 @@ export default function EditProfilePage({
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium mb-2">
+                                            Facebook
+                                        </label>
+                                        <FormField
+                                            control={form.control}
+                                            name="facebook"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormControl>
+                                                        <Input
+                                                            {...field}
+                                                            value={field.value ?? ""}
+                                                            placeholder="Facebook"
+                                                            className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:border-purple-500"
+                                                            disabled={
+                                                                updateProfileMutation.isPending
+                                                            }
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">
                                             Instagram
                                         </label>
                                         <FormField
@@ -305,18 +332,18 @@ export default function EditProfilePage({
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium mb-2">
-                                            Twitter
+                                            Tiktok
                                         </label>
                                         <FormField
                                             control={form.control}
-                                            name="twitter"
+                                            name="tiktok"
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <FormControl>
                                                         <Input
                                                             {...field}
                                                             value={field.value ?? ""}
-                                                            placeholder="Twitter"
+                                                            placeholder="Tiktok"
                                                             className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:border-purple-500"
                                                             disabled={
                                                                 updateProfileMutation.isPending

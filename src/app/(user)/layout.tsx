@@ -8,6 +8,7 @@ import { UserStoreProvider } from "@/providers/user-store-provider";
 import { ReactQueryProvider } from "@/providers/react-query-provider";
 import WrapperSessionProvider from "@/app/(user)/_components/wrapper-session-provider";
 import ProgressBarProvider from "@/providers/progress-bar-provider";
+import { VideosSearchStoreProvider } from "@/providers/videos-search-store-provider";
 
 export default function UserLayout({
     children,
@@ -21,13 +22,15 @@ export default function UserLayout({
                 <ProgressBarProvider>
                     <main className="container mx-auto flex flex-col min-h-screen sm:px-4 px-2">
                         <UserStoreProvider>
-                            <ReactQueryProvider>
-                                <WrapperSessionProvider>
-                                    <SearchBar />
-                                </WrapperSessionProvider>
-                                {children}
-                                <Toaster />
-                            </ReactQueryProvider>
+                            <VideosSearchStoreProvider>
+                                <ReactQueryProvider>
+                                    <WrapperSessionProvider>
+                                        <SearchBar />
+                                    </WrapperSessionProvider>
+                                    {children}
+                                    <Toaster />
+                                </ReactQueryProvider>
+                            </VideosSearchStoreProvider>
                         </UserStoreProvider>
                     </main>
                 </ProgressBarProvider>

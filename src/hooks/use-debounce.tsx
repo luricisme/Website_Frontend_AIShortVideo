@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 /**
  * Hook để debounce một function
@@ -8,10 +8,7 @@ import { useEffect, useRef } from "react";
  * @param delay Thời gian trễ (milliseconds)
  * @returns Function đã được debounce
  */
-export const useDebounce = <F extends (...args: unknown[]) => unknown>(
-    callback: F,
-    delay: number
-) => {
+export const useDebounce = <T extends unknown[], R>(callback: (...args: T) => R, delay: number) => {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
@@ -22,13 +19,16 @@ export const useDebounce = <F extends (...args: unknown[]) => unknown>(
         };
     }, []);
 
-    return (...args: Parameters<F>) => {
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-        }
+    return useCallback(
+        (...args: T) => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
 
-        timeoutRef.current = setTimeout(() => {
-            callback(...args);
-        }, delay);
-    };
+            timeoutRef.current = setTimeout(() => {
+                callback(...args);
+            }, delay);
+        },
+        [callback, delay]
+    );
 };
