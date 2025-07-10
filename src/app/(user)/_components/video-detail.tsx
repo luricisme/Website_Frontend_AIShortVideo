@@ -613,7 +613,7 @@ const VideoDetail = ({
                                         />
                                     </div>
                                     <span className="text-xs md:text-sm font-medium truncate">
-                                        Chia sẻ
+                                        Share
                                     </span>
                                 </button>
 
@@ -629,15 +629,9 @@ const VideoDetail = ({
                                     </span>
                                 </button>
 
-                                <div
-                                    className="w-9 h-9 md:w-11 md:h-11 cursor-pointer mt-2 mx-auto"
-                                    onClick={(e) => {
-                                        e.stopPropagation(); // Prevent video click event
-                                        e.preventDefault(); // Prevent default action
-                                        if (video.user.id) {
-                                            router.push(`/profile/${video.user.id}`);
-                                        }
-                                    }}
+                                <Link
+                                    href={`/profile/${video.user.id}`}
+                                    className="block w-9 h-9 md:w-11 md:h-11 cursor-pointer mt-2 mx-auto"
                                 >
                                     <Avatar className="w-9 h-9 md:w-11 md:h-11 rounded-full">
                                         <AvatarImage src={video.user.avatar ?? undefined} />
@@ -645,7 +639,7 @@ const VideoDetail = ({
                                             {video.user.username.charAt(0)}
                                         </AvatarFallback>
                                     </Avatar>
-                                </div>
+                                </Link>
                             </div>
                         </div>
                     </div>
