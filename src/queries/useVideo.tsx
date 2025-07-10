@@ -3,12 +3,7 @@ import { commentApiRequests } from "@/apiRequests/comment";
 import VideoDetail from "@/app/(user)/_components/video-detail";
 import { checkFollowing } from "@/apiRequests/client/user.client";
 import { Comment, CommentListResponse } from "@/types/comment.types";
-import {
-    Video,
-    VideoLikeStatus,
-    VideoListResponse,
-    VideoTopTrendingCategoryListResponse,
-} from "@/types/video.types";
+import { Video, VideoLikeStatus, VideoListResponse } from "@/types/video.types";
 import {
     QueryClient,
     useInfiniteQuery,
@@ -29,6 +24,7 @@ import {
     getVideosByCategoryName,
     getVideosByTagName,
     getVideosByUserId,
+    getVideosTrendingMonthly,
     incrementVideoViewCount,
     likeVideo,
     searchVideos,
@@ -712,7 +708,7 @@ export const useGetTrendingVideosQuery = (
         enabled: boolean | string | null | undefined;
     }
 ) => {
-    const queryClient = useQueryClient();
+    // const queryClient = useQueryClient();
     // const categories =
     //     (
     //         queryClient.getQueryData([
@@ -720,10 +716,10 @@ export const useGetTrendingVideosQuery = (
     //         ]) as ApiResponse<VideoTopTrendingCategoryListResponse>
     //     ).data || [];
 
-    const categories =
-        queryClient.getQueryData<ApiResponse<VideoTopTrendingCategoryListResponse>>([
-            "trending-categories",
-        ])?.data || [];
+    // const categories =
+    //     queryClient.getQueryData<ApiResponse<VideoTopTrendingCategoryListResponse>>([
+    //         "trending-categories",
+    //     ])?.data || [];
 
     // console.log("useGetTrendingVideosQuery categories:", categories);
     // console.log(">>> is enabled:", enabled);
@@ -744,27 +740,9 @@ export const useGetTrendingVideosQuery = (
                     pageSize: pageSize,
                 });
             } else {
-                // default use first category
-                if (categories?.length > 0) {
-                    return getVideosByCategoryName({
-                        categoryName: categories[0].category,
-                        pageNo: currentPage,
-                        pageSize: pageSize,
-                    });
-                }
-
-                // If no category or tag is active, return empty response with correct shape
-                return Promise.resolve({
-                    status: 200,
-                    message: "No category or tag selected",
-                    data: {
-                        pageNo: currentPage,
-                        pageSize: pageSize,
-                        totalPage: 0,
-                        totalElements: 0,
-                        items: [] as Video[],
-                    },
-                    errors: [],
+                return getVideosTrendingMonthly({
+                    pageNo: currentPage,
+                    pageSize: pageSize,
                 });
             }
         },
@@ -841,6 +819,24 @@ export const useGetLikedVideosByUserIdQuery = ({
         queryKey: ["my-liked-videos", userId, pageNo, pageSize],
         queryFn: () => getLikedVideosByUserId({ userId, pageNo, pageSize }),
         enabled: !!userId && enabled,
+        staleTime: 5 * 60 * 1000, // 5 phút
+        gcTime: 10 * 60 * 1000, // 10 phút
+    });
+};
+
+export const useGetVideosTrendingMonthlyQuery = ({
+    pageNo = 1,
+    pageSize = 10,
+    enabled = true,
+}: {
+    pageNo?: number;
+    pageSize?: number;
+    enabled?: boolean;
+}) => {
+    return useQuery({
+        queryKey: ["trending-monthly-videos", pageNo, pageSize],
+        queryFn: () => getVideosTrendingMonthly({ pageNo, pageSize }),
+        enabled: enabled,
         staleTime: 5 * 60 * 1000, // 5 phút
         gcTime: 10 * 60 * 1000, // 10 phút
     });

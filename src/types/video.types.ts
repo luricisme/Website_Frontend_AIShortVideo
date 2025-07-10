@@ -48,6 +48,7 @@ export const videoListByTagNameSchema = paginatedVideoListSchema;
 export const videoListByCategoryNameSchema = paginatedVideoListSchema;
 export const videoListBySearchQuerySchema = paginatedVideoListSchema;
 export const videoListByUserIdSchema = paginatedVideoListSchema;
+export const videoTrendingMonthlySchema = paginatedVideoListSchema;
 
 export const videoLikeStatusResponseSchema = z.object({
     liked: z.boolean(),
@@ -83,6 +84,7 @@ export type VideoListByTagName = PaginatedVideoList;
 export type VideoListByCategoryName = PaginatedVideoList;
 export type VideoListBySearchQuery = PaginatedVideoList;
 export type VideoListByUserId = PaginatedVideoList;
+export type VideoTrendingMonthly = PaginatedVideoList;
 
 export type VideoLikeStatus = z.infer<typeof videoLikeStatusResponseSchema>;
 export type VideoLikeDislikeCommentCount = z.infer<typeof videoLikeDislikeCommentCountSchema>;

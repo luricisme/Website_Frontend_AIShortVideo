@@ -10,6 +10,7 @@ import {
     videoSchema,
     videoTopPopularTagListResponseSchema,
     videoTopTrendingCategoryListResponseSchema,
+    videoTrendingMonthlySchema,
 } from "@/types/video.types";
 import http from "@/utils/api/client";
 
@@ -233,5 +234,23 @@ export const getLikedVideosByUserId = async ({
     return http.get(`${URL}/my-liked-video/${userId}?${params.toString()}`, {
         requireAuth: false,
         responseSchema: apiResponseSchema(videoListByUserIdSchema),
+    });
+};
+
+export const getVideosTrendingMonthly = async ({
+    pageNo = 1,
+    pageSize = 10,
+}: {
+    pageNo?: number;
+    pageSize?: number;
+}) => {
+    const params = new URLSearchParams({
+        pageNo: pageNo.toString(),
+        pageSize: pageSize.toString(),
+    });
+
+    return http.get(`${URL}/trending-month?${params.toString()}`, {
+        requireAuth: false,
+        responseSchema: apiResponseSchema(videoTrendingMonthlySchema),
     });
 };

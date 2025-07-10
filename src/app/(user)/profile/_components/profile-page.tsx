@@ -25,8 +25,8 @@ interface ProfilePageProps {
     videos?: Video[];
     user: User;
     isFetching: boolean;
-    isOtherUser: boolean; // Optional prop to indicate if it's another user's profile
-    currentUser?: User; // Optional prop to pass current user data
+    isOtherUser: boolean;
+    currentUser?: User;
 }
 
 const ProfilePage = ({
@@ -35,8 +35,8 @@ const ProfilePage = ({
     onEditProfile = () => {},
     user,
     isFetching,
-    isOtherUser = false, // Default to false if not specified
-    currentUser = undefined, // Default to undefined if not specified
+    isOtherUser = false,
+    currentUser = undefined,
 }: ProfilePageProps) => {
     console.log(">>> ProfilePage user:", user);
     const [myVideosPage, setMyVideosPage] = useState(1);
@@ -346,6 +346,7 @@ const ProfilePage = ({
                                 itemsPerPage={myVideosPageSize}
                                 onItemsPerPageChange={handleMyVideosPageSizeChange}
                                 showFullInfo={false}
+                                isLoading={isVideosLoading}
                             />
                         )}
                     </div>
@@ -369,6 +370,7 @@ const ProfilePage = ({
                                 itemsPerPage={likedVideosPageSize}
                                 onItemsPerPageChange={handleLikedVideosPageSizeChange}
                                 showFullInfo={false}
+                                isLoading={isLikedVideosLoading}
                             />
                         )}
                     </div>
