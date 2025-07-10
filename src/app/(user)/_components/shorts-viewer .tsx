@@ -1,40 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import VideoDetail from "@/app/(user)/_components/video-detail";
-import RightPanel, { PanelConfig } from "@/app/(user)/_components/right-panel";
-import {
-    CommentsPanel,
-    DetailsPanel,
-    SharePanel,
-    PlaylistPanel,
-} from "@/app/(user)/_components/panel-contents";
-import { useDebounce } from "@/hooks/use-debounce";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useBodyScroll, useScrollContainer } from "@/hooks/use-body-scroll";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-interface Video {
-    id: number;
-    title: string;
-    description: string;
-    thumbnail: string;
-    source: string;
-    duration: number;
-    views: number;
-    author: {
-        id: number;
-        name: string;
-        username: string;
-        avatar: string;
-    };
-}
+import { Video } from "@/types/video.types";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import VideoDetail from "@/app/(user)/_components/video-detail";
+import { useBodyScroll, useScrollContainer } from "@/hooks/use-body-scroll";
+import RightPanel, { PanelConfig } from "@/app/(user)/_components/right-panel";
+import { DetailsPanel, SharePanel, PlaylistPanel } from "@/app/(user)/_components/panel-contents";
+import { CommentsPanel } from "@/app/(user)/_components/comment";
 
 interface ShortsViewerProps {
     videos: Video[];
     initialVideoIndex?: number;
     updateUrl?: boolean;
     urlPath?: string;
+    onLoadMore?: () => void;
+    hasMore?: boolean; // Chỉ định có thêm video để tải hay không
+    isLoadingMore?: boolean; // Trạng thái đang tải thêm
 }
 
 const ShortsViewer = ({
@@ -42,6 +27,9 @@ const ShortsViewer = ({
     initialVideoIndex = 0,
     updateUrl = false,
     urlPath = "/shorts",
+    onLoadMore,
+    hasMore = false,
+    isLoadingMore = false,
 }: ShortsViewerProps) => {
     const isMobile = useMediaQuery("(max-width: 767px)");
     const isCompactView = useMediaQuery("(max-width: 1249px)");
@@ -68,6 +56,20 @@ const ShortsViewer = ({
     const [isScrolling, setIsScrolling] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
     const urlUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        if (!hasMore || !onLoadMore || isScrolling) return;
+
+        // Nếu đang ở gần video cuối cùng (ví dụ còn 2-3 videos), tải thêm
+        const LOAD_THRESHOLD = 3;
+        if (
+            videos.length > 0 &&
+            currentVideoIndex >= videos.length - LOAD_THRESHOLD &&
+            !isLoadingMore
+        ) {
+            onLoadMore();
+        }
+    }, [currentVideoIndex, videos.length, hasMore, onLoadMore, isScrolling, isLoadingMore]);
 
     useEffect(() => {
         videoRefs.current = videoRefs.current.slice(0, videos.length);
@@ -292,15 +294,15 @@ const ShortsViewer = ({
 
         return {
             comments: {
-                title: "Bình luận",
+                title: "Comment",
                 content: <CommentsPanel video={currentVideo} />,
             },
             details: {
-                title: "Thông tin chi tiết",
+                title: "Video Details",
                 content: <DetailsPanel video={currentVideo} />,
             },
             share: {
-                title: "Chia sẻ",
+                title: "Share",
                 content: <SharePanel video={currentVideo} />,
             },
             playlist: {
@@ -333,75 +335,84 @@ const ShortsViewer = ({
     const panelConfigs = createPanelConfigs();
 
     return (
-        <div className="relative overflow-hidden bg-black">
-            <div ref={containerRef} className={scrollContainerClass}>
-                {videos.map((video, index) => (
-                    <div
-                        key={video.id}
-                        ref={(el) => {
-                            videoRefs.current[index] = el;
-                        }}
-                        style={{
-                            height: `calc(100vh - 80px)`,
-                            scrollSnapAlign: "start",
-                            scrollSnapStop: "always",
-                        }}
-                        className="overflow-hidden"
-                    >
-                        <VideoDetail
-                            video={video}
-                            isVisible={currentVideoIndex === index}
-                            isShowRightPanel={isShowRightPanel}
-                            panelConfigs={panelConfigs}
-                            onOpenPanel={handleOpenPanel}
-                        />
+        <>
+            <div className="relative overflow-hidden bg-black">
+                <div ref={containerRef} className={scrollContainerClass}>
+                    {videos.map((video, index) => (
+                        <div
+                            key={video.id}
+                            ref={(el) => {
+                                videoRefs.current[index] = el;
+                            }}
+                            style={{
+                                height: `calc(100vh - 80px)`,
+                                scrollSnapAlign: "start",
+                                scrollSnapStop: "always",
+                            }}
+                            className="overflow-hidden"
+                        >
+                            <VideoDetail
+                                video={video}
+                                isVisible={currentVideoIndex === index}
+                                isShowRightPanel={isShowRightPanel}
+                                panelConfigs={panelConfigs}
+                                onOpenPanel={handleOpenPanel}
+                            />
+                        </div>
+                    ))}
+                </div>
+
+                {!isMobile && (
+                    <div className="fixed right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-4 z-20">
+                        <button
+                            className={`p-2 rounded-full bg-black/40 text-white cursor-pointer ${
+                                currentVideoIndex <= 0
+                                    ? "opacity-40 cursor-not-allowed"
+                                    : "hover:bg-black/60"
+                            }`}
+                            onClick={() => handleNavClick("prev")}
+                            disabled={currentVideoIndex <= 0}
+                            aria-label="Video trước"
+                        >
+                            <ChevronUp size={24} />
+                        </button>
+
+                        <button
+                            className={`p-2 rounded-full bg-black/40 text-white cursor-pointer ${
+                                currentVideoIndex >= videos.length - 1
+                                    ? "opacity-40 cursor-not-allowed"
+                                    : "hover:bg-black/60"
+                            }`}
+                            onClick={() => handleNavClick("next")}
+                            disabled={currentVideoIndex >= videos.length - 1}
+                            aria-label="Video tiếp theo"
+                        >
+                            <ChevronDown size={24} />
+                        </button>
                     </div>
-                ))}
+                )}
+
+                {currentPanel && (
+                    <RightPanel
+                        isVisible={isShowRightPanel}
+                        isPanelVisible={isPanelVisible}
+                        title={currentPanel.title}
+                        onClose={handleClosePanel}
+                        containerRef={containerRef}
+                        isCompactView={isCompactView}
+                    >
+                        {currentPanel.content}
+                    </RightPanel>
+                )}
             </div>
 
-            {!isMobile && (
-                <div className="fixed right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-4 z-20">
-                    <button
-                        className={`p-2 rounded-full bg-black/40 text-white cursor-pointer ${
-                            currentVideoIndex <= 0
-                                ? "opacity-40 cursor-not-allowed"
-                                : "hover:bg-black/60"
-                        }`}
-                        onClick={() => handleNavClick("prev")}
-                        disabled={currentVideoIndex <= 0}
-                        aria-label="Video trước"
-                    >
-                        <ChevronUp size={24} />
-                    </button>
-
-                    <button
-                        className={`p-2 rounded-full bg-black/40 text-white cursor-pointer ${
-                            currentVideoIndex >= videos.length - 1
-                                ? "opacity-40 cursor-not-allowed"
-                                : "hover:bg-black/60"
-                        }`}
-                        onClick={() => handleNavClick("next")}
-                        disabled={currentVideoIndex >= videos.length - 1}
-                        aria-label="Video tiếp theo"
-                    >
-                        <ChevronDown size={24} />
-                    </button>
+            {/* Hiển thị thông báo đang tải nếu cần */}
+            {isLoadingMore && (
+                <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white py-2 px-4 rounded-full z-50">
+                    Loading more videos...
                 </div>
             )}
-
-            {currentPanel && (
-                <RightPanel
-                    isVisible={isShowRightPanel}
-                    isPanelVisible={isPanelVisible}
-                    title={currentPanel.title}
-                    onClose={handleClosePanel}
-                    containerRef={containerRef}
-                    isCompactView={isCompactView}
-                >
-                    {currentPanel.content}
-                </RightPanel>
-            )}
-        </div>
+        </>
     );
 };
 

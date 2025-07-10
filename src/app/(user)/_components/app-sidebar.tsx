@@ -14,10 +14,14 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+// import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 import { icons } from "@/constants/icons";
+import {
+    usePathname,
+    // useRouter
+} from "next/navigation";
 
 // Menu items.
 const items = [
@@ -33,13 +37,14 @@ const items = [
     },
     {
         title: "Profile",
-        url: "/profile",
+        url: "/profile/me",
         icon: <Image src={icons.profile.svg} alt="Profile" width={16} height={16} />,
     },
 ];
 
 export function AppSidebar() {
     const pathname = usePathname();
+    // const router = useRouter();
 
     return (
         <Sidebar>
@@ -54,22 +59,21 @@ export function AppSidebar() {
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {items.map((item) => (
-                                <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton
-                                        asChild
-                                        isActive={
-                                            pathname === item.url ||
-                                            (pathname.startsWith(item.url) && item.url !== "/")
-                                        }
-                                    >
-                                        <Link href={item.url}>
+                                <Link key={item.title} href={item.url} prefetch={false}>
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton
+                                            isActive={
+                                                pathname === item.url ||
+                                                (pathname.startsWith(item.url) && item.url !== "/")
+                                            }
+                                        >
                                             {item.icon}
                                             <span className="ml-2 font-medium text-sm text-gray-700 dark:text-gray-200">
                                                 {item.title}
                                             </span>
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                </Link>
                             ))}
                         </SidebarMenu>
                     </SidebarGroupContent>

@@ -117,7 +117,7 @@ export default function AudioPage() {
         const updatedFiles = [...audioFiles, newFile];
         setAudioFiles(updatedFiles);
 
-        // Auto-save to localStorage with duration
+        // Auto-save to localStorage
         saveVideoAudioData({
             audioFiles: updatedFiles,
             selectedAudioFiles: getSelectedAudioFiles(),
@@ -206,7 +206,7 @@ export default function AudioPage() {
     const handleContinue = () => {
         const selectedFiles = getSelectedAudioFiles();
         if (selectedFiles.length === 0) {
-            alert("Please select at least one audio file before continuing");
+            alert("Vui lòng chọn ít nhất một file audio trước khi tiếp tục");
             return;
         }
 

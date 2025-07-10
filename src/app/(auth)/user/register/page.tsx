@@ -1,18 +1,22 @@
 "use client";
 
-import React from "react";
-import { ALargeSmall, Check, LockKeyhole, LogIn, Mail } from "lucide-react";
-import Image from "next/image";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { InputWithIcon } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { icons } from "@/constants/icons";
-import { useForm } from "react-hook-form";
+import React, { Suspense } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ALargeSmall, LoaderCircle, LockKeyhole, LogIn, Mail } from "lucide-react";
+
+import http from "@/utils/api/client";
+import { Button } from "@/components/ui/button";
+import { createUniqueUsername } from "@/utils/common";
+import { InputWithIcon } from "@/components/ui/input";
+import { type RegisterResponse } from "@/schemas/auth/responses";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { GoogleLoginButton, LeftSideContent } from "@/app/(auth)/user/_components";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 
 // 1. Register Schema
 const registerSchema = z
@@ -31,6 +35,10 @@ const registerSchema = z
 type RegisterType = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
+    const router = useRouter();
+
+    const [isLoading, setIsLoading] = React.useState(false);
+
     const form = useForm<RegisterType>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
@@ -42,68 +50,53 @@ export default function RegisterPage() {
         },
     });
 
-    const onSubmit = (data: RegisterType) => {
+    const onSubmit = async (data: RegisterType) => {
         console.log(data);
+        setIsLoading(true);
+        try {
+            const body = {
+                firstName: data.firstName,
+                lastName: data.lastName,
+                username: createUniqueUsername(data.firstName, data.lastName),
+                email: data.email,
+                password: data.password,
+                role: "USER",
+            };
+
+            const response = await http.post<typeof body, RegisterResponse>("/auth/register", {
+                body,
+                requireAuth: false,
+            });
+
+            const responseData = await response;
+
+            // console.log("Registration response:", responseData);
+
+            if (responseData.status < 200 || responseData.status >= 300) {
+                const message = responseData.message || "Registration failed";
+                toast.error(message);
+                return;
+            }
+
+            toast.success("Registration successful! Redirecting to sign in...");
+            setTimeout(() => {
+                localStorage.setItem("email", data.email);
+                localStorage.setItem("password", data.password);
+                router.push("/user/signin");
+            }, 2000);
+        } catch (error) {
+            console.error("Error during registration:", { error });
+
+            toast.error(error instanceof Error ? error.message : "An unexpected error occurred");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
         <div className="min-h-screen w-full text-white grid grid-cols-1 lg:grid-cols-2">
             {/* Left side - Content */}
-            <div className="flex-1 flex flex-col justify-center items-center lg:items-start px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-8 sm:py-12 lg:py-0">
-                {/* Logo */}
-                <div className="mb-8 sm:mb-12 lg:mb-16 w-full max-w-lg">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-                            <span className="text-black font-bold text-xl">M</span>
-                        </div>
-                        <span className="text-lg sm:text-xl font-semibold">
-                            AI Short Video Creator
-                        </span>
-                    </div>
-                </div>
-
-                {/* Main Content */}
-                <div className="max-w-lg w-full">
-                    <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
-                        Create AI short videos in minutes
-                    </h1>
-
-                    <p className="text-gray-400 text-sm sm:text-base lg:text-lg mb-8 sm:mb-10 lg:mb-12 leading-relaxed">
-                        An intelligent short video creation tool that helps you easily create
-                        engaging content for social media without editing experience.
-                    </p>
-
-                    {/* Features */}
-                    <div className="space-y-3 sm:space-y-4">
-                        <div className="flex items-start gap-3">
-                            <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check strokeWidth={3.5} className="w-3 h-3 text-white" />
-                            </div>
-                            <span className="text-gray-300 text-sm sm:text-base">
-                                Turn text into video in just a few minutes
-                            </span>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                            <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check strokeWidth={3.5} className="w-3 h-3 text-white" />
-                            </div>
-                            <span className="text-gray-300 text-sm sm:text-base">
-                                Thousands of professional templates and effects
-                            </span>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                            <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check strokeWidth={3.5} className="w-3 h-3 text-white" />
-                            </div>
-                            <span className="text-gray-300 text-sm sm:text-base">
-                                Optimized for TikTok, Instagram, and YouTube Shorts
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <LeftSideContent />
 
             {/* Right side - Login Form */}
             <div className="flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-6 xl:p-8">
@@ -247,11 +240,27 @@ export default function RegisterPage() {
 
                         <Button
                             onClick={form.handleSubmit(onSubmit)}
-                            disabled={form.formState.isSubmitting}
+                            disabled={form.formState.isSubmitting || isLoading}
                             className="w-full h-10 sm:h-12 bg-[#D9D9D9] text-black hover:bg-gray-200 font-semibold text-sm sm:text-base"
                         >
-                            Create Account
-                            <LogIn strokeWidth={2.5} className="w-3 h-3 sm:w-4 sm:h-4 ml-2" />
+                            {isLoading ? (
+                                <>
+                                    <LoaderCircle
+                                        className="animate-spin h-5 w-5 text-gray-800 mr-2"
+                                        size={20}
+                                        aria-label="Loading"
+                                    />
+                                    Creating Account...
+                                </>
+                            ) : (
+                                <>
+                                    Create Account
+                                    <LogIn
+                                        strokeWidth={2.5}
+                                        className="w-3 h-3 sm:w-4 sm:h-4 ml-2"
+                                    />
+                                </>
+                            )}
                         </Button>
 
                         <div className="relative">
@@ -265,25 +274,28 @@ export default function RegisterPage() {
                             </div>
                         </div>
 
-                        <Button
-                            variant="outline"
-                            className="w-full h-10 sm:h-12 bg-transparent border-gray-700 text-white hover:bg-gray-800 text-sm sm:text-base"
+                        <Suspense
+                            fallback={
+                                <LoaderCircle className="animate-spin h-5 w-5 text-gray-800 mx-auto" />
+                            }
                         >
-                            <Image
-                                src={icons.google.svg}
-                                alt="Google Logo"
-                                width={20}
-                                height={20}
-                                className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
+                            <GoogleLoginButton
+                                isDisabled={isLoading}
+                                content="Sign up with Google"
                             />
-                            Sign up with Google
-                        </Button>
+                        </Suspense>
 
                         <div className="text-center text-xs sm:text-sm">
                             <span className="text-[#786E6E]">Already have an account? </span>
                             <Link
                                 href="/user/signin"
-                                className="text-white hover:underline font-medium"
+                                className={`text-white hover:underline font-medium ${
+                                    form.formState.isSubmitting || isLoading
+                                        ? "pointer-events-none opacity-60"
+                                        : ""
+                                }`}
+                                tabIndex={form.formState.isSubmitting || isLoading ? -1 : 0}
+                                aria-disabled={form.formState.isSubmitting || isLoading}
                             >
                                 Sign In
                             </Link>
