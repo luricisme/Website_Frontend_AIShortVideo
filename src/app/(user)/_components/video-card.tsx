@@ -107,6 +107,7 @@ const VideoCard = ({ video }: { video: Video }) => {
                 }
             }
         }, 200);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [videoError, hasValidVideoUrl]);
 
     const handleMouseLeave = useCallback(() => {

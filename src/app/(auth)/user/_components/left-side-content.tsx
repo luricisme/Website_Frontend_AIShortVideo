@@ -1,17 +1,18 @@
 import { Check } from "lucide-react";
+import Link from "next/link";
 
 const LeftSideContent = () => {
     return (
         <div className="flex-1 flex flex-col justify-center items-center lg:items-start px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-8 sm:py-12 lg:py-0">
             {/* Logo */}
-            <div className="mb-8 sm:mb-12 lg:mb-16 w-full max-w-lg">
+            <Link href="/" className="block mb-8 sm:mb-12 lg:mb-16 w-full max-w-lg">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
                         <span className="text-black font-bold text-xl">M</span>
                     </div>
                     <span className="text-lg sm:text-xl font-semibold">AI Short Video Creator</span>
                 </div>
-            </div>
+            </Link>
 
             {/* Main Content */}
             <div className="max-w-lg w-full">

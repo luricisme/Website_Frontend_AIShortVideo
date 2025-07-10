@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { EllipsisVertical } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
-import { EllipsisVertical, Hash } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { icons } from "@/constants/icons";
@@ -30,6 +30,7 @@ import {
     useCheckFollowStatusQuery,
     useVideoLikeDislikeCommentCountQuery,
 } from "@/queries/useVideo";
+import Link from "next/link";
 
 interface VideoDetailProps {
     video: Video;
@@ -340,7 +341,6 @@ const VideoDetail = ({
                     <div className="flex flex-col gap-2 p-4">
                         {video && video?.tags && video.tags.length > 0 && (
                             <div className="flex items-center gap-2 text-gray-400 bg-sidebar/80 rounded-md px-4 py-2.5 w-fit">
-                                <Hash color="#fff" size={35} strokeWidth={2} />
                                 <div className="flex flex-wrap gap-2 text-sm text-white max-w-full">
                                     {video.tags.map((tag, index) => (
                                         <span
@@ -361,18 +361,23 @@ const VideoDetail = ({
                         <h1 className="text-2xl font-semibold text-white">{video.title}</h1>
                         <p className="text-sm text-gray-400">{video.script}</p>
                         <div className="flex items-center gap-3">
-                            <Avatar className="w-8 h-8">
-                                <AvatarImage src={undefined} />
-                                <AvatarFallback>{video.user.username.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col">
-                                <span className="text-sm font-medium text-white">
-                                    {video.user.firstName} {video.user.lastName}
-                                </span>
-                                <span className="text-xs text-gray-400">
-                                    @{video.user.username}
-                                </span>
-                            </div>
+                            <Link
+                                href={`/profile/${video.user.id}`}
+                                className="flex items-center gap-2"
+                            >
+                                <Avatar className="w-8 h-8">
+                                    <AvatarImage src={video.user.avatar ?? undefined} />
+                                    <AvatarFallback>{video.user.username.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-medium text-white">
+                                        {video.user.firstName} {video.user.lastName}
+                                    </span>
+                                    <span className="text-xs text-gray-400">
+                                        @{video.user.username}
+                                    </span>
+                                </div>
+                            </Link>
                             {userInfo?.id && (
                                 <Button
                                     size="sm"
@@ -634,8 +639,8 @@ const VideoDetail = ({
                                         }
                                     }}
                                 >
-                                    <Avatar className="w-9 h-9 md:w-11 md:h-11 rounded-md">
-                                        <AvatarImage src={undefined} />
+                                    <Avatar className="w-9 h-9 md:w-11 md:h-11 rounded-full">
+                                        <AvatarImage src={video.user.avatar ?? undefined} />
                                         <AvatarFallback>
                                             {video.user.username.charAt(0)}
                                         </AvatarFallback>

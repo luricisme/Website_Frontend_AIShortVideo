@@ -7,8 +7,8 @@ import { User } from "@/types/user.types";
 import { Video } from "@/types/video.types";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIncrementVideoViewCountMutation } from "@/queries/useVideo";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface CustomVideoPlayerProps {
     src: string;
@@ -748,7 +748,7 @@ export default function CustomVideoPlayer({
                     <div
                         className={`flex items-center gap-2 md:gap-3 mb-1 md:mb-2 flex-wrap ${
                             is340pxScreen ? "max-w-[200px]" : "max-w-[300px]"
-                        } md:max-w-[400px]`}
+                        } md:max-w-[280px]`}
                     >
                         <Avatar className="w-6 h-6 md:w-8 md:h-8">
                             <AvatarImage src={video.user?.avatar || undefined} />
@@ -775,11 +775,13 @@ export default function CustomVideoPlayer({
                         )}
                     </div>
 
-                    <h2 className="text-sm md:text-lg font-semibold mb-0.5 md:mb-1 line-clamp-1">
+                    <h2 className="text-sm md:text-lg font-semibold mb-0.5 md:mb-1 line-clamp-1 md:max-w-[270px] max-w-[265px]">
                         {video.title}
                     </h2>
 
-                    <p className="text-xs md:text-sm line-clamp-2">{video.script}</p>
+                    <p className="text-xs md:text-sm line-clamp-2 max-w-[265px] md:max-w-[270px]">
+                        {video.script}
+                    </p>
                 </div>
             )}
 
@@ -838,7 +840,7 @@ export default function CustomVideoPlayer({
                     <div
                         className={`flex items-center gap-2 md:gap-3 mb-1 md:mb-2 flex-wrap ${
                             is340pxScreen ? "max-w-[200px]" : "max-w-[300px]"
-                        } md:max-w-[400px]`}
+                        } md:max-w-[280px]`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <Avatar className="w-6 h-6 md:w-8 md:h-8">
@@ -864,11 +866,13 @@ export default function CustomVideoPlayer({
                         )}
                     </div>
 
-                    <h2 className="text-sm md:text-lg font-semibold mb-0.5 md:mb-1 line-clamp-1">
+                    <h2 className="text-sm md:text-lg font-semibold mb-0.5 md:mb-1 line-clamp-1 md:max-w-[270px] max-w-[265px]">
                         {video?.title}
                     </h2>
 
-                    <p className="text-xs md:text-sm line-clamp-2">{video?.script}</p>
+                    <p className="text-xs md:text-sm line-clamp-2 md:max-w-[270px] max-w-[265px]">
+                        {video?.script}
+                    </p>
                 </div>
             )}
         </div>
