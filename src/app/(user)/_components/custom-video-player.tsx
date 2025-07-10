@@ -67,7 +67,7 @@ export default function CustomVideoPlayer({
     const [showControls, setShowControls] = useState(false);
 
     // State để theo dõi việc đã tính view
-    const [viewCounted, setViewCounted] = useState(false);
+    // const [viewCounted, setViewCounted] = useState(false);
     const viewingTimeRef = useRef<number>(0);
     const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
     const apiCalledRef = useRef<boolean>(false);
@@ -85,14 +85,14 @@ export default function CustomVideoPlayer({
     };
 
     const callViewCountAPI = (videoId: number | string, reason: string) => {
-        if (apiCalledRef.current || viewCounted) {
+        if (apiCalledRef.current) {
             // console.log(">>> API already called, skipping...");
             return;
         }
 
         console.log(`>>> 🎯 CALLING VIEW API for reason: ${reason}`);
         apiCalledRef.current = true;
-        setViewCounted(true);
+        // setViewCounted(true);
 
         if (intervalIdRef.current) {
             clearInterval(intervalIdRef.current);
@@ -204,7 +204,7 @@ export default function CustomVideoPlayer({
 
     useEffect(() => {
         // console.log(">>> 🔄 Resetting for new video/src");
-        setViewCounted(false);
+        // setViewCounted(false);
         viewingTimeRef.current = 0;
         apiCalledRef.current = false;
 

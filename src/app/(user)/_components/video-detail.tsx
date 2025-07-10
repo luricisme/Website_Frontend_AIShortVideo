@@ -359,7 +359,7 @@ const VideoDetail = ({
                             </div>
                         )}
                         <h1 className="text-2xl font-semibold text-white">{video.title}</h1>
-                        <p className="text-sm text-gray-400">{video.script}</p>
+                        <p className="text-sm text-gray-400 line-clamp-2">{video.script}</p>
                         <div className="flex items-center gap-3">
                             <Link
                                 href={`/profile/${video.user.id}`}
@@ -408,7 +408,7 @@ const VideoDetail = ({
                         }}
                     >
                         <CustomVideoPlayer
-                            src={"https://cdn.pixabay.com/video/2025/03/11/263962_large.mp4"}
+                            src={video.videoUrl ?? ""} // Use video.videoUrl if available
                             // || video.videoUrl
                             autoPlay={true}
                             muted={false}

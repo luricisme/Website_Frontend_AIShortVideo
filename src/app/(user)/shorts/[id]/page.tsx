@@ -52,7 +52,7 @@ export async function generateMetadata(
                         // url: video.data.thumbnail?.startsWith("http")
                         //     ? video.data.thumbnail
                         //     : `${envServer.NEXTAUTH_URL}/default-thumbnail.jpg`,
-                        url: "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
+                        url: video.data.thumbnail,
                         width: 1200, // ⚠️ Facebook recommended size
                         height: 630,
                         alt: video.data.title,
@@ -83,7 +83,7 @@ export async function generateMetadata(
                     // url: video.data.thumbnail?.startsWith("http")
                     //     ? video.data.thumbnail
                     //     : `${envServer.NEXTAUTH_URL}/default-thumbnail.jpg`,
-                    url: "https://plus.unsplash.com/premium_photo-1747633943306-0379c57c22dd?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
+                    url: video.data.thumbnail,
                     alt: video.data.title,
                 },
                 creator: "@yourusername", // ⚠️ Add your Twitter handle

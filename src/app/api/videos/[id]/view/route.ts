@@ -3,7 +3,7 @@ import { serverHttp } from "@/utils/api/server";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-const VIEW_TRACKING_HOURS = 24; // Hours to track views for a video
+const VIEW_TRACKING_HOURS = 1; // Hours to track views for a video
 const COOKIE_PREFIX = "video_viewed_";
 
 interface Params {

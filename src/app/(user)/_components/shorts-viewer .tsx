@@ -7,7 +7,7 @@ import { Video } from "@/types/video.types";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import VideoDetail from "@/app/(user)/_components/video-detail";
-import { useBodyScroll, useScrollContainer } from "@/hooks/use-body-scroll";
+import useBodyScrollSimple, { useScrollContainer } from "@/hooks/use-body-scroll";
 import RightPanel, { PanelConfig } from "@/app/(user)/_components/right-panel";
 import { DetailsPanel, SharePanel, PlaylistPanel } from "@/app/(user)/_components/panel-contents";
 import { CommentsPanel } from "@/app/(user)/_components/comment";
@@ -34,7 +34,7 @@ const ShortsViewer = ({
     const isMobile = useMediaQuery("(max-width: 767px)");
     const isCompactView = useMediaQuery("(max-width: 1249px)");
 
-    useBodyScroll(true); // Ẩn scroll của body
+    useBodyScrollSimple(true); // Ẩn scroll của body
     const scrollContainerClass = useScrollContainer({
         height: "h-[calc(100vh-80px)]",
         hideScrollbar: true,

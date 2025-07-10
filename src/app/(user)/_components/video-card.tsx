@@ -18,7 +18,6 @@ const VideoCard = ({ video }: { video: Video }) => {
     const playPromiseRef = useRef<Promise<void> | null>(null);
     const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    // ⚠️ Cleanup function
     const cleanup = useCallback(() => {
         if (playPromiseRef.current) {
             playPromiseRef.current
@@ -107,7 +106,7 @@ const VideoCard = ({ video }: { video: Video }) => {
                 }
             }
         }, 200);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [videoError, hasValidVideoUrl]);
 
     const handleMouseLeave = useCallback(() => {
@@ -153,7 +152,6 @@ const VideoCard = ({ video }: { video: Video }) => {
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
                 >
-                    {/* ⚠️ Thumbnail/Fallback Layer */}
                     {!isHovering && (
                         <>
                             {!imageError && video.thumbnail ? (
@@ -169,7 +167,6 @@ const VideoCard = ({ video }: { video: Video }) => {
                                     onError={handleImageError}
                                 />
                             ) : (
-                                /* ⚠️ Image Fallback */
                                 <div className="w-full h-full rounded-lg bg-gradient-to-br from-zinc-800 via-zinc-900 to-black flex items-center justify-center">
                                     <div className="text-center">
                                         <div className="w-16 h-16 mx-auto mb-3 bg-zinc-700/50 rounded-full flex items-center justify-center">
@@ -198,7 +195,6 @@ const VideoCard = ({ video }: { video: Video }) => {
                         </>
                     )}
 
-                    {/* ⚠️ Video Layer - Only render when we have valid video */}
                     {isHovering && shouldShowVideo() && (
                         <>
                             <video
@@ -217,7 +213,6 @@ const VideoCard = ({ video }: { video: Video }) => {
                                 poster={video.thumbnail || undefined}
                             />
 
-                            {/* ⚠️ Video Loading Indicator */}
                             {!videoLoaded && !videoError && (
                                 <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
                                     <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -226,7 +221,6 @@ const VideoCard = ({ video }: { video: Video }) => {
                         </>
                     )}
 
-                    {/* ⚠️ Video Fallback when hovering but no valid video */}
                     {isHovering && shouldShowVideoFallback() && (
                         <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 via-zinc-900 to-black rounded-lg flex items-center justify-center">
                             <div className="text-center">
@@ -258,7 +252,7 @@ const VideoCard = ({ video }: { video: Video }) => {
                     {video.length && !isHovering && (
                         <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs px-2 py-1 rounded transition-opacity duration-200">
                             {Math.floor(video.length / 60)}:
-                            {(video.length % 60).toString().padStart(2, "0")}
+                            {(Math.floor(video.length) % 60).toString().padStart(2, "0")}
                         </div>
                     )}
 

@@ -157,6 +157,7 @@ export const useLikeVideoMutation = ({
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["video-like-status", videoId, userId] });
             queryClient.invalidateQueries({ queryKey: ["videos"] });
+            queryClient.invalidateQueries({ queryKey: ["my-liked-videos", userId], exact: false });
         },
     });
 };
@@ -208,6 +209,7 @@ export const useUnlikeVideoMutation = ({
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["video-like-status", videoId, userId] });
             queryClient.invalidateQueries({ queryKey: ["videos"] });
+            queryClient.invalidateQueries({ queryKey: ["my-liked-videos", userId], exact: false });
         },
     });
 };
@@ -260,6 +262,7 @@ export const useDislikeVideoMutation = ({
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["video-like-status", videoId, userId] });
             queryClient.invalidateQueries({ queryKey: ["videos"] });
+            queryClient.invalidateQueries({ queryKey: ["my-liked-videos", userId], exact: false });
         },
     });
 };
@@ -310,6 +313,7 @@ export const useUndislikeVideoMutation = ({
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["video-like-status", videoId, userId] });
             queryClient.invalidateQueries({ queryKey: ["videos"] });
+            queryClient.invalidateQueries({ queryKey: ["my-liked-videos", userId], exact: false });
         },
     });
 };
@@ -331,79 +335,79 @@ export const useVideoLikeDislikeCommentCountQuery = (
     });
 };
 
-function updateVideoListViewCount(
-    queryClient: QueryClient,
-    videoId: number | string,
-    delta: number = 1
-) {
-    queryClient.setQueryData(["videos"], (old: VideoListResponse) => {
-        if (!old?.items) return old;
+// function updateVideoListViewCount(
+//     queryClient: QueryClient,
+//     videoId: number | string,
+//     delta: number = 1
+// ) {
+//     queryClient.setQueryData(["videos"], (old: VideoListResponse) => {
+//         if (!old?.items) return old;
 
-        return {
-            ...old,
-            items: old.items.map((v: Video) =>
-                v.id === videoId ? { ...v, viewCnt: (v.viewCnt ?? 0) + delta } : v
-            ),
-        };
-    });
-}
+//         return {
+//             ...old,
+//             items: old.items.map((v: Video) =>
+//                 v.id === videoId ? { ...v, viewCnt: (v.viewCnt ?? 0) + delta } : v
+//             ),
+//         };
+//     });
+// }
 
 // incrementVideoViewCount
 export const useIncrementVideoViewCountMutation = () => {
-    const queryClient = useQueryClient();
+    // const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: (videoId: number | string) => incrementVideoViewCount(videoId),
-        onMutate: async (videoId) => {
-            // Cancel any outgoing refetches
-            await queryClient.cancelQueries({ queryKey: ["videos"] });
+        // onMutate: async (videoId) => {
+        //     // Cancel any outgoing refetches
+        //     await queryClient.cancelQueries({ queryKey: ["videos"] });
 
-            // Snapshot the previous value
-            const previousVideos = queryClient.getQueryData(["videos"]);
-            const previousVideo = queryClient.getQueryData(["video", videoId]);
+        //     // Snapshot the previous value
+        //     const previousVideos = queryClient.getQueryData(["videos"]);
+        //     const previousVideo = queryClient.getQueryData(["video", videoId]);
 
-            // Optimistically update to the new value
-            updateVideoListViewCount(queryClient, videoId, 1);
+        //     // Optimistically update to the new value
+        //     updateVideoListViewCount(queryClient, videoId, 1);
 
-            // Return a context object with the snapshotted value
-            return { previousVideos, previousVideo };
-        },
-        onError: (err, videoId, context) => {
-            // Rollback if error
-            if (context?.previousVideos) {
-                queryClient.setQueryData(["videos"], context.previousVideos);
-            }
+        //     // Return a context object with the snapshotted value
+        //     return { previousVideos, previousVideo };
+        // },
+        // onError: (err, videoId, context) => {
+        //     // Rollback if error
+        //     if (context?.previousVideos) {
+        //         queryClient.setQueryData(["videos"], context.previousVideos);
+        //     }
 
-            if (context?.previousVideo) {
-                queryClient.setQueryData(["video", videoId], context.previousVideo);
-            }
-        },
-        onSuccess: (response, videoId, context) => {
-            if (response.alreadyCounted) {
-                console.log(
-                    `View for video ${videoId} was already counted, rolling back optimistic update`
-                );
-                // Rollback optimistic update vì view không thực sự tăng
-                if (context?.previousVideos) {
-                    queryClient.setQueryData(["videos"], context.previousVideos);
-                }
+        //     if (context?.previousVideo) {
+        //         queryClient.setQueryData(["video", videoId], context.previousVideo);
+        //     }
+        // },
+        // onSuccess: (response, videoId, context) => {
+        //     if (response.alreadyCounted) {
+        //         console.log(
+        //             `View for video ${videoId} was already counted, rolling back optimistic update`
+        //         );
+        //         // Rollback optimistic update vì view không thực sự tăng
+        //         if (context?.previousVideos) {
+        //             queryClient.setQueryData(["videos"], context.previousVideos);
+        //         }
 
-                if (context?.previousVideo) {
-                    queryClient.setQueryData(["video", videoId], context.previousVideo);
-                }
+        //         if (context?.previousVideo) {
+        //             queryClient.setQueryData(["video", videoId], context.previousVideo);
+        //         }
 
-                // Không invalidate queries vì data không thay đổi
-                return;
-            }
+        //         // Không invalidate queries vì data không thay đổi
+        //         return;
+        //     }
 
-            // View count thực sự tăng, invalidate để sync với server
-            queryClient.invalidateQueries({
-                queryKey: ["videos"],
-            });
-            queryClient.invalidateQueries({
-                queryKey: ["video", videoId],
-            });
-        },
+        //     // View count thực sự tăng, invalidate để sync với server
+        //     queryClient.invalidateQueries({
+        //         queryKey: ["videos"],
+        //     });
+        //     queryClient.invalidateQueries({
+        //         queryKey: ["video", videoId],
+        //     });
+        // },
     });
 };
 
@@ -1017,8 +1021,6 @@ export const useGetLikedVideosByUserIdQuery = ({
         queryKey: ["my-liked-videos", userId, pageNo, pageSize],
         queryFn: () => getLikedVideosByUserId({ userId, pageNo, pageSize }),
         enabled: !!userId && enabled,
-        staleTime: 5 * 60 * 1000, // 5 phút
-        gcTime: 10 * 60 * 1000, // 10 phút
     });
 };
 
