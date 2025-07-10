@@ -111,6 +111,18 @@ export default function RegisterPage() {
                         <Form {...form}>
                             <form
                                 onSubmit={form.handleSubmit(onSubmit)}
+                                onKeyDown={(e) => {
+                                    if (
+                                        e.key === "Enter" &&
+                                        !e.shiftKey &&
+                                        !isLoading &&
+                                        !form.formState.isSubmitting &&
+                                        form.formState.isValid
+                                    ) {
+                                        e.preventDefault();
+                                        form.handleSubmit(onSubmit)();
+                                    }
+                                }}
                                 className="space-y-3 sm:space-y-4"
                             >
                                 {/* First Name - Last Name */}
@@ -197,7 +209,7 @@ export default function RegisterPage() {
                                                 <InputWithIcon
                                                     type="password"
                                                     placeholder="Password"
-                                                    autoComplete="current-password"
+                                                    autoComplete="new-password"
                                                     icon={
                                                         <LockKeyhole className="w-4 h-4 sm:w-5 sm:h-5" />
                                                     }
@@ -221,7 +233,7 @@ export default function RegisterPage() {
                                                 <InputWithIcon
                                                     type="password"
                                                     placeholder="Confirm Password"
-                                                    autoComplete="current-password"
+                                                    autoComplete="new-password"
                                                     icon={
                                                         <LockKeyhole className="w-4 h-4 sm:w-5 sm:h-5" />
                                                     }
@@ -235,33 +247,33 @@ export default function RegisterPage() {
                                         </FormItem>
                                     )}
                                 />
+
+                                <Button
+                                    type="submit"
+                                    disabled={form.formState.isSubmitting || isLoading}
+                                    className="w-full h-10 sm:h-12 bg-[#D9D9D9] text-black hover:bg-gray-200 font-semibold text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <LoaderCircle
+                                                className="animate-spin h-5 w-5 text-gray-800 mr-2"
+                                                size={20}
+                                                aria-label="Loading"
+                                            />
+                                            Creating Account...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Create Account
+                                            <LogIn
+                                                strokeWidth={2.5}
+                                                className="w-3 h-3 sm:w-4 sm:h-4 ml-2"
+                                            />
+                                        </>
+                                    )}
+                                </Button>
                             </form>
                         </Form>
-
-                        <Button
-                            onClick={form.handleSubmit(onSubmit)}
-                            disabled={form.formState.isSubmitting || isLoading}
-                            className="w-full h-10 sm:h-12 bg-[#D9D9D9] text-black hover:bg-gray-200 font-semibold text-sm sm:text-base"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <LoaderCircle
-                                        className="animate-spin h-5 w-5 text-gray-800 mr-2"
-                                        size={20}
-                                        aria-label="Loading"
-                                    />
-                                    Creating Account...
-                                </>
-                            ) : (
-                                <>
-                                    Create Account
-                                    <LogIn
-                                        strokeWidth={2.5}
-                                        className="w-3 h-3 sm:w-4 sm:h-4 ml-2"
-                                    />
-                                </>
-                            )}
-                        </Button>
 
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">

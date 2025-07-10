@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { Play, Search, User, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -24,6 +24,7 @@ interface VideoSearchResultsProps {
     };
     searchQuery?: string;
     onViewAllClick?: () => void;
+    isMobileMode?: boolean;
 }
 
 const VideoSearchResults = ({
@@ -33,131 +34,251 @@ const VideoSearchResults = ({
     pagination,
     searchQuery = "",
     onViewAllClick = () => {},
+    isMobileMode = false,
 }: VideoSearchResultsProps) => {
     if (isLoading) {
         return (
-            <div className="p-4 sm:p-4 space-y-3">
+            <div className={`space-y-3 ${isMobileMode ? "p-4" : "p-4 sm:p-4"}`}>
                 {[...Array(3)].map((_, i) => (
                     <div key={i} className="flex items-center gap-3 sm:gap-3">
-                        <Skeleton className="h-12 w-16 sm:h-12 sm:w-20 rounded" />
+                        <Skeleton
+                            className={`rounded ${
+                                isMobileMode ? "h-16 w-20" : "h-12 w-16 sm:h-12 sm:w-20"
+                            }`}
+                        />
                         <div className="flex-1">
-                            <Skeleton className="h-4 sm:h-4 w-full mb-1" />
-                            <Skeleton className="h-3 sm:h-3 w-2/3" />
+                            <Skeleton
+                                className={`w-full mb-1 ${isMobileMode ? "h-5" : "h-4 sm:h-4"}`}
+                            />
+                            <Skeleton className={`w-2/3 ${isMobileMode ? "h-4" : "h-3 sm:h-3"}`} />
                         </div>
                     </div>
                 ))}
-                <Skeleton className="h-8 sm:h-8 w-full mt-2" />
+                <Skeleton className={`w-full mt-2 ${isMobileMode ? "h-10" : "h-8 sm:h-8"}`} />
             </div>
         );
     }
 
     if (videos.length === 0) {
         return (
-            <div className="p-4 sm:p-4 text-center text-muted-foreground">
-                <div className="mb-2 text-sm">No videos found</div>
-                {searchQuery && <div className="text-xs">Try searching for something else</div>}
+            <div
+                className={`text-center text-muted-foreground ${
+                    isMobileMode ? "p-6" : "p-4 sm:p-4"
+                }`}
+            >
+                <div className={`mb-2 ${isMobileMode ? "text-base" : "text-sm"}`}>
+                    No videos found
+                </div>
+                {searchQuery && (
+                    <div className={`${isMobileMode ? "text-sm" : "text-xs"}`}>
+                        Try searching for something else
+                    </div>
+                )}
             </div>
         );
     }
 
+    const containerClasses = isMobileMode
+        ? "max-h-[70vh] overflow-hidden flex flex-col bg-background rounded-lg shadow-sm"
+        : "max-h-60 sm:max-h-80 lg:max-h-96 overflow-hidden flex flex-col bg-background border-0 sm:border border-border rounded-none sm:rounded-lg shadow-sm";
+
     return (
-        <div className="max-h-60 sm:max-h-80 overflow-hidden flex flex-col bg-background border-0 sm:border border-border rounded-none sm:rounded-lg shadow-sm">
+        <div className={containerClasses}>
             {pagination && (
-                <div className="px-4 sm:px-3 py-2 sm:py-2 border-b border-border bg-muted/20 flex items-center justify-between">
-                    <div className="text-sm sm:text-xs text-muted-foreground">
+                <div
+                    className={`border-b border-border bg-muted/20 flex items-center justify-between ${
+                        isMobileMode ? "px-4 py-3" : "px-3 sm:px-4 py-2 sm:py-3"
+                    }`}
+                >
+                    <div
+                        className={`text-muted-foreground ${
+                            isMobileMode ? "text-sm" : "text-xs sm:text-sm"
+                        }`}
+                    >
                         <span className="font-medium text-foreground">{videos.length}</span>{" "}
-                        <span className="hidden sm:inline">of </span>
-                        <span className="sm:hidden">/</span>{" "}
+                        <span className={isMobileMode ? "inline" : "hidden sm:inline"}>of </span>
+                        <span className={isMobileMode ? "hidden" : "sm:hidden"}>/ </span>{" "}
                         <span className="font-medium text-foreground">
                             {pagination.totalElements}
                         </span>
                     </div>
                     {pagination.totalElements > pagination.pageSize && (
-                        <div className="text-sm sm:text-xs text-muted-foreground font-medium">
-                            {pagination.totalPage} <span className="hidden sm:inline">pages</span>
-                            <span className="sm:hidden">p</span>
+                        <div
+                            className={`text-muted-foreground font-medium ${
+                                isMobileMode ? "text-sm" : "text-xs sm:text-sm"
+                            }`}
+                        >
+                            {pagination.totalPage}{" "}
+                            <span className={isMobileMode ? "inline" : "hidden sm:inline"}>
+                                pages
+                            </span>
+                            <span className={isMobileMode ? "hidden" : "sm:hidden"}>p</span>
                         </div>
                     )}
                 </div>
             )}
 
             <div className="flex-1 overflow-y-auto min-h-0">
-                <div className="p-2 sm:p-2">
-                    {videos.map((video, index) => (
-                        <div
-                            key={video.id}
-                            className="flex items-center gap-3 sm:gap-3 p-3 sm:p-3 hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer transition-colors group"
-                            onClick={() => onVideoClick(video)}
-                        >
-                            <div className="w-16 h-12 sm:w-16 sm:h-12 bg-muted rounded-md overflow-hidden flex-shrink-0 border border-border">
-                                {video.thumbnail ? (
-                                    <Image
-                                        src="https://images.unsplash.com/photo-1548637724-cbc39e0c8d3b?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8YmVhdXRpZnVsJTIwd29tYW58ZW58MHx8MHx8fDA%3D"
-                                        alt={video.title}
-                                        width={64}
-                                        height={48}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-muted flex items-center justify-center">
-                                        <span className="text-xs text-muted-foreground">
-                                            No image
+                <div className={isMobileMode ? "p-2 sm:p-3" : "p-2"}>
+                    {videos.map((video, index) => {
+                        const itemClasses = isMobileMode
+                            ? "flex items-center gap-3 sm:gap-4 p-3 sm:p-4 hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer transition-colors group"
+                            : "flex items-center gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer transition-colors group";
+
+                        const thumbnailClasses = isMobileMode
+                            ? "w-20 h-16 sm:w-24 sm:h-18"
+                            : "w-16 h-12 sm:w-18 sm:h-14 lg:w-20 lg:h-16";
+
+                        return (
+                            <div
+                                key={video.id}
+                                className={itemClasses}
+                                onClick={() => onVideoClick(video)}
+                            >
+                                <div
+                                    className={`bg-muted rounded-md overflow-hidden flex-shrink-0 border border-border relative ${thumbnailClasses}`}
+                                >
+                                    {video.thumbnail ? (
+                                        <Image
+                                            src={video.thumbnail}
+                                            alt={video.title}
+                                            width={isMobileMode ? 96 : 80}
+                                            height={isMobileMode ? 72 : 64}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.currentTarget.style.display = "none";
+                                                const fallback = e.currentTarget
+                                                    .nextElementSibling as HTMLElement;
+                                                if (fallback) fallback.style.display = "flex";
+                                            }}
+                                        />
+                                    ) : null}
+
+                                    <div
+                                        className={`w-full h-full bg-gradient-to-br from-muted to-muted/70 flex flex-col items-center justify-center ${
+                                            video.thumbnail ? "hidden" : "flex"
+                                        }`}
+                                        style={{ display: video.thumbnail ? "none" : "flex" }}
+                                    >
+                                        <Play
+                                            className={`text-muted-foreground/50 ${
+                                                isMobileMode ? "w-6 h-6" : "w-4 h-4 sm:w-5 sm:h-5"
+                                            }`}
+                                        />
+                                        <span
+                                            className={`text-muted-foreground/70 text-center mt-1 ${
+                                                isMobileMode ? "text-xs" : "text-[10px] sm:text-xs"
+                                            }`}
+                                        >
+                                            Video
                                         </span>
                                     </div>
-                                )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-sm sm:text-sm truncate text-foreground group-hover:text-accent-foreground">
-                                    {video.title}
-                                </h4>
-                                <p className="text-xs text-muted-foreground truncate">
-                                    {video.user?.username || "Unknown User"}
-                                    {video.category && (
-                                        <>
-                                            <span className="mx-1">•</span>
-                                            <span className="text-foreground/70 font-medium">
-                                                {video.category}
-                                            </span>
-                                        </>
+
+                                    {video.length && (
+                                        <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 py-0.5 rounded text-[10px] sm:text-xs">
+                                            {video.length}s
+                                        </div>
                                     )}
-                                </p>
-                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                    {video.viewCnt && <span>{video.viewCnt} views</span>}
-                                    {video.length && video.viewCnt && <span>•</span>}
-                                    {video.length && <span>{video.length}s</span>}
-                                    <span className="ml-auto text-muted-foreground/60 font-mono text-xs sm:text-xs">
-                                        #{index + 1}
-                                    </span>
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                    <h4
+                                        className={`font-medium text-foreground group-hover:text-accent-foreground line-clamp-2 ${
+                                            isMobileMode
+                                                ? "text-sm sm:text-base leading-tight sm:leading-normal"
+                                                : "text-xs sm:text-sm lg:text-base leading-tight"
+                                        }`}
+                                        title={video.title}
+                                    >
+                                        {video.title}
+                                    </h4>
+
+                                    <div
+                                        className={`flex items-center gap-1 text-muted-foreground mt-1 ${
+                                            isMobileMode ? "text-xs sm:text-sm" : "text-xs"
+                                        }`}
+                                    >
+                                        <User
+                                            className={`${
+                                                isMobileMode
+                                                    ? "w-3 h-3"
+                                                    : "w-2.5 h-2.5 sm:w-3 sm:h-3"
+                                            }`}
+                                        />
+                                        <span className="truncate">
+                                            {video.user?.username || "Unknown User"}
+                                        </span>
+                                        {video.category && (
+                                            <>
+                                                <span className="mx-1">•</span>
+                                                <span className="text-foreground/70 font-medium truncate">
+                                                    {video.category}
+                                                </span>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    <div
+                                        className={`flex items-center justify-between mt-1 ${
+                                            isMobileMode ? "text-xs sm:text-sm" : "text-xs"
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-1 text-muted-foreground">
+                                            {video.viewCnt && (
+                                                <span>{video.viewCnt.toLocaleString()} views</span>
+                                            )}
+                                        </div>
+                                        <span
+                                            className={`text-muted-foreground/60 font-mono ${
+                                                isMobileMode ? "text-xs" : "text-[10px] sm:text-xs"
+                                            }`}
+                                        >
+                                            #{index + 1}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
 
             {pagination && pagination.totalElements > videos.length && (
                 <div className="border-t border-border bg-muted/10 flex-shrink-0">
-                    <div className="p-3 sm:p-2">
+                    <div className={isMobileMode ? "p-3 sm:p-4" : "p-2 sm:p-3"}>
                         <button
                             type="button"
                             onClick={onViewAllClick}
-                            className="w-full py-2 sm:py-1.5 px-4 sm:px-3 bg-primary text-primary-foreground text-sm sm:text-xs font-medium rounded-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 sm:gap-1.5"
+                            className={`w-full bg-primary text-primary-foreground font-medium rounded-md hover:bg-primary/90 transition-colors flex items-center justify-center ${
+                                isMobileMode
+                                    ? "py-2.5 sm:py-3 px-4 text-sm gap-2"
+                                    : "py-2 px-3 sm:px-4 text-xs sm:text-sm gap-1.5 sm:gap-2"
+                            }`}
                         >
-                            <Search size={14} className="sm:w-3 sm:h-3" />
+                            <Search
+                                size={isMobileMode ? 16 : 14}
+                                className={isMobileMode ? "w-4 h-4" : "w-3.5 h-3.5 sm:w-4 sm:h-4"}
+                            />
                             <span>View all {pagination.totalElements} results</span>
                         </button>
 
-                        <div className="mt-2 sm:mt-1 text-center text-xs text-muted-foreground">
+                        <div
+                            className={`text-center text-muted-foreground ${
+                                isMobileMode
+                                    ? "mt-2 sm:mt-3 text-xs sm:text-sm"
+                                    : "mt-1 sm:mt-2 text-xs"
+                            }`}
+                        >
                             <span>
                                 {pagination.totalElements - videos.length} more •{" "}
-                                <span className="hidden sm:inline">
+                                <span className={isMobileMode ? "inline" : "hidden sm:inline"}>
                                     Press{" "}
                                     <kbd className="px-1 py-0.5 text-xs font-mono bg-muted border border-border rounded text-[10px]">
                                         Enter
                                     </kbd>{" "}
                                     for all {pagination.totalPage} pages
                                 </span>
-                                <span className="sm:hidden">
+                                <span className={isMobileMode ? "hidden" : "sm:hidden"}>
                                     {pagination.totalPage} pages total
                                 </span>
                             </span>
@@ -169,7 +290,12 @@ const VideoSearchResults = ({
     );
 };
 
-const SearchInput = () => {
+interface SearchInputProps {
+    onSearchComplete?: () => void;
+    isMobileMode?: boolean;
+}
+
+const SearchInput = ({ onSearchComplete, isMobileMode = false }: SearchInputProps) => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { setSearchQuery, clearSearch } = useVideosSearchStore((state) => state);
@@ -214,7 +340,7 @@ const SearchInput = () => {
         staleTime: 30000,
     });
 
-    //Popover state management
+    // Popover state management
     useEffect(() => {
         if (debouncedQuery.length > 0 && isInputFocused) {
             setIsSearchOpen(true);
@@ -230,7 +356,7 @@ const SearchInput = () => {
         debouncedSetSearchResults(value);
     };
 
-    //  Focus handler
+    // Focus handler
     const handleInputFocus = () => {
         setIsInputFocused(true);
         if (localSearchQuery.trim().length > 0) {
@@ -238,11 +364,11 @@ const SearchInput = () => {
         }
     };
 
-    //  Blur handler với proper timing
+    // Blur handler với proper timing
     const handleInputBlur = (e: React.FocusEvent) => {
         const relatedTarget = e.relatedTarget as Element;
 
-        //  Check if clicking on popover content
+        // Check if clicking on popover content
         setTimeout(() => {
             const isClickInsidePopover = popoverContentRef.current?.contains(relatedTarget);
 
@@ -251,14 +377,6 @@ const SearchInput = () => {
             }
         }, 100);
     };
-    // const handleInputBlur = () => {
-    //     console.log("Input blurred, checking focus state...");
-    //     setTimeout(() => {
-    //         if (!searchInputRef.current?.matches(":focus")) {
-    //             setIsInputFocused(false);
-    //         }
-    //     }, 150);
-    // };
 
     // Sync URL changes
     useEffect(() => {
@@ -276,6 +394,8 @@ const SearchInput = () => {
         setIsSearchOpen(false);
         setIsInputFocused(false);
         router.push(`/shorts/${video.id}`);
+
+        onSearchComplete?.();
     };
 
     const handleSearchSubmit = (e: React.FormEvent) => {
@@ -284,16 +404,18 @@ const SearchInput = () => {
             setIsSearchOpen(false);
             setIsInputFocused(false);
             setSearchQuery(localSearchQuery.trim());
-            // updateQueryParam(localSearchQuery.trim());
             setDebouncedQuery(localSearchQuery.trim());
 
             router.push(`/?q=${encodeURIComponent(localSearchQuery.trim())}`);
             router.refresh();
 
             window.scrollTo({ top: 0, behavior: "smooth" });
+
+            onSearchComplete?.();
         }
     };
 
+    // Click outside handler
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Element;
@@ -303,31 +425,22 @@ const SearchInput = () => {
                 document.querySelector("[data-search-popover]") ||
                 document.querySelector("[data-radix-popover-content]");
 
-            // console.log("Target element:", target);
-            // console.log("Search container:", searchContainer);
-            // console.log("Popover element:", popoverElement);
-
-            // console.log(
-            //     ">>> is target inside search container:",
-            //     searchContainer?.contains(target)
-            // );
-            // console.log(">>> is target inside popover element:", popoverElement?.contains(target));
-
-            // console.log(
-            //     ">>> should close search:",
-            //     !searchContainer?.contains(target) && !popoverElement?.contains(target)
-            // );
-
             if (!searchContainer?.contains(target) && !popoverElement?.contains(target)) {
-                console.log("Closing search popover");
                 setIsSearchOpen(false);
                 setIsInputFocused(false);
             }
         };
 
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+        if (!isMobileMode) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+
+        return () => {
+            if (!isMobileMode) {
+                document.removeEventListener("mousedown", handleClickOutside);
+            }
+        };
+    }, [isMobileMode]);
 
     const handleClearSearch = () => {
         setLocalSearchQuery("");
@@ -356,14 +469,48 @@ const SearchInput = () => {
         router.replace(newUrl, { scroll: false });
     };
 
+    const containerClasses = isMobileMode
+        ? "relative flex items-center justify-center w-full"
+        : "relative flex items-center justify-center w-full max-w-[400px]";
+
+    const popoverClasses = (() => {
+        if (isMobileMode) {
+            return "w-[calc(100vw-2rem)] max-w-none mx-auto rounded-lg border p-0 shadow-md";
+        }
+
+        if (windowWidth < 1024) {
+            return "w-[calc(100vw-2rem)] max-w-none mx-auto rounded-lg border p-0 shadow-md";
+        }
+
+        if (windowWidth < 640) {
+            return "w-[min(calc(100vw-1rem),400px)] max-w-none mx-auto rounded-lg border p-0 shadow-md";
+        }
+
+        return "w-[400px] max-w-[400px] mx-auto rounded-lg border p-0 shadow-md";
+    })();
+
+    const getSideOffset = () => {
+        if (isMobileMode) return 8;
+        if (windowWidth < 1024) return 4; 
+        if (windowWidth < 640) return 4;
+        return 5;
+    };
+
+    useEffect(() => {
+        if (isMobileMode && searchInputRef.current) {
+            const timeoutId = setTimeout(() => {
+                searchInputRef.current?.focus();
+            }, 100);
+            return () => clearTimeout(timeoutId);
+        }
+    }, [isMobileMode]);
+
     return (
-        <div
-            data-search-container
-            className="relative flex items-center justify-center w-full max-w-[400px]"
-        >
+        <div data-search-container className={containerClasses}>
             <Popover open={isSearchOpen} onOpenChange={() => {}}>
                 <PopoverTrigger asChild>
                     <form onSubmit={handleSearchSubmit} className="w-full">
+                        {/* Form content remains the same */}
                         <div className="relative">
                             <button
                                 type="submit"
@@ -400,16 +547,21 @@ const SearchInput = () => {
                 <PopoverContent
                     data-search-popover
                     ref={popoverContentRef}
-                    className="w-screen sm:w-[400px] max-w-none sm:max-w-[400px] mx-0 sm:mx-auto rounded-none sm:rounded-lg border-x-0 sm:border-x p-0 border-y border-border shadow-md"
-                    align={windowWidth < 640 ? "center" : "start"}
+                    className={popoverClasses}
+                    align="center"
                     side="bottom"
-                    sideOffset={windowWidth < 640 ? 0 : 5}
+                    sideOffset={getSideOffset()}
+                    collisionPadding={windowWidth < 1024 ? 16 : 8} 
                     onOpenAutoFocus={(e) => e.preventDefault()}
                     onCloseAutoFocus={(e) => e.preventDefault()}
                     onEscapeKeyDown={() => {
                         setIsSearchOpen(false);
                         setIsInputFocused(false);
                         searchInputRef.current?.blur();
+
+                        if (isMobileMode) {
+                            onSearchComplete?.();
+                        }
                     }}
                 >
                     <VideoSearchResults
@@ -432,6 +584,7 @@ const SearchInput = () => {
                                 preventDefault: () => {},
                             } as React.FormEvent)
                         }
+                        isMobileMode={isMobileMode || windowWidth < 1024} 
                     />
                 </PopoverContent>
             </Popover>

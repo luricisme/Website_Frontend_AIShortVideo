@@ -3,7 +3,7 @@
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
@@ -22,13 +22,65 @@ import {
     DropdownMenuShortcut,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Search, X } from "lucide-react";
 import SearchInput from "@/app/(user)/_components/search-input";
 
 function SearchInputLoading() {
     return (
         <div className="flex-1 max-w-lg">
-            <Skeleton className="h-10 w-full rounded-md" />
+            <Skeleton className="h-10 w-full rounded-full" />
         </div>
+    );
+}
+
+function ResponsiveSearchInput({ onSearchComplete }: { onSearchComplete?: () => void }) {
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+
+    return (
+        <>
+            <div className="hidden lg:flex flex-1 max-w-lg">
+                <Suspense fallback={<SearchInputLoading />}>
+                    <SearchInput onSearchComplete={onSearchComplete} />
+                </Suspense>
+            </div>
+
+            <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden w-10 h-10 p-0 shrink-0"
+                onClick={() => setIsMobileSearchOpen(true)}
+                aria-label="Open search"
+            >
+                <Search className="w-5 h-5" />
+            </Button>
+
+            {isMobileSearchOpen && (
+                <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-sm lg:hidden">
+                    <div className="flex items-center gap-3 p-4">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-10 h-10 p-0 shrink-0"
+                            onClick={() => setIsMobileSearchOpen(false)}
+                            aria-label="Close search"
+                        >
+                            <X className="w-5 h-5" />
+                        </Button>
+                        <div className="flex-1">
+                            <Suspense fallback={<SearchInputLoading />}>
+                                <SearchInput
+                                    isMobileMode={true}
+                                    onSearchComplete={() => {
+                                        setIsMobileSearchOpen(false);
+                                        onSearchComplete?.();
+                                    }}
+                                />
+                            </Suspense>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }
 
@@ -46,11 +98,8 @@ const AvatarDropdownMenu = ({
     const handleLogout = async () => {
         try {
             clearUser();
-
             await signOut({ redirect: false });
-
             router.refresh();
-
             toast.success("Logged out successfully");
         } catch (error) {
             console.error(">>> Logout failed:", error);
@@ -65,9 +114,11 @@ const AvatarDropdownMenu = ({
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Avatar className="w-9 h-9 cursor-pointer">
+                <Avatar className="w-8 h-8 sm:w-9 sm:h-9 cursor-pointer">
                     <AvatarImage src={image ?? undefined} />
-                    <AvatarFallback>{(name ?? "Unknown").charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="text-xs sm:text-sm">
+                        {(name ?? "Unknown").charAt(0)}
+                    </AvatarFallback>
                 </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
@@ -136,7 +187,6 @@ const SearchBar = () => {
                 setError(userInfoError);
                 setFetching(false);
                 toast.error(userInfoError?.message || "Failed to fetch user info");
-                // signOut({ redirect: false });
                 callSignOut();
                 break;
 
@@ -165,16 +215,16 @@ const SearchBar = () => {
     ]);
 
     return (
-        <div className="h-[76px] flex items-center w-full gap-2 py-4 sticky top-0 z-50 bg-background">
-            <SidebarTrigger />
-            <div className="flex items-center justify-between w-full">
-                <Suspense fallback={<SearchInputLoading />}>
-                    <SearchInput />
-                </Suspense>
-                <div className="flex items-center gap-2">
+        <div className="h-[76px] flex items-center w-full gap-2 sm:gap-3 md:gap-4 py-4 sticky top-0 z-50 bg-background px-2 sm:px-4">
+            <SidebarTrigger className="shrink-0" />
+
+            <div className="flex items-center justify-between w-full min-w-0">
+                <ResponsiveSearchInput />
+
+                <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-2 sm:ml-3">
                     {status === "loading" || isUserInfoLoading ? (
                         <div className="flex items-center gap-2">
-                            <Skeleton className="h-9 w-9 rounded-full" />
+                            <Skeleton className="h-8 w-8 sm:h-9 sm:w-9 rounded-full" />
                         </div>
                     ) : user && session?.user ? (
                         <AvatarDropdownMenu
@@ -184,11 +234,27 @@ const SearchBar = () => {
                         />
                     ) : (
                         <>
-                            <Button className="!font-semibold">
+                            <Button
+                                size="sm"
+                                className="!font-semibold text-xs sm:text-sm px-2 sm:px-4 h-8 sm:h-9"
+                            >
                                 <Link href={"/user/signin"}>Sign In</Link>
                             </Button>
-                            <Button variant="outline" className="!font-semibold">
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="!font-semibold text-xs sm:text-sm px-2 sm:px-4 h-8 sm:h-9 hidden sm:flex"
+                            >
                                 <Link href={"/user/register"}>Register</Link>
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="!font-semibold text-xs px-2 h-8 sm:hidden"
+                            >
+                                <Link href={"/user/register"}>Join</Link>
                             </Button>
                         </>
                     )}

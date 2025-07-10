@@ -1,8 +1,9 @@
 "use client";
 
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { ChevronDown, ChevronUp, Hash, EllipsisVertical, Play } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ChevronDown, ChevronUp, EllipsisVertical, Play } from "lucide-react";
+
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function VideosSkeleton() {
@@ -82,7 +83,6 @@ export default function VideosSkeleton() {
                                 <div className="flex flex-col gap-2 p-4">
                                     {/* Tags skeleton */}
                                     <div className="flex items-center gap-2 text-neutral-400 bg-neutral-800/80 rounded-md px-4 py-2.5 w-fit">
-                                        <Hash color="#a3a3a3" size={35} strokeWidth={2} />
                                         <div className="flex flex-wrap gap-2 text-sm max-w-full">
                                             <Skeleton className="h-4 w-16" />
                                             <Skeleton className="h-4 w-12" />
@@ -122,7 +122,7 @@ export default function VideosSkeleton() {
                                 }`}
                             >
                                 <div className="h-full max-h-[calc(100vh-120px)] flex items-center justify-center relative w-full">
-                                    {/* Video skeleton - Đảm bảo kích thước đúng */}
+                                    {/* Video skeleton  */}
                                     <div
                                         className="relative bg-neutral-800 rounded-lg overflow-hidden"
                                         style={{
@@ -238,13 +238,13 @@ export default function VideosSkeleton() {
                                             </div>
 
                                             {/* Avatar skeleton */}
-                                            <Skeleton className="w-9 h-9 md:w-11 md:h-11 rounded-md mt-2" />
+                                            <Skeleton className="w-9 h-9 md:w-11 md:h-11 rounded-full mt-2" />
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Right Panel - Hidden on compact view */}
+                            {/* Right Panel */}
                             <div className={isCompactView ? "hidden" : "block"}></div>
                         </div>
                     </div>
@@ -263,7 +263,6 @@ export default function VideosSkeleton() {
                 </div>
             )}
 
-            {/* Enhanced Loading indicator */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
                 <div className="flex flex-col items-center space-y-4 bg-black/80 backdrop-blur-sm rounded-xl p-6 border border-neutral-700/50">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>

@@ -265,9 +265,13 @@ export const updateVideoTitle = async ({
     return http.patch(`${URL}/update-title/${videoId}`, {
         requireAuth: true,
         body: { title },
+        responseSchema: apiBasicResponseSchema,
     });
 };
 
 export const deleteVideo = async (videoId: number | string) => {
-    return http.delete(`${URL}/delete-video/${videoId}`)
+    return http.delete(`${URL}/delete-video/${videoId}`, {
+        requireAuth: true,
+        responseSchema: apiBasicResponseSchema,
+    })
 }
