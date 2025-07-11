@@ -6,14 +6,14 @@ import { VideoDetailModal } from "@/app/(user)/dashboard/_components/video-detai
 import VideoTable from "@/app/(user)/dashboard/_components/video-table/video-table";
 import UnauthorizedProfile from "@/app/(user)/profile/_components/unauthorized-profile";
 import FeaturedVideoCard from "./videoCard"; // Component mới cho featured videos
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+// import { Alert, AlertDescription } from "@/components/ui/alert";
+// import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserStore } from "@/providers/user-store-provider";
 import { useGetVideosByUserIdQuery } from "@/queries/useVideo";
-import { AlertCircle, RefreshCw } from "lucide-react";
+// import { AlertCircle, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import {
     useDashboardOverviewQuery,
