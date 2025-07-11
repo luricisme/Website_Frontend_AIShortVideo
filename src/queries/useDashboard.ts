@@ -3,7 +3,7 @@ import {
     getDashboardOverview,
     getPlatformStatistic,
     getViewStatistic,
-    getViewsByCategory
+    getViewsByCategory, getTopInteractedVideos
 } from "@/apiRequests/client";
 
 export const useDashboardOverviewQuery = (enabled = true) => {
@@ -49,5 +49,15 @@ export const useViewsByCategoryQuery = (page = 1, pageSize = 10, enabled = true)
         enabled,
         staleTime: 5 * 60 * 1000,
         gcTime: 10 * 60 * 1000,
+    });
+};
+
+export const useTopInteractedVideosQuery = (pageNo = 0, pageSize = 10, enabled = true) => {
+    return useQuery({
+        queryKey: ["top-interacted-videos", pageNo, pageSize],
+        queryFn: () => getTopInteractedVideos(pageNo, pageSize),
+        enabled,
+        staleTime: 5 * 60 * 1000, // 5 phút
+        gcTime: 10 * 60 * 1000, // 10 phút
     });
 };
