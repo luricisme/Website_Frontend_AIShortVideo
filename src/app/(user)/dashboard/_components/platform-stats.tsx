@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Youtube, TrendingUp, MessageCircle, Heart, ThumbsDown, Loader2 } from "lucide-react";
 
-const PlatformStats = ({ data, isLoading, selectedPlatform, onPlatformChange }) => {
+const PlatformStats = ({ data, isLoading }) => {
     // Hiển thị loading state
     if (isLoading) {
         return (

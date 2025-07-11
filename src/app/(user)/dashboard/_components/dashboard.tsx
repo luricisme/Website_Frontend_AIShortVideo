@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useDashboardData } from "@/hooks/use-dashboard-data";
+// import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { useUserStore } from "@/providers/user-store-provider";
 import { useGetVideosByUserIdQuery } from "@/queries/useVideo";
 import { AlertCircle, RefreshCw } from "lucide-react";
@@ -20,20 +20,11 @@ import {
     usePlatformStatisticQuery, useViewsByCategoryQuery,
     useViewStatisticQuery
 } from "@/queries/useDashboard";
-import VideoCard from "@/app/(user)/_components/video-card";
+// import VideoCard from "@/app/(user)/_components/video-card";
 import {ViewsPieChart} from "@/app/(user)/dashboard/_components/ViewsPieChart";
-import {ViewsByCategoryChart} from "./ViewByCategory"
+import ViewsByCategoryChart from "@/app/(user)/dashboard/_components/ViewByCategory";
 
 const Dashboard = () => {
-    // Mock data for date range selection
-    // const {
-    //     dateRange,
-    //     totalStats,
-    //     videoStats,
-    //     // recentVideos,
-    //     viewsTrendData,
-    // } = useDashboardData();
-
     const [selectedVideo, setSelectedVideo] = useState<number | null>(null);
 
     const { user: currentUser } = useUserStore((state) => state);
@@ -69,8 +60,6 @@ const Dashboard = () => {
     const {
         data: categoryData,
         isLoading: isCategoryLoading,
-        error: categoryError,
-        refetch: refetchCategory,
     } = useViewsByCategoryQuery(1, 10, !!currentUser?.id);
 
     const {
@@ -89,8 +78,6 @@ const Dashboard = () => {
     const totalVideos = videosResponse?.data.totalElements || 0;
     const totalPages = videosResponse?.data.totalPage || 0;
     const overview = overviewData?.data;
-    // const platformStats = platformData?.data;
-    // const viewStats = viewData?.data;
 
     if (!currentUser || (currentUser && !currentUser.id)) {
         return <UnauthorizedProfile />;
@@ -187,7 +174,7 @@ const Dashboard = () => {
                                 isLoading={isViewLoading}
                             />
 
-                            <ViewsPieChart
+                            <ViewsByCategoryChart
                                 data={categoryData}
                                 isLoading={isCategoryLoading}
                             />

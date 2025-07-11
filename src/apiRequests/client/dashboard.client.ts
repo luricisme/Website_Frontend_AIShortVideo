@@ -1,4 +1,4 @@
-import {apiBasicResponseSchema, apiResponseSchema} from "@/types/api/common";
+import {apiResponseSchema} from "@/types/api/common";
 // import { User, userSchema } from "@/types/user.types";
 import http from "@/utils/api/client";
 import { z } from "zod";
@@ -29,6 +29,25 @@ export const viewStatisticSchema = z.object({
     mainView: z.number(),
 });
 
+export const categoryViewItemSchema = z.object({
+    cateName: z.string(),
+    viewCount: z.number(),
+});
+
+export const viewsByCategoryDataSchema = z.object({
+    pageNo: z.number(),
+    pageSize: z.number(),
+    totalPage: z.number(),
+    totalElements: z.number(),
+    items: z.array(categoryViewItemSchema),
+});
+
+export const viewsByCategoryResponseSchema = z.object({
+    status: z.number(),
+    message: z.string(),
+    data: viewsByCategoryDataSchema,
+});
+
 // API functions
 export const getDashboardOverview = async () => {
     return http.get(`${URL}/overview`, {
@@ -54,6 +73,6 @@ export const getViewStatistic = async () => {
 export const getViewsByCategory = async (page = 1, pageSize = 10) => {
     return http.get(`${URL}/view_by_cate?page=${page}&pageSize=${pageSize}`, {
         requireAuth: true,
-        responseSchema: apiResponseSchema(viewStatisticSchema),
+        responseSchema: viewsByCategoryResponseSchema,
     })
 };

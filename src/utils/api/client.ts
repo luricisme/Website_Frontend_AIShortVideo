@@ -226,7 +226,7 @@ const http = {
             responseSchema: z.ZodObject<{
                 status: z.ZodNumber;
                 message: z.ZodString;
-                data: any;
+                data: never;
                 errors: z.ZodOptional<z.ZodArray<z.ZodObject<{
                     code: z.ZodOptional<z.ZodString>;
                     field: z.ZodOptional<z.ZodString>;
@@ -237,12 +237,12 @@ const http = {
                     field?: string | undefined;
                 }>, "many">>;
             }, "strip", z.ZodTypeAny, {
-                [x: string]: any;
+                [x: string]: unknown;
                 status?: unknown;
                 message?: unknown;
                 data?: unknown;
                 errors?: unknown;
-            }, { [x: string]: any; status?: unknown; message?: unknown; data?: unknown; errors?: unknown; }>;
+            }, { [x: string]: unknown; status?: unknown; message?: unknown; data?: unknown; errors?: unknown; }>;
         }, options: HttpRequestOptions<Req, Res> = {}    ): Promise<Res> {
         try {
             const {

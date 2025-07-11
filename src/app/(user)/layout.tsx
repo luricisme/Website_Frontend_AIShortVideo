@@ -17,11 +17,11 @@ export default function UserLayout({
 }>) {
     return (
         <>
-            <SidebarProvider>
-                <AppSidebar />
-                <ProgressBarProvider>
-                    <main className="container mx-auto flex flex-col min-h-screen sm:px-4 px-2">
-                        <UserStoreProvider>
+            <UserStoreProvider>
+                <SidebarProvider>
+                    <AppSidebar />
+                    <ProgressBarProvider>
+                        <main className="container mx-auto flex flex-col min-h-screen sm:px-4 px-2">
                             <VideosSearchStoreProvider>
                                 <ReactQueryProvider>
                                     <WrapperSessionProvider>
@@ -31,10 +31,10 @@ export default function UserLayout({
                                     <Toaster />
                                 </ReactQueryProvider>
                             </VideosSearchStoreProvider>
-                        </UserStoreProvider>
-                    </main>
-                </ProgressBarProvider>
-            </SidebarProvider>
+                        </main>
+                    </ProgressBarProvider>
+                </SidebarProvider>
+            </UserStoreProvider>
         </>
     );
 }

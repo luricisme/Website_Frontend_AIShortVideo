@@ -51,37 +51,37 @@ const StatsOverview = ({
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <Card className="bg-zinc-900 border-zinc-800">
                 <CardHeader>
                     <CardTitle>Tổng video</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalVideo}</div>
+                    <div className="text-3xl font-bold">{stats.totalVideo}</div>
                     <p className="text-xs text-zinc-500 mt-1">Video đã tạo</p>
                 </CardContent>
             </Card>
 
             <Card className="bg-zinc-900 border-zinc-800">
                 <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">
+                    <CardTitle>
                         Tổng lượt xem
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalView.toLocaleString()}</div>
+                    <div className="text-3xl font-bold">{stats.totalView.toLocaleString()}</div>
                     <p className="text-xs text-zinc-500 mt-1">Lượt xem tổng cộng</p>
                 </CardContent>
             </Card>
 
             <Card className="bg-zinc-900 border-zinc-800">
                 <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">
+                    <CardTitle>
                         Người theo dõi
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">
+                    <div className="text-3xl font-bold">
                         {stats.totalFollower.toLocaleString()}
                     </div>
                     <p className="text-xs text-zinc-500 mt-1">Người theo dõi hiện tại</p>
@@ -90,12 +90,12 @@ const StatsOverview = ({
 
             <Card className="bg-zinc-900 border-zinc-800">
                 <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">
+                    <CardTitle>
                         Đang theo dõi
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalFollowing.toLocaleString()}</div>
+                    <div className="text-3xl font-bold">{stats.totalFollowing.toLocaleString()}</div>
                     <p className="text-xs text-zinc-500 mt-1">Số người đang theo dõi</p>
                 </CardContent>
             </Card>

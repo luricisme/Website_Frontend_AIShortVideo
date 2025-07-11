@@ -1,38 +1,24 @@
-interface CategoryViewData {
-    cateName: string;
-    viewCount: number;
-}
-
-interface ViewsByCategoryResponse {
-    pageNo: number;
-    pageSize: number;
-    totalPage: number;
-    totalElements: number;
-    items: CategoryViewData[];
-}
-
-interface ViewsByCategoryChartProps {
-    data?: {
-        data: ViewsByCategoryResponse;
-    };
-    isLoading?: boolean;
-}
-
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart3, PieChart as PieChartIcon, Loader2 } from "lucide-react";
+import type { ViewsByCategoryResponse } from "@/apiRequests/client";
+
+interface ViewsByCategoryChartProps {
+    data?: ViewsByCategoryResponse;
+    isLoading?: boolean;
+}
 
 const COLORS = [
     "#6366F1", "#8B5CF6", "#EC4899", "#EF4444", "#F59E0B",
     "#10B981", "#06B6D4", "#84CC16", "#F97316", "#8B5A2B"
 ];
 
-export const ViewsByCategoryChart: React.FC<ViewsByCategoryChartProps> = ({
-                                                                              data,
-                                                                              isLoading = false
-                                                                          }) => {
+const ViewsByCategoryChart: React.FC<ViewsByCategoryChartProps> = ({
+                                                                       data,
+                                                                       isLoading = false
+                                                                   }) => {
     const [chartType, setChartType] = React.useState<'bar' | 'pie'>('bar');
 
     if (isLoading) {
