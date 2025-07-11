@@ -1,5 +1,4 @@
 import {apiResponseSchema} from "@/types/api/common";
-// import { User, userSchema } from "@/types/user.types";
 import http from "@/utils/api/client";
 import { z } from "zod";
 
@@ -48,6 +47,20 @@ export const viewsByCategoryResponseSchema = z.object({
     data: viewsByCategoryDataSchema,
 });
 
+export const topInteractedVideoSchema = z.object({
+    title: z.string(),
+    totalInteraction: z.number(),
+    videoUrl: z.string(),
+});
+
+export const topInteractedVideosSchema = z.object({
+    pageNo: z.number(),
+    pageSize: z.number(),
+    totalPage: z.number(),
+    totalElements: z.number(),
+    items: z.array(topInteractedVideoSchema),
+});
+
 // API functions
 export const getDashboardOverview = async () => {
     return http.get(`${URL}/overview`, {
@@ -76,3 +89,11 @@ export const getViewsByCategory = async (page = 1, pageSize = 10) => {
         responseSchema: viewsByCategoryResponseSchema,
     })
 };
+
+export const getTopInteractedVideos = async (pageNo = 0, pageSize = 10) => {
+    return http.get(`${URL}/top_interacted?pageNo=${pageNo}&pageSize=${pageSize}`, {
+        requireAuth: true,
+        responseSchema: apiResponseSchema(topInteractedVideosSchema),
+    });
+};
+

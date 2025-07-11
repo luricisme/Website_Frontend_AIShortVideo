@@ -324,6 +324,9 @@ export default function AudioPage() {
     const processRecordedAudio = async () => {
         if (recordedChunks.length === 0) return;
 
+        // Generate consistent temp file ID
+        const tempFileId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
         try {
             // Create blob from recorded chunks
             const audioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
@@ -334,7 +337,6 @@ export default function AudioPage() {
             });
 
             // Create temporary audio file entry
-            const tempFileId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const tempAudioFile: AudioFile = {
                 id: tempFileId,
                 name: `Recording ${formatTime(recordingTime)}`,
@@ -369,13 +371,11 @@ export default function AudioPage() {
             alert('Failed to save recording. Please try again.');
 
             // Remove from list if processing failed
-            const tempFileId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             setAudioFiles(prev => prev.filter(audioFile => audioFile.id !== tempFileId));
         } finally {
             // Remove from uploading state
             setUploadingFiles(prev => {
                 const newSet = new Set(prev);
-                const tempFileId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 newSet.delete(tempFileId);
                 return newSet;
             });
@@ -895,8 +895,8 @@ export default function AudioPage() {
                                                                             'bg-orange-100 text-orange-700'
                                                             }`}>
                                                                 {uploadingFiles.has(audioFile.id) ? 'Đang upload...' :
-                                                                    audioFile.type === 'generated' ? 'Đã tạo' :
-                                                                        audioFile.type === 'uploaded' ? 'Đã tải lên' : 'Đã ghi âm'}
+                                                                    audioFile.type === 'generated' ? 'Generated' :
+                                                                        audioFile.type === 'uploaded' ? 'Uploaded' : 'Recorded'}
                                                             </span>
                                                             {uploadingFiles.has(audioFile.id) && (
                                                                 <div className="animate-spin w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full" />
