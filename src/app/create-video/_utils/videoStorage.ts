@@ -4,6 +4,8 @@ type VideoScriptData = {
     category: string;
     tag: string;
     language: string;
+    target: string;
+    style: string
 };
 
 type VideoImageData = {
@@ -21,7 +23,7 @@ type VideoAudioData = {
         name: string;
         url: string;
         type: 'generated' | 'uploaded' | 'recorded';
-        duration?: number;
+        duration: number;
         voiceType?: string;
         speed?: string;
         isSelected: boolean;
@@ -31,10 +33,11 @@ type VideoAudioData = {
         name: string;
         url: string;
         type: 'generated' | 'uploaded' | 'recorded';
-        duration?: number;
+        duration: number;
         voiceType?: string;
         speed?: string;
     }>;
+    totalDuration: number;
     voiceType?: string;
     speed?: string;
     customText?: string;
@@ -46,6 +49,7 @@ type VideoCaptionData = {
     fontSize: string;
     color: string;
     background: boolean;
+    fontFamily: string;
 };
 
 const STORAGE_SCRIPT = 'videoScriptData';
@@ -108,7 +112,32 @@ export const clearVideoImageData = () => {
 };
 
 // Audio storage functions
-export const saveVideoAudioData = (data: VideoAudioData) => {
+export const saveVideoAudioData = (data: {
+    selectedAudioFiles: {
+        id?: string;
+        name: string;
+        url: string;
+        type: "generated" | "uploaded" | "recorded";
+        voiceType?: string;
+        speed?: string;
+        duration?: number;
+        isSelected?: boolean
+    }[];
+    audioFiles?: Array<{
+        id: string;
+        name: string;
+        url: string;
+        type: "generated" | "uploaded" | "recorded";
+        voiceType?: string;
+        speed?: string;
+        duration?: number;
+        isSelected: boolean
+    }>;
+    totalDuration: number;
+    voiceType?: string;
+    speed?: string;
+    customText?: string
+}) => {
     try {
         localStorage.setItem(STORAGE_AUDIO, JSON.stringify(data));
     } catch (err) {

@@ -14,14 +14,12 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
-// import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { icons } from "@/constants/icons";
-import {
-    usePathname,
-    // useRouter
-} from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useUserStore } from "@/providers/user-store-provider";
 
 // Menu items.
 const items = [
@@ -44,7 +42,21 @@ const items = [
 
 export function AppSidebar() {
     const pathname = usePathname();
-    // const router = useRouter();
+    const router = useRouter();
+    const { user: currentUser } = useUserStore((state) => state);
+
+    const handleCreateVideoClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+
+        if (!currentUser) {
+            // Navigate to a login page or profile page that shows UnauthorizedProfile
+            router.push("/user/signin"); // hoặc router.push("/login");
+            return;
+        }
+
+        // If user is authenticated, proceed to create video page
+        router.push("/create-video");
+    };
 
     return (
         <Sidebar>
@@ -81,12 +93,13 @@ export function AppSidebar() {
             </SidebarContent>
             <SidebarFooter>
                 <div className="flex items-center justify-between px-4 py-2 gap-2 ">
-                    <Link className={"w-full"} href={"/create-video"}>
-                        <Button className="w-full flex items-center justify-center gap-2 cursor-pointer">
-                            <Plus strokeWidth={4} />
-                            <p className="text-sm font-bold">Create Video</p>
-                        </Button>
-                    </Link>
+                    <Button
+                        className="w-full flex items-center justify-center gap-2 cursor-pointer"
+                        onClick={handleCreateVideoClick}
+                    >
+                        <Plus strokeWidth={4} />
+                        <p className="text-sm font-bold">Create Video</p>
+                    </Button>
                 </div>
             </SidebarFooter>
         </Sidebar>

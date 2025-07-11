@@ -5,9 +5,10 @@ export interface ScriptData {
     dataSource: string;
     language: string;
     style: string;
-    audience: string;
+    target: string;
     category: string;
     tag: string;
+    audience: string;
 }
 
 export interface GeneratedImage {
@@ -21,6 +22,7 @@ export interface AudioData {
     speed?: string;
     customText: string;
     audioFile: File | null;
+    duration?: number;
     isRecording: boolean;
     recordedAudio: string | null;
     isGenerating?: boolean;
@@ -32,6 +34,7 @@ export interface CaptionData {
     fontSize: string;
     color: string;
     background: boolean;
+    fontFamily: string;
 }
 
 export interface FetchedData {
@@ -57,6 +60,8 @@ export interface VideoScriptData {
     category: string;
     tag: string;
     language: string;
+    target: string;
+    style: string;
 }
 
 export interface VideoImageData {
@@ -72,19 +77,20 @@ export interface VideoAudioData {
         type: 'generated' | 'uploaded' | 'recorded';
         voiceType?: string;
         speed?: string;
-        duration?: number;
+        duration: number;
         isSelected?: boolean;
     }>;
-    audioFiles?: Array<{
+    audioFiles: Array<{
         id: string;
         name: string;
         url: string;
         type: 'generated' | 'uploaded' | 'recorded';
         voiceType?: string;
         speed?: string;
-        duration?: number;
+        duration: number;
         isSelected: boolean;
     }>;
+    totalDuration: number;
     voiceType?: string;
     speed?: string;
     customText?: string;
@@ -96,33 +102,6 @@ export interface VideoData {
     videoAudioData: VideoAudioData;
     videoCaptionData: CaptionData;
 }
-
-// Định nghĩa type cho category
-export type VideoCategory =
-    | "Education"
-    | "Entertainment"
-    | "Technology"
-    | "Travel"
-    | "Fitness & Health"
-    | "Beauty & Fashion"
-    | "Gaming"
-    | "Business & Finance"
-    | "Food & Cooking"
-    | "Environment";
-
-// Dùng type này cho map
-export const categoryTagMap: Record<VideoCategory, string[]> = {
-    Education: ["#StudyTips", "#ELearning", "#Science"],
-    Entertainment: ["#Comedy", "#Music", "#Dance"],
-    Technology: ["#AI", "#Coding", "#Gadgets"],
-    Travel: ["#Vlog", "#Adventure", "#FoodTour"],
-    "Fitness & Health": ["#Workout", "#Yoga", "#Nutrition"],
-    "Beauty & Fashion": ["#Makeup", "#Outfit", "#Skincare"],
-    Gaming: ["#Gameplay", "#Walkthrough", "#Review"],
-    "Business & Finance": ["#Startup", "#Investing", "#Marketing"],
-    "Food & Cooking": ["#Recipe", "#StreetFood", "#Baking"],
-    Environment: ["#ClimateChange", "#Sustainability", "#Nature"]
-};
 
 export interface StepProps {
     currentStep: number;

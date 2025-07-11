@@ -24,14 +24,15 @@ const initialState: VideoCreationState = {
         style: '',
         audience: '',
         category: '',
-        tag: ''
+        tag: '',
+        target: ''
     },
     generatedScript: '',
     selectedImages: [],
     generatedImages: [],
     audioData: {
         voiceType: '',
-        speed: 'normal',
+        speed: '1.0',
         customText: '',
         audioFile: null,
         isRecording: false,
@@ -43,7 +44,8 @@ const initialState: VideoCreationState = {
         position: '',
         fontSize: '',
         color: '',
-        background: false
+        background: false,
+        fontFamily: ''
     },
     isGenerating: false,
     fetchedData: null,
