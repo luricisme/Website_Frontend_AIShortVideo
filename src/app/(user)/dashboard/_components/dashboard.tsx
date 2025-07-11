@@ -6,14 +6,14 @@ import { VideoDetailModal } from "@/app/(user)/dashboard/_components/video-detai
 import VideoTable from "@/app/(user)/dashboard/_components/video-table/video-table";
 import UnauthorizedProfile from "@/app/(user)/profile/_components/unauthorized-profile";
 import FeaturedVideoCard from "./videoCard"; // Component mới cho featured videos
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+// import { Alert, AlertDescription } from "@/components/ui/alert";
+// import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserStore } from "@/providers/user-store-provider";
 import { useGetVideosByUserIdQuery } from "@/queries/useVideo";
-import { AlertCircle, RefreshCw } from "lucide-react";
+// import { AlertCircle, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import {
     useDashboardOverviewQuery,
@@ -37,15 +37,13 @@ const Dashboard = () => {
     const {
         data: overviewData,
         isLoading: isOverviewLoading,
-        error: overviewError,
-        refetch: refetchOverview,
     } = useDashboardOverviewQuery(!!currentUser?.id);
+
+    console.log(overviewData);
 
     const {
         data: platformData,
         isLoading: isPlatformLoading,
-        error: platformError,
-        refetch: refetchPlatform,
     } = usePlatformStatisticQuery({
         platform: selectedPlatform,
         enabled: !!currentUser?.id,
@@ -54,8 +52,6 @@ const Dashboard = () => {
     const {
         data: viewData,
         isLoading: isViewLoading,
-        error: viewError,
-        refetch: refetchView,
     } = useViewStatisticQuery(!!currentUser?.id);
 
     const {
@@ -67,8 +63,6 @@ const Dashboard = () => {
     const {
         data: topInteractedData,
         isLoading: isTopInteractedLoading,
-        error: topInteractedError,
-        refetch: refetchTopInteracted,
     } = useTopInteractedVideosQuery(0, 10, !!currentUser?.id);
 
     const {
@@ -93,63 +87,32 @@ const Dashboard = () => {
         return <UnauthorizedProfile />;
     }
 
-    if ((overviewError || platformError || viewError || videosError || topInteractedError) &&
-        !isOverviewLoading && !isPlatformLoading && !isViewLoading && !isVideosLoading && !isTopInteractedLoading) {
-        return (
-            <div className="text-white pb-10">
-                <div className="mx-auto max-w-7xl">
-                    <h1 className="text-3xl font-bold mb-6">Content Analytics</h1>
-                    <Alert className="bg-red-900/20 border-red-500/50 text-red-200">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="flex items-center justify-between">
-                            <span>Unable to load dashboard data. Please try again.</span>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                    refetchOverview();
-                                    refetchPlatform();
-                                    refetchView();
-                                    refetchVideos();
-                                    refetchTopInteracted();
-                                }}
-                                className="ml-4"
-                            >
-                                <RefreshCw className="h-4 w-4 mr-2" />
-                                Retry
-                            </Button>
-                        </AlertDescription>
-                    </Alert>
-                </div>
-            </div>
-        );
-    }
 
-    if (videosError && !isVideosLoading) {
-        return (
-            <div className="text-white pb-10">
-                <div className="mx-auto max-w-7xl">
-                    <h1 className="text-3xl font-bold mb-6">Content Analytics</h1>
-
-                    <Alert className="bg-red-900/20 border-red-500/50 text-red-200">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="flex items-center justify-between">
-                            <span>Unable to load video data. Please try again.</span>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => refetchVideos()}
-                                className="ml-4"
-                            >
-                                <RefreshCw className="h-4 w-4 mr-2" />
-                                Retry
-                            </Button>
-                        </AlertDescription>
-                    </Alert>
-                </div>
-            </div>
-        );
-    }
+    // if (videosError && !isVideosLoading) {
+    //     return (
+    //         <div className="text-white pb-10">
+    //             <div className="mx-auto max-w-7xl">
+    //                 <h1 className="text-3xl font-bold mb-6">Content Analytics</h1>
+    //
+    //                 <Alert className="bg-red-900/20 border-red-500/50 text-red-200">
+    //                     <AlertCircle className="h-4 w-4" />
+    //                     <AlertDescription className="flex items-center justify-between">
+    //                         <span>Unable to load video data. Please try again.</span>
+    //                         <Button
+    //                             variant="outline"
+    //                             size="sm"
+    //                             onClick={() => refetchVideos()}
+    //                             className="ml-4"
+    //                         >
+    //                             <RefreshCw className="h-4 w-4 mr-2" />
+    //                             Retry
+    //                         </Button>
+    //                     </AlertDescription>
+    //                 </Alert>
+    //             </div>
+    //         </div>
+    //     );
+    // }
 
     return (
         <div className="text-white pb-10">
@@ -172,11 +135,25 @@ const Dashboard = () => {
                     </TabsList>
 
                     <TabsContent value="overview" className="mt-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                            <PlatformStats
-                                data={platformData}
-                                isLoading={isPlatformLoading}
-                            />
+                        {!overviewData && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                <PlatformStats
+                                    data={platformData}
+                                    isLoading={isPlatformLoading}
+                                />
+
+                                <ViewsPieChart
+                                    data={viewData}
+                                    isLoading={isViewLoading}
+                                />
+                                <ViewsByCategoryChart
+                                    data={categoryData}
+                                    isLoading={isCategoryLoading}
+                                />
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <ViewsPieChart
                                 data={viewData}
                                 isLoading={isViewLoading}
