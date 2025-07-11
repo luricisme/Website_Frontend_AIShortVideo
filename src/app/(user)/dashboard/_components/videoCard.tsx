@@ -137,11 +137,11 @@ const FeaturedVideoCard = ({ video, onClick }: FeaturedVideoCardProps) => {
 
     return (
         <div
-            className="bg-zinc-800 border border-zinc-700 hover:border-zinc-600 rounded-lg overflow-hidden transition-all duration-200 cursor-pointer group"
+            className="bg-zinc-800 border border-zinc-700 hover:border-zinc-600 rounded-lg overflow-hidden transition-all h-120 duration-200 cursor-pointer group"
             onClick={onClick}
         >
             <div
-                className="relative aspect-video bg-zinc-900 overflow-hidden"
+                className="relative aspect-video h-100 bg-zinc-900 overflow-hidden"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
             >

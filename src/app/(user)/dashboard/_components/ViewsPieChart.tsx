@@ -19,7 +19,6 @@ interface ViewsPieChartProps {
 
 const COLORS = {
     youtube: "#FF0000",
-    tiktok: "#FF0050",
     main: "#6366F1"
 };
 
@@ -69,13 +68,12 @@ export const ViewsPieChart: React.FC<ViewsPieChartProps> = ({
         );
     }
 
-    const { totalView, youtubeView, tiktokView, mainView } = data.data;
+    const { totalView, youtubeView, mainView } = data.data;
 
     // Chỉ hiển thị các platform có views > 0
     const chartData = [
         ...(youtubeView > 0 ? [{ name: "YouTube", value: youtubeView, color: COLORS.youtube }] : []),
-        ...(tiktokView > 0 ? [{ name: "TikTok", value: tiktokView, color: COLORS.tiktok }] : []),
-        ...(mainView > 0 ? [{ name: "Main Platform", value: mainView, color: COLORS.main }] : [])
+        ...(mainView > 0 ? [{ name: "ASVC", value: mainView, color: COLORS.main }] : [])
     ];
 
     // Nếu không có data hoặc tổng views = 0
