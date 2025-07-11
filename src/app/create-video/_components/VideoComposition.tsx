@@ -38,7 +38,7 @@ export default function VideoComposition({ videoData }: { videoData: VideoData }
     let timePerSegment = 3.8;
 
     if (language === 'Vietnamese') {
-        timePerSegment = 3.5;
+        timePerSegment = 2.8;
     } else if (language === 'English') {
         timePerSegment = 3.8;
     } else if (language === 'Chinese') {
@@ -152,16 +152,16 @@ export default function VideoComposition({ videoData }: { videoData: VideoData }
                     />
 
                     {/* Overlay gradient */}
-                    <div
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            background: 'linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0))',
-                        }}
-                    />
+                    {/*<div*/}
+                    {/*    style={{*/}
+                    {/*        position: 'absolute',*/}
+                    {/*        top: 0,*/}
+                    {/*        left: 0,*/}
+                    {/*        width: '100%',*/}
+                    {/*        height: '100%',*/}
+                    {/*        background: 'linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0))',*/}
+                    {/*    }}*/}
+                    {/*/>*/}
                 </div>
             )}
 

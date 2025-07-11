@@ -1,7 +1,8 @@
 import { z } from "zod";
 import {
+    categoryViewItemSchema,
     dashboardOverviewSchema,
-    platformStatisticSchema,
+    platformStatisticSchema, viewsByCategoryDataSchema, viewsByCategoryResponseSchema,
     viewStatisticSchema
 } from "@/apiRequests/client";
 

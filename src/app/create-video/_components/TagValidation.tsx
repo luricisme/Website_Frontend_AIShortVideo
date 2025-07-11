@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {ChangeEvent, useState} from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -43,7 +43,7 @@ export const formatTags = (tagString: string) => {
 export const TagInput = ({ value, onChange, placeholder = "Ex. #anime, #cooking, #tutorial" }) => {
     const [error, setError] = useState('');
 
-    const handleChange = (e: { target: { value: never; }; }) => {
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
         const validation = validateTags(newValue);
 

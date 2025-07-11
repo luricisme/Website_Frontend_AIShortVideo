@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         let timePerSegment = 3.8;
 
         if (language === 'Vietnamese') {
-            timePerSegment = 2.5;
+            timePerSegment = 2.8;
         } else if (language === 'English') {
             timePerSegment = 3.8;
         } else if (language === 'Chinese') {
@@ -78,12 +78,12 @@ export async function POST(req: NextRequest) {
                 start: startTime,
                 length: length,
                 fit: 'cover',
-                scale: 1.0,
-                transition: {
-                    in: 'fade',
-                    out: 'fade'
-                },
-                effect: 'zoomIn' // Ken Burns effect
+                scale: 1.05,
+                // transition: {
+                //     in: 'fade',
+                //     out: 'fade'
+                // },
+                effect: 'zoomIn'
             };
         });
 
@@ -107,13 +107,13 @@ export async function POST(req: NextRequest) {
         const getFontWeight = (style: string) => {
             switch (style) {
                 case 'modern':
-                    return 600;
+                    return 700;
                 case 'classic':
                     return 700; // SemiBold
                 case 'minimal':
                     return 800; // Bold
                 case 'elegant':
-                    return 500;
+                    return 700;
                 default:
                     return 800;
             }
@@ -122,11 +122,23 @@ export async function POST(req: NextRequest) {
         // Helper function to get font size in pixels
         const getFontSize = (fontSize: string) => {
             switch (fontSize) {
-                case 'small': return 42;
-                case 'medium': return 50;
-                case 'large': return 58;
-                case 'extra-large': return 66;
-                default: return 50;
+                case 'small': return 58;
+                case 'medium': return 64;
+                case 'large': return 72;
+                case 'extra-large': return 80;
+                default: return 64;
+            }
+        };
+
+        const getVerticalAlignment = (position: string) => {
+            switch(position) {
+                case 'top':
+                    return 'top';
+                case 'bottom':
+                    return 'bottom';
+                case 'center':
+                default:
+                    return 'center';
             }
         };
 
@@ -136,6 +148,7 @@ export async function POST(req: NextRequest) {
             const color = captionData.color || '#000000';
             const fontFamily = getFontFamily(captionData.style);
             const fontWeight = getFontWeight(captionData.style);
+            const verticalAlignment = getVerticalAlignment(captionData.position);
 
             return {
                 asset: {
@@ -143,24 +156,20 @@ export async function POST(req: NextRequest) {
                     text: segment.text,
                     alignment: {
                         horizontal: 'center',
-                        vertical: 'bottom'
+                        vertical: verticalAlignment
                     },
                     font: {
                         family: fontFamily,
                         size: fontSize,
                         color: color,
                         weight: fontWeight,
-                        lineHeight: 1.4
+                        lineHeight: 1.3
                     },
-                    width: 1000,
-                    height: 200
+                    width: 650,
+                    height: 1700
                 },
                 start: segment.startTime,
                 length: segment.duration,
-                transition: {
-                    in: 'fade',
-                    out: 'fade'
-                }
             };
         });
 
@@ -214,7 +223,7 @@ export async function POST(req: NextRequest) {
                     width: 1080,
                     height: 1920
                 },
-                fps: 60,
+                fps: 30,
                 scaleTo: 'preview' // For faster processing, use 'render' for final
             }
         };

@@ -10,7 +10,7 @@ import { Select, SelectTrigger, SelectValue, SelectItem, SelectContent } from '@
 import StepNavigation from '../_components/StepNavigation';
 import { useVideoCreation } from '../_context/VideoCreationContext';
 import { saveVideoCaptionData, loadVideoCaptionData } from '../_utils/videoStorage';
-import {Checkbox} from "@/components/ui/checkbox";
+// import {Checkbox} from "@/components/ui/checkbox";
 
 export default function CaptionPage() {
     const router = useRouter();
@@ -172,7 +172,22 @@ export default function CaptionPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-
+                                <div>
+                                    <Label className="text-sm font-medium mb-2 block">Position</Label>
+                                    <Select
+                                        value={captionData.position}
+                                        onValueChange={(value) => updateCaptionData({ position: value })}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select position" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="bottom">Bottom</SelectItem>
+                                            <SelectItem value="top">Top</SelectItem>
+                                            <SelectItem value="center">Center</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                                 <div>
                                     <Label className=" font-medium mb-2 block">Size</Label>
                                     <Select
@@ -206,16 +221,16 @@ export default function CaptionPage() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center space-x-3">
-                                    <Checkbox
-                                        id="background"
-                                        checked={captionData.background}
-                                        onCheckedChange={(checked) => updateCaptionData({ background: !!checked })}
-                                    />
-                                    <Label htmlFor="background" className=" font-medium">
-                                        Add background to subtitles
-                                    </Label>
-                                </div>
+                                {/*<div className="flex items-center space-x-3">*/}
+                                {/*    <Checkbox*/}
+                                {/*        id="background"*/}
+                                {/*        checked={captionData.background}*/}
+                                {/*        onCheckedChange={(checked) => updateCaptionData({ background: !!checked })}*/}
+                                {/*    />*/}
+                                {/*    <Label htmlFor="background" className=" font-medium">*/}
+                                {/*        Add background to subtitles*/}
+                                {/*    </Label>*/}
+                                {/*</div>*/}
                             </div>
 
                             {/* Preview Section */}
@@ -223,7 +238,7 @@ export default function CaptionPage() {
                                 <Label className="text-lg font-semibold block">Preview</Label>
                                 <div className={`relative bg-gray-900 rounded-lg aspect-video flex ${positionClass} justify-center text-center overflow-hidden w-65 h-100 `}>
                                     {/* Mock video background */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 opacity-50" />
+                                    <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 opacity-90" />
 
                                     <p
                                         className={`relative z-10 transition-all duration-300 ${sizeClass} ${fontClass} font-semibold max-w-4xl px-4 ${
@@ -232,7 +247,7 @@ export default function CaptionPage() {
                                                 : 'drop-shadow-lg'
                                         }`}
                                         style={{
-                                            color: captionData.color,
+                                            color: captionData.color || '#000000',
                                             // textShadow: captionData.background ? 'none' : '2px 2px 4px rgba(0,0,0,0.8)',
                                             fontFamily: captionData.style ? getFontFamily(captionData.style) : 'inherit'
                                         }}

@@ -20,11 +20,11 @@ export default function CaptionDisplay ({ text, position, fontSize, color, backg
 
     const getFontSize = () => {
         switch (fontSize) {
-            case 'small': return '0.8rem';
-            case 'medium': return '1rem';
-            case 'large': return '1.2rem';
-            case 'extra-large': return '1.5rem';
-            default: return '1rem';
+            case 'small': return '1.2rem';
+            case 'medium': return '1.4rem';
+            case 'large': return '1.8rem';
+            case 'extra-large': return '2.0rem';
+            default: return '1.4rem';
         }
     };
 
@@ -92,7 +92,7 @@ export default function CaptionDisplay ({ text, position, fontSize, color, backg
             style={{
                 position: 'absolute',
                 ...getPosition(),
-                color: color,
+                color: color || '#000000',
                 fontSize: getFontSize(),
                 fontFamily: getFontFamily(),
                 textAlign: 'center',
@@ -100,9 +100,9 @@ export default function CaptionDisplay ({ text, position, fontSize, color, backg
                 backgroundColor: background ? '#000000B3' : 'transparent',
                 borderRadius: background ? '10px' : '0',
                 padding: background ? '6px 8px' : '0',
-                textShadow: background ? 'none' : '2px 2px 4px rgba(0,0,0,0.8)',
+                // textShadow: background ? 'none' : '2px 2px 4px rgba(0,0,0,0.8)',
                 lineHeight: '1.4',
-                maxWidth: '90%',
+                // maxWidth: '90%',
                 ...additionalStyles,
             }}
         >

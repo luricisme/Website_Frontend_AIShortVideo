@@ -23,7 +23,7 @@ type VideoAudioData = {
         name: string;
         url: string;
         type: 'generated' | 'uploaded' | 'recorded';
-        duration?: number;
+        duration: number;
         voiceType?: string;
         speed?: string;
         isSelected: boolean;
@@ -33,11 +33,11 @@ type VideoAudioData = {
         name: string;
         url: string;
         type: 'generated' | 'uploaded' | 'recorded';
-        duration?: number;
+        duration: number;
         voiceType?: string;
         speed?: string;
     }>;
-    totalDuration?: number;
+    totalDuration: number;
     voiceType?: string;
     speed?: string;
     customText?: string;
@@ -112,7 +112,32 @@ export const clearVideoImageData = () => {
 };
 
 // Audio storage functions
-export const saveVideoAudioData = (data: VideoAudioData) => {
+export const saveVideoAudioData = (data: {
+    selectedAudioFiles: {
+        id?: string;
+        name: string;
+        url: string;
+        type: "generated" | "uploaded" | "recorded";
+        voiceType?: string;
+        speed?: string;
+        duration?: number;
+        isSelected?: boolean
+    }[];
+    audioFiles?: Array<{
+        id: string;
+        name: string;
+        url: string;
+        type: "generated" | "uploaded" | "recorded";
+        voiceType?: string;
+        speed?: string;
+        duration?: number;
+        isSelected: boolean
+    }>;
+    totalDuration: number;
+    voiceType?: string;
+    speed?: string;
+    customText?: string
+}) => {
     try {
         localStorage.setItem(STORAGE_AUDIO, JSON.stringify(data));
     } catch (err) {

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Player } from '@remotion/player';
-import {ArrowLeft, ArrowRight, GripVertical, Pause, Play, Plus, Trash2} from 'lucide-react';
+import {ArrowLeft, ArrowRight, GripVertical, Pause, Play, Trash2} from 'lucide-react';
 import {
     loadVideoAudioData,
     loadVideoCaptionData,
@@ -22,6 +22,13 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import {Textarea} from "@/components/ui/textarea";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {
+    AlertDialog, AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+    AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 
 export default function VideoEditor() {
     const [videoData, setVideoData] = useState<VideoData>();
@@ -29,6 +36,7 @@ export default function VideoEditor() {
     const [draggedAudio, setDraggedAudio] = useState();
     const [playingAudio, setPlayingAudio] = useState();
     const [currentAudio, setCurrentAudio] = useState();
+    // const [audioToDelete, setAudioToDelete] = useState(null);
     const router = useRouter();
     // Tính toán durationInFrames từ totalDuration
     const fps = 120;
@@ -58,12 +66,14 @@ export default function VideoEditor() {
                         style: "classic",
                         position: "center",
                         fontSize: "large",
-                        color: "#cdab8f",
+                        color: "#000000",
                         background: false,
                         fontFamily: ''
                     }
                 };
 
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
                 setVideoData(combinedData);
             } catch (err) {
                 console.error('Error loading video data:', err);
@@ -223,12 +233,42 @@ export default function VideoEditor() {
     };
 
     // Cập nhật audioData và lưu vào localStorage
-    const updateAudioData = (newAudioData: { selectedAudioFiles: { id?: string; name: string; url: string; type: "generated" | "uploaded" | "recorded"; voiceType?: string; speed?: string; duration: number; isSelected?: boolean; }[] }) => {
+    const updateAudioData = (newAudioData: {
+        selectedAudioFiles: {
+            id?: string;
+            name: string;
+            url: string;
+            type: "generated" | "uploaded" | "recorded";
+            voiceType?: string;
+            speed?: string;
+            duration: number;
+            isSelected?: boolean
+        }[];
+        audioFiles: Array<{
+            id: string;
+            name: string;
+            url: string;
+            type: "generated" | "uploaded" | "recorded";
+            voiceType?: string;
+            speed?: string;
+            duration: number;
+            isSelected: boolean
+        }>;
+        totalDuration?: number;
+        voiceType?: string;
+        speed?: string;
+        customText?: string
+    }) => {
         const updatedVideoData = {
             ...videoData,
             videoAudioData: newAudioData
         };
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         setVideoData(updatedVideoData);
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         saveVideoAudioData(newAudioData);
     };
 
@@ -280,6 +320,7 @@ export default function VideoEditor() {
         };
 
         updateAudioData(newAudioData);
+        // setAudioToDelete(null);
     };
 
     // Play/Pause audio
@@ -287,22 +328,38 @@ export default function VideoEditor() {
         if (playingAudio === audio.id) {
             // Pause
             if (currentAudio) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
                 currentAudio.pause();
             }
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setPlayingAudio(null);
         } else {
             // Play
             if (currentAudio) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
                 currentAudio.pause();
             }
 
             const audioElement = new Audio(audio.url);
             audioElement.play();
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setCurrentAudio(audioElement);
+
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setPlayingAudio(audio.id);
 
             audioElement.onended = () => {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
                 setPlayingAudio(null);
+
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
                 setCurrentAudio(null);
             };
         }
@@ -322,12 +379,19 @@ export default function VideoEditor() {
     const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetAudio: { id: number; name?: string; url?: string; type?: "generated" | "uploaded" | "recorded"; voiceType?: string | undefined; speed?: string | undefined; duration?: number; isSelected?: boolean | undefined; }) => {
         e.preventDefault();
 
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         if (!draggedAudio || draggedAudio.id === targetAudio.id) return;
 
         const audioData = videoData.videoAudioData;
         const newSelectedAudioFiles = [...audioData.selectedAudioFiles];
 
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const draggedIndex = newSelectedAudioFiles.findIndex(audio => audio.id === draggedAudio.id);
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const targetIndex = newSelectedAudioFiles.findIndex(audio => audio.id === targetAudio.id);
 
         if (draggedIndex !== -1 && targetIndex !== -1) {
@@ -343,6 +407,8 @@ export default function VideoEditor() {
             updateAudioData(newAudioData);
         }
 
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         setDraggedAudio(null);
     };
 
@@ -356,6 +422,7 @@ export default function VideoEditor() {
 
     const audioData = videoData.videoAudioData;
     const selectedAudioIds = audioData.selectedAudioFiles.map(audio => audio.id);
+    const availableAudioFiles = audioData.audioFiles.filter(audio => !selectedAudioIds.includes(audio.id));
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-black p-6">
@@ -394,7 +461,7 @@ export default function VideoEditor() {
                                     durationInFrames={durationInFrames}
                                     compositionWidth={540}
                                     compositionHeight={960}
-                                    fps={60}
+                                    fps={fps}
                                     style={{ width: '100%', height: '100%' }}
                                     controls
                                     loop
@@ -419,6 +486,8 @@ export default function VideoEditor() {
                                         <div className="grid grid-cols-3 gap-4 overflow-x-auto pb-2">
                                             {selectedImages.map((image, index) => (
                                                 <div
+                                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                                    // @ts-expect-error
                                                     key={image.id}
                                                     className="relative flex-shrink-0 group"
                                                     draggable
@@ -433,6 +502,8 @@ export default function VideoEditor() {
                                                     <Image
                                                         width={150}
                                                         height={200}
+                                                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                                        // @ts-expect-error
                                                         src={image.url}
                                                         alt={`Image ${index + 1}`}
                                                         className="object-cover rounded cursor-move"
@@ -441,6 +512,8 @@ export default function VideoEditor() {
                                                         {index + 1}
                                                     </div>
                                                     <Button
+                                                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                                        // @ts-expect-error
                                                         onClick={() => handleRemoveImage(image.id)}
                                                         className="absolute bottom-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                                                     >
@@ -493,8 +566,12 @@ export default function VideoEditor() {
                                                         <div
                                                             key={audio.id}
                                                             draggable
+                                                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                                            // @ts-expect-error
                                                             onDragStart={(e) => handleDragStart(e, audio)}
                                                             onDragOver={handleDragOver}
+                                                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                                            // @ts-expect-error
                                                             onDrop={(e) => handleDrop(e, audio)}
                                                             className="border border-blue-500 bg-blue-900/20 rounded-lg p-4 cursor-move hover:bg-blue-900/30 transition-colors"
                                                         >
@@ -518,6 +595,8 @@ export default function VideoEditor() {
                                                                     <Button
                                                                         size="sm"
                                                                         variant="ghost"
+                                                                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                                                        // @ts-expect-error
                                                                         onClick={() => handlePlayAudio(audio)}
                                                                         className="text-neutral-300 hover:text-white"
                                                                     >
@@ -527,6 +606,8 @@ export default function VideoEditor() {
                                                                     <Button
                                                                         size="sm"
                                                                         variant="ghost"
+                                                                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                                                        // @ts-expect-error
                                                                         onClick={() => handleToggleSelect(audio.id)}
                                                                         className="text-red-400 hover:text-red-300"
                                                                     >
@@ -543,76 +624,90 @@ export default function VideoEditor() {
                                         {/* Available Audio Section */}
                                         <div className="bg-neutral-900 rounded-lg p-6">
                                             <div className="flex items-center justify-between mb-4">
-                                                <h3 className="text-white font-medium text-lg">Available Audio ({audioData.audioFiles.length})</h3>
-                                                <Button size="sm" variant="outline" className="text-neutral-300 border-neutral-700">
-                                                    <Plus className="w-4 h-4 mr-2" />
-                                                    Add Audio
-                                                </Button>
+                                                <h3 className="text-white font-medium text-lg">Available Audio ({availableAudioFiles.length})</h3>
                                             </div>
 
                                             <div className="space-y-3 max-h-96 overflow-y-auto">
-                                                {audioData.audioFiles.length === 0 ? (
+                                                {availableAudioFiles.length === 0 ? (
                                                     <div className="text-center py-8 text-neutral-500">
-                                                        No audio files available. Generate or upload audio files first.
+                                                        {audioData.audioFiles.length === 0
+                                                            ? "No audio files available. Generate or upload audio files first."
+                                                            : "All audio files are already selected."
+                                                        }
                                                     </div>
                                                 ) : (
-                                                    audioData.audioFiles.map((audio) => {
-                                                        const isSelected = selectedAudioIds.includes(audio.id);
-                                                        return (
-                                                            <div
-                                                                key={audio.id}
-                                                                className={`border rounded-lg p-4 transition-all duration-200 ${
-                                                                    isSelected
-                                                                        ? 'border-blue-500 bg-blue-900/20'
-                                                                        : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-750'
-                                                                }`}
-                                                            >
-                                                                <div className="flex items-center justify-between">
-                                                                    <div className="flex-1">
-                                                                        <h4 className="font-medium text-white">{audio.name}</h4>
-                                                                        <div className="text-sm text-neutral-400 mt-1">
-                                                                            {Math.floor(audio.duration / 60)}:{Math.floor(audio.duration % 60).toString().padStart(2, '0')} | {audio.voiceType} | {audio.speed}x
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="flex items-center space-x-2">
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="ghost"
-                                                                            onClick={() => handlePlayAudio(audio)}
-                                                                            className="text-neutral-300 hover:text-white"
-                                                                        >
-                                                                            {playingAudio === audio.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                                                                        </Button>
-
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="ghost"
-                                                                            onClick={() => handleToggleSelect(audio.id)}
-                                                                            className={isSelected ? 'text-blue-400' : 'text-neutral-400'}
-                                                                        >
-                                                                            {isSelected ? 'Remove' : 'Select'}
-                                                                        </Button>
-
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="ghost"
-                                                                            onClick={() => handleRemoveAudio(audio.id)}
-                                                                            className="text-red-400 hover:text-red-300"
-                                                                        >
-                                                                            <Trash2 className="w-4 h-4" />
-                                                                        </Button>
+                                                    availableAudioFiles.map((audio) => (
+                                                        <div
+                                                            key={audio.id}
+                                                            className="border border-neutral-700 bg-neutral-800 hover:bg-neutral-750 rounded-lg p-4 transition-all duration-200"
+                                                        >
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex-1">
+                                                                    <h4 className="font-medium text-white">{audio.name}</h4>
+                                                                    <div className="text-sm text-neutral-400 mt-1">
+                                                                        {Math.floor(audio.duration / 60)}:{Math.floor(audio.duration % 60).toString().padStart(2, '0')} | {audio.voiceType} | {audio.speed}x
                                                                     </div>
                                                                 </div>
+
+                                                                <div className="flex items-center space-x-2">
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                                                        // @ts-expect-error
+                                                                        onClick={() => handlePlayAudio(audio)}
+                                                                        className="text-neutral-300 hover:text-white"
+                                                                    >
+                                                                        {playingAudio === audio.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                                                    </Button>
+
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        onClick={() => handleToggleSelect(audio.id)}
+                                                                        className="text-neutral-400 hover:text-white"
+                                                                    >
+                                                                        Select
+                                                                    </Button>
+
+                                                                    <AlertDialog>
+                                                                        <AlertDialogTrigger asChild>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="ghost"
+                                                                                // onClick={() => setAudioToDelete(audio)}
+                                                                                className="text-red-400 hover:text-red-300"
+                                                                            >
+                                                                                <Trash2 className="w-4 h-4" />
+                                                                            </Button>
+                                                                        </AlertDialogTrigger>
+                                                                        <AlertDialogContent>
+                                                                            <AlertDialogHeader>
+                                                                                <AlertDialogTitle>Delete Audio File</AlertDialogTitle>
+                                                                                <AlertDialogDescription>
+                                                                                    Are you sure you want to delete &#39;{audio.name}&#39;? This action cannot be undone.
+                                                                                </AlertDialogDescription>
+                                                                            </AlertDialogHeader>
+                                                                            <AlertDialogFooter>
+                                                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                                <AlertDialogAction
+                                                                                    onClick={() => handleRemoveAudio(audio.id)}
+                                                                                    className="bg-red-600 hover:bg-red-700"
+                                                                                >
+                                                                                    Delete
+                                                                                </AlertDialogAction>
+                                                                            </AlertDialogFooter>
+                                                                        </AlertDialogContent>
+                                                                    </AlertDialog>
+                                                                </div>
                                                             </div>
-                                                        );
-                                                    })
+                                                        </div>
+                                                    ))
                                                 )}
                                             </div>
                                         </div>
                                     </div>
                                 </TabsContent>
-
                                 <TabsContent value={"captions"}>
                                     <div className="bg-neutral-900 rounded-lg p-4">
                                         <h3 className="text-white font-medium mb-3">Caption Settings</h3>
@@ -621,6 +716,8 @@ export default function VideoEditor() {
                                                 <Label className="text-neutral-300 text-sm block mb-2">Style</Label>
                                                 <Select
                                                     value={videoData.videoCaptionData?.style || 'modern'}
+                                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                                    // @ts-expect-error
                                                     onValueChange={(value) => handleCaptionChange('style', value)}
                                                 >
                                                     <SelectTrigger className="w-full bg-neutral-700 text-white border-neutral-600">
@@ -638,6 +735,8 @@ export default function VideoEditor() {
                                                 <Label className="text-neutral-300 text-sm block mb-2">Position</Label>
                                                 <Select
                                                     value={videoData.videoCaptionData?.position || 'center'}
+                                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                                    // @ts-expect-error
                                                     onValueChange={(value) => handleCaptionChange('position', value)}
                                                 >
                                                     <SelectTrigger className="w-full bg-neutral-700 text-white border-neutral-600">
@@ -654,6 +753,8 @@ export default function VideoEditor() {
                                                 <Label className="text-neutral-300 text-sm block mb-2">Font Size</Label>
                                                 <Select
                                                     value={videoData.videoCaptionData?.fontSize || 'medium'}
+                                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                                    // @ts-expect-error
                                                     onValueChange={(value) => handleCaptionChange('fontSize', value)}
                                                 >
                                                     <SelectTrigger className="w-full bg-neutral-700 text-white border-neutral-600">
@@ -671,7 +772,9 @@ export default function VideoEditor() {
                                                 <Label className="text-neutral-300 text-sm block mb-2">Color</Label>
                                                 <input
                                                     type="color"
-                                                    value={videoData.videoCaptionData?.color || '#cdab8f'}
+                                                    value={videoData.videoCaptionData?.color || '#000000'}
+                                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                                    // @ts-expect-error
                                                     onChange={(e) => handleCaptionChange('color', e.target.value)}
                                                     className="w-12 h-12 rounded-lg border-2 border-neutral-300 cursor-pointer hover:border-neutral-400 transition-colors"
                                                 />

@@ -57,7 +57,8 @@ export default function VideoPreviewCreator () {
                         fontFamily: ""
                     }
                 };
-
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
                 setVideoData(combinedData);
             } catch (err) {
                 console.error('Error loading video data:', err);

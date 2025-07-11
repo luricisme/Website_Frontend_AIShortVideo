@@ -28,7 +28,7 @@ const Dashboard = () => {
     const [selectedVideo, setSelectedVideo] = useState<number | null>(null);
 
     const { user: currentUser } = useUserStore((state) => state);
-    const [selectedPlatform, setSelectedPlatform] = useState("youtube");
+    const [selectedPlatform] = useState("youtube");
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
@@ -61,6 +61,8 @@ const Dashboard = () => {
         data: categoryData,
         isLoading: isCategoryLoading,
     } = useViewsByCategoryQuery(1, 10, !!currentUser?.id);
+
+    console.log(categoryData);
 
     const {
         data: videosResponse,
@@ -165,15 +167,11 @@ const Dashboard = () => {
                             <PlatformStats
                                 data={platformData}
                                 isLoading={isPlatformLoading}
-                                selectedPlatform={selectedPlatform}
-                                onPlatformChange={setSelectedPlatform}
                             />
-
                             <ViewsPieChart
                                 data={viewData}
                                 isLoading={isViewLoading}
                             />
-
                             <ViewsByCategoryChart
                                 data={categoryData}
                                 isLoading={isCategoryLoading}

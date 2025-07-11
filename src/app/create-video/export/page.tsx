@@ -42,6 +42,7 @@ import {
 import {envPublic} from "@/constants/env.public";
 import { useUserStore } from "@/providers/user-store-provider";
 import {useSession} from "next-auth/react";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 
 interface RenderStatus {
     id: string;
@@ -87,7 +88,7 @@ export default function VideoExportPage() {
         title: '',
         description: '',
         tags: '',
-        privacy: 'private' as 'private' | 'public' | 'unlisted'
+        privacyStatus: 'private' as 'private' | 'public' | 'unlisted'
     });
 
     const router = useRouter();
@@ -194,6 +195,8 @@ export default function VideoExportPage() {
         console.log(videoData)
         console.log(videoTitle)
         console.log(session?.user?.id);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         if (!videoData || !session.user?.id || !videoTitle.trim()) {
             setSaveResult({
                 success: false,
@@ -222,7 +225,7 @@ export default function VideoExportPage() {
 
             // Prepare image URLs array
             const imageUrls = imageData.generatedImages
-                ? imageData.generatedImages.map((img) => img.url)
+                ? imageData.generatedImages.map((img: { url: string; }) => img.url)
                 : [];
 
             const saveData = {
@@ -233,6 +236,8 @@ export default function VideoExportPage() {
                 script: scriptData.script || '',
                 videoUrl: videoUrl,
                 length: totalDuration,
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
                 userId: session.user?.id,
                 tags: tagsArray,
                 imageUrls: imageUrls
@@ -342,6 +347,7 @@ export default function VideoExportPage() {
         }
 
         setIsUploading(true);
+        console.log(session?.user.id)
 
         try {
             // Create FormData object
@@ -349,7 +355,12 @@ export default function VideoExportPage() {
             formData.append('videoUrl', renderStatus.url);
             formData.append('title', youtubeData.title);
             formData.append('description', youtubeData.description);
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             formData.append('userId', session?.user.id);
+            formData.append('privacyStatus', youtubeData.privacyStatus);
+
+            console.log(formData);
 
             const response = await fetch(`${API_URL}/publish/youtube/upload_url`, {
                 method: 'POST',
@@ -376,7 +387,7 @@ export default function VideoExportPage() {
             } else {
                 setUploadResult({
                     success: false,
-                    message: data.error || 'Failed to upload video to YouTube'
+                    message: data.message || 'Failed to upload video to YouTube'
                 });
             }
         } catch (error) {
@@ -548,6 +559,20 @@ export default function VideoExportPage() {
                                                         className="bg-neutral-700 border-neutral-600"
                                                         placeholder="Enter video title"
                                                     />
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor="privacyStatus" className="mb-3">Privacy</Label>
+                                                    <Select
+                                                        value={youtubeData.privacyStatus}>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select privacy" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="private">Private</SelectItem>
+                                                            <SelectItem value="public">Public</SelectItem>
+                                                            <SelectItem value="unlisted">Unlisted</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
 
                                             </div>

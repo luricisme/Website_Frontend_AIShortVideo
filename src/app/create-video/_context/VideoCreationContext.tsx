@@ -24,7 +24,8 @@ const initialState: VideoCreationState = {
         style: '',
         audience: '',
         category: '',
-        tag: ''
+        tag: '',
+        target: ''
     },
     generatedScript: '',
     selectedImages: [],

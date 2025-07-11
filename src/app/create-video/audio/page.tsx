@@ -123,6 +123,7 @@ export default function AudioPage() {
 
         // Auto-save to localStorage
         saveVideoAudioData({
+            totalDuration: 0,
             audioFiles: updatedFiles,
             selectedAudioFiles: getSelectedAudioFiles(),
             voiceType: audioData.voiceType,
@@ -140,6 +141,7 @@ export default function AudioPage() {
 
         // Auto-save to localStorage
         saveVideoAudioData({
+            totalDuration: 0,
             audioFiles: updatedFiles,
             selectedAudioFiles: updatedFiles.filter(file => file.isSelected),
             voiceType: audioData.voiceType,
@@ -169,6 +171,7 @@ export default function AudioPage() {
 
         // Auto-save to localStorage
         saveVideoAudioData({
+            totalDuration: 0,
             audioFiles: updatedFiles,
             selectedAudioFiles: updatedFiles.filter(file => file.isSelected),
             voiceType: audioData.voiceType,
@@ -224,8 +227,10 @@ export default function AudioPage() {
     useEffect(() => {
         if (audioFiles.length > 0) {
             saveVideoAudioData({
+                speed: "", totalDuration: 0, voiceType: "",
+                customText: "",
                 audioFiles,
-                selectedAudioFiles: getSelectedAudioFiles(),
+                selectedAudioFiles: getSelectedAudioFiles()
             });
         }
     }, [audioFiles, audioData.voiceType, audioData.speed, audioData.customText, recordedChunks]);

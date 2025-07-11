@@ -8,6 +8,7 @@ export interface ScriptData {
     target: string;
     category: string;
     tag: string;
+    audience: string;
 }
 
 export interface GeneratedImage {
@@ -76,20 +77,20 @@ export interface VideoAudioData {
         type: 'generated' | 'uploaded' | 'recorded';
         voiceType?: string;
         speed?: string;
-        duration?: number;
+        duration: number;
         isSelected?: boolean;
     }>;
-    audioFiles?: Array<{
+    audioFiles: Array<{
         id: string;
         name: string;
         url: string;
         type: 'generated' | 'uploaded' | 'recorded';
         voiceType?: string;
         speed?: string;
-        duration?: number;
+        duration: number;
         isSelected: boolean;
     }>;
-    totalDuration?: number;
+    totalDuration: number;
     voiceType?: string;
     speed?: string;
     customText?: string;
