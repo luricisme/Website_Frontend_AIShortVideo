@@ -17,7 +17,12 @@ const DEFAULT_OPTIONS: RequestInit = {
 async function getAuthToken(): Promise<string | null> {
     try {
         const cookieStore = await cookies();
-        const token = cookieStore.get("next-auth.session-token")?.value;
+        let token = cookieStore.get("next-auth.session-token")?.value;
+
+        if (process.env.NODE_ENV !== "development") {
+            token = cookieStore.get("__Secure-next-auth.session-token")?.value || token;
+        }
+
         return token || null;
     } catch (error) {
         console.error("Failed to get auth token from cookies:", error);
