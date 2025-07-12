@@ -17,6 +17,7 @@ import {
     useGetLikedVideosByUserIdQuery,
     useGetVideosByUserIdQuery,
 } from "@/queries/useVideo";
+import { formatDateToMilliseconds } from "@/utils/common";
 
 interface ProfilePageProps {
     activeTab: string;
@@ -136,6 +137,8 @@ const ProfilePage = ({
     const likedVideos = likedVideosData?.data.items || [];
     const likedVideosPagination = likedVideosData?.data;
 
+    console.log(">>> ProfilePage user avatar:", user?.avatar);
+
     return (
         <div className="min-h-screen text-white mb-10">
             <div className="mx-auto max-w-6xl px-4">
@@ -143,7 +146,11 @@ const ProfilePage = ({
                 <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 mb-8">
                     <Avatar className="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center">
                         <AvatarImage
-                            src={user?.avatar || undefined}
+                            src={
+                                user?.avatar +
+                                    `?v=${formatDateToMilliseconds(user?.updatedAt ?? "")}` ||
+                                undefined
+                            }
                             alt={`${user?.firstName} ${user?.lastName}`}
                         />
                         <AvatarFallback>

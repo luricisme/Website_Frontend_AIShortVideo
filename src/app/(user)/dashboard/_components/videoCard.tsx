@@ -4,12 +4,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react";
-
-interface TopInteractedVideo {
-    title: string;
-    totalInteraction: number;
-    videoUrl: string;
-}
+import { TopInteractedVideo } from "@/apiRequests/client";
+import Image from "next/image";
 
 interface FeaturedVideoCardProps {
     video: TopInteractedVideo;
@@ -145,7 +141,7 @@ const FeaturedVideoCard = ({ video, onClick }: FeaturedVideoCardProps) => {
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
             >
-                {!isHovering && (
+                {/* {!isHovering && (
                     <div className="w-full h-full bg-gradient-to-br from-zinc-800 via-zinc-900 to-black flex items-center justify-center">
                         <div className="text-center">
                             <div className="w-16 h-16 mx-auto mb-3 bg-zinc-700/50 rounded-full flex items-center justify-center">
@@ -170,6 +166,23 @@ const FeaturedVideoCard = ({ video, onClick }: FeaturedVideoCardProps) => {
                             <p className="text-xs text-zinc-600 mt-1">Hover to preview</p>
                         </div>
                     </div>
+                )} */}
+
+                {/* Bình thường hiển thị thumbnail nếu image lỗi hiển thị fallback */}
+                {!isHovering && (
+                    <Image
+                        src={video.thumbnailUrl}
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                        width={640}
+                        height={360}
+                        onError={() => setVideoError(true)}
+                        onLoadingComplete={() => setVideoLoaded(true)}
+                        loading="lazy"
+                        placeholder="blur"
+                        blurDataURL={video.thumbnailUrl}
+                        onClick={onClick}
+                    />
                 )}
 
                 {isHovering && shouldShowVideo() && (
@@ -220,7 +233,7 @@ const FeaturedVideoCard = ({ video, onClick }: FeaturedVideoCardProps) => {
                     </div>
                 )}
 
-                {!isHovering && (
+                {/* {!isHovering && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="w-12 h-12 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             {shouldShowVideo() ? (
@@ -250,7 +263,7 @@ const FeaturedVideoCard = ({ video, onClick }: FeaturedVideoCardProps) => {
                             )}
                         </div>
                     </div>
-                )}
+                )} */}
 
                 {isHovering && videoLoaded && !videoError && shouldShowVideo() && (
                     <div className="absolute top-2 left-2 flex items-center gap-1 bg-red-500/90 backdrop-blur-sm text-white text-xs px-2 py-1 rounded">
@@ -261,9 +274,7 @@ const FeaturedVideoCard = ({ video, onClick }: FeaturedVideoCardProps) => {
             </div>
 
             <div className="p-3">
-                <h3 className="text-sm font-medium text-white mb-2 line-clamp-2">
-                    {video.title}
-                </h3>
+                <h3 className="text-sm font-medium text-white mb-2 line-clamp-2">{video.title}</h3>
 
                 <div className="flex items-center justify-between">
                     <Badge

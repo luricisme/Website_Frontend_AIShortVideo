@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Search, X } from "lucide-react";
 import SearchInput from "@/app/(user)/_components/search-input";
+import { formatDateToMilliseconds } from "@/utils/common";
 
 function SearchInputLoading() {
     return (
@@ -228,7 +229,11 @@ const SearchBar = () => {
                         </div>
                     ) : user && session?.user ? (
                         <AvatarDropdownMenu
-                            image={user?.avatar ?? session.user.image ?? null}
+                            image={
+                                user?.avatar ??
+                                session.user.image ??
+                                null + `?v=${formatDateToMilliseconds(user?.updatedAt ?? "")}`
+                            }
                             name={user?.username ?? session.user.name ?? null}
                             userId={user?.id}
                         />

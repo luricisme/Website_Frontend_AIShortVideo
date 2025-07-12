@@ -1,4 +1,4 @@
-import {apiResponseSchema} from "@/types/api/common";
+import { apiResponseSchema } from "@/types/api/common";
 import http from "@/utils/api/client";
 import { z } from "zod";
 
@@ -51,7 +51,10 @@ export const topInteractedVideoSchema = z.object({
     title: z.string(),
     totalInteraction: z.number(),
     videoUrl: z.string(),
+    thumbnailUrl: z.string(),
 });
+
+export type TopInteractedVideo = z.infer<typeof topInteractedVideoSchema>;
 
 export const topInteractedVideosSchema = z.object({
     pageNo: z.number(),
@@ -87,7 +90,7 @@ export const getViewsByCategory = async (page = 1, pageSize = 10) => {
     return http.get(`${URL}/view_by_cate?page=${page}&pageSize=${pageSize}`, {
         requireAuth: true,
         responseSchema: viewsByCategoryResponseSchema,
-    })
+    });
 };
 
 export const getTopInteractedVideos = async (pageNo = 0, pageSize = 10) => {
@@ -96,4 +99,3 @@ export const getTopInteractedVideos = async (pageNo = 0, pageSize = 10) => {
         responseSchema: apiResponseSchema(topInteractedVideosSchema),
     });
 };
-

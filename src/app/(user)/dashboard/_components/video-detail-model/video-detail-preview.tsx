@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ImageIcon, Pause, Play, PlayCircle, Volume2, VolumeX } from "lucide-react";
+import { ImageIcon, Maximize, Pause, Play, PlayCircle, Volume2, VolumeX } from "lucide-react";
 
 import { Video } from "@/types/video.types";
 
@@ -111,6 +111,41 @@ const VideoDetailPreview = ({ video }: { video: Video }) => {
         };
     }, []);
 
+    useEffect(() => {
+        const videoEl = videoRef.current;
+        if (!videoEl) return;
+
+        const handleFullscreenChange = () => {
+            if (document.fullscreenElement === videoEl) {
+                videoEl.style.width = "100vw";
+                videoEl.style.height = "100vh";
+                videoEl.style.objectFit = "contain";
+                videoEl.style.backgroundColor = "#000";
+            } else {
+                videoEl.style.width = "";
+                videoEl.style.height = "";
+                videoEl.style.objectFit = "";
+                videoEl.style.backgroundColor = "";
+            }
+        };
+
+        document.addEventListener("fullscreenchange", handleFullscreenChange);
+
+        return () => {
+            document.removeEventListener("fullscreenchange", handleFullscreenChange);
+        };
+    }, []);
+
+    const handleFullscreen = useCallback(() => {
+        if (videoRef.current) {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                videoRef.current.requestFullscreen();
+            }
+        }
+    }, []);
+
     const videoSource = getVideoSource();
 
     return (
@@ -170,6 +205,18 @@ const VideoDetailPreview = ({ video }: { video: Video }) => {
                                 ) : (
                                     <Volume2 className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5" />
                                 )}
+                            </button>
+
+                            <button
+                                onClick={handleFullscreen}
+                                className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 md:bottom-4 md:left-4
+                                       w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10
+                                       bg-black/50 backdrop-blur-sm rounded-full
+                                       flex items-center justify-center text-white
+                                       hover:bg-black/70 transition-colors duration-200"
+                                title="Toggle Fullscreen"
+                            >
+                                <Maximize className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5" />
                             </button>
 
                             <div
@@ -280,7 +327,7 @@ const VideoDetailPreview = ({ video }: { video: Video }) => {
                               text-xs px-2 py-1 rounded font-medium"
                 >
                     {Math.floor(video.length / 60)}:
-                    {(video.length % 60).toString().padStart(2, "0")}
+                    {(Math.floor(video.length) % 60).toString().padStart(2, "0")}
                 </div>
             )}
         </div>

@@ -49,6 +49,7 @@ export const userSchema = z.object({
     twitter: z.string().nullable().optional(),
     followers: followerResponseSchema.optional(),
     followings: followerResponseSchema.optional(),
+    updatedAt: z.string().optional(),
 });
 
 // Type
