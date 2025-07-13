@@ -173,27 +173,33 @@ const UserTable = ({
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center justify-center space-x-1">
-                                                    <Link href={`/admin/users/${user.id}`}>
-                                                        <Button
-                                                            title="View details"
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="text-zinc-400 hover:text-white hover:bg-zinc-800"
-                                                        >
-                                                            <Eye className="w-4 h-4" />
-                                                        </Button>
-                                                    </Link>
-                                                    <Link href={`/admin/users/update/${user.id}`}>
-                                                        <Button
-                                                            title="Edit user"
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="text-zinc-400 hover:text-white hover:bg-zinc-800"
-                                                        >
-                                                            <Edit className="w-4 h-4" />
-                                                        </Button>
-                                                    </Link>
-                                                    <UserDeleteAlertDialog user={user} />
+                                                    {user.status !== "DELETED" && (
+                                                        <>
+                                                            <Link href={`/admin/users/${user.id}`}>
+                                                                <Button
+                                                                    title="View details"
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+                                                                >
+                                                                    <Eye className="w-4 h-4" />
+                                                                </Button>
+                                                            </Link>
+                                                            <Link
+                                                                href={`/admin/users/update/${user.id}`}
+                                                            >
+                                                                <Button
+                                                                    title="Edit user"
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+                                                                >
+                                                                    <Edit className="w-4 h-4" />
+                                                                </Button>
+                                                            </Link>
+                                                            <UserDeleteAlertDialog user={user} />
+                                                        </>
+                                                    )}
                                                 </div>
                                             </TableCell>
                                         </TableRow>

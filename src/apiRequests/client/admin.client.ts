@@ -1,5 +1,5 @@
 import { apiBasicResponseSchema, apiResponseSchema } from "@/types/api/common";
-import { userSchema, usersOverviewSchema } from "@/types/user.types";
+import { userGrowthDataSchema, userSchema, usersOverviewSchema } from "@/types/user.types";
 import { createPaginatedSchema, tagListResponseSchema, videoListSchema } from "@/types/video.types";
 import http from "@/utils/api/client";
 import z from "zod";
@@ -109,5 +109,18 @@ export const deleteUser = async (userId: number | string) => {
     return http.delete(`/admin/users/${userId}`, {
         requireAuth: true,
         responseSchema: apiBasicResponseSchema,
+    });
+};
+
+type PeriodType = "day" | "week" | "month";
+export const getUserGrowth = async (periodType: PeriodType, numPeriod: number = 3) => {
+    const params = new URLSearchParams({
+        period_type: periodType,
+        num_period: numPeriod.toString(),
+    });
+
+    return http.get(`/admin/users/growth?${params.toString()}`, {
+        requireAuth: true,
+        responseSchema: apiResponseSchema(userGrowthDataSchema),
     });
 };

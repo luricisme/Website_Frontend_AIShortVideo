@@ -17,7 +17,15 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const DeleteVideoAlertDialog = ({ video }: { video: Video }) => {
+const DeleteVideoAlertDialog = ({
+    video,
+    isAdmin = false,
+    onRefresh = () => {},
+}: {
+    video: Video;
+    isAdmin?: boolean;
+    onRefresh?: () => void;
+}) => {
     const [isOpen, setIsOpen] = useState(false);
     const deleteVideoMutation = useDeleteVideoMutation();
 
@@ -28,6 +36,13 @@ const DeleteVideoAlertDialog = ({ video }: { video: Video }) => {
             toast.success(
                 `Video "${video.title || "Untitled Video"}" has been deleted successfully.`
             );
+
+            if (isAdmin) {
+                console.log(">>> onRefresh:", onRefresh);
+                if (onRefresh && typeof onRefresh === "function") {
+                    onRefresh();
+                }
+            }
 
             setIsOpen(false);
         } catch (error) {

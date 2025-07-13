@@ -186,7 +186,7 @@ export const searchVideos = async ({
     pageSize?: number;
 }) => {
     const params = new URLSearchParams({
-        search: `title:${query},category:${query}`,
+        search: `title:${query},category:${query},style:${query},target:${query},script:${query}`,
         pageNo: pageNo.toString(),
         pageSize: pageSize.toString(),
     });
@@ -273,5 +273,5 @@ export const deleteVideo = async (videoId: number | string) => {
     return http.delete(`${URL}/delete-video/${videoId}`, {
         requireAuth: true,
         responseSchema: apiBasicResponseSchema,
-    })
-}
+    });
+};

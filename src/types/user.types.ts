@@ -53,6 +53,15 @@ export const usersOverviewSchema = z.object({
     numNewUserToday: z.number().optional(),
 });
 
+export const userGrowthDataSchema = z.object({
+    totalUser: z.number().optional().nullable(),
+    periodStart: z.string().optional().nullable(),
+    periodEnd: z.string().optional().nullable(),
+    previousUserCount: z.number().optional().nullable(),
+    followingUserCount: z.number().optional().nullable(),
+    growthPercent: z.number().optional().nullable(),
+});
+
 export const userSchema = z.object({
     id: z.union([z.number(), z.string()]).optional(), // id can be a number or a string, and is optional
     firstName: z.string().min(1, "First name is required"),
@@ -81,3 +90,4 @@ export type UserStatus = z.infer<typeof userStatusSchema>;
 export type UserSortCriteria = z.infer<typeof userSortCriteriaSchema>;
 export type UserSortDirection = z.infer<typeof userSortDirectionSchema>;
 export type UsersOverview = z.infer<typeof usersOverviewSchema>;
+export type UserGrowthData = z.infer<typeof userGrowthDataSchema>;

@@ -142,7 +142,10 @@ const Header = () => {
     ]);
 
     const getActiveTab = () => {
-        return ITEMS_SIDEBAR.find((item) => item.url === pathname) || ITEMS_SIDEBAR[0];
+        const matched = ITEMS_SIDEBAR.filter((item) => pathname.startsWith(item.url)).sort(
+            (a, b) => b.url.length - a.url.length
+        )[0];
+        return matched || ITEMS_SIDEBAR[0];
     };
 
     return (

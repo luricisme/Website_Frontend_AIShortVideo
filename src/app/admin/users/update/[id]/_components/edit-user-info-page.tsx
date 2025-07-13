@@ -85,6 +85,7 @@ export default function EditUserInfo({
             // Reset input
             e.target.value = "";
         },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [updateAvatarMutation]
     );
 

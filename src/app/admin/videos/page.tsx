@@ -13,7 +13,6 @@ export default function VideoManagementDashboard() {
     const [pageSize, setPageSize] = useState(5);
     const [selectedVideo, setSelectedVideo] = useState<number | null>(null);
 
-    // Mock data for users
     const {
         data: videosResponse,
         isLoading: isVideosLoading,
@@ -35,6 +34,27 @@ export default function VideoManagementDashboard() {
         isError: isErrorNumberOfCreatedVideosToday,
         error: errorNumberOfCreatedVideosToday,
     } = useNumberOfCreatedVideosTodayQuery();
+
+    const handleRefresh = () => {
+        refetchVideos();
+        setSelectedVideo(null);
+        setCurrentPage(1);
+        setPageSize(5);
+        const url = new URL(window.location.href);
+        url.searchParams.set("page", "1");
+        url.searchParams.set("pageSize", "5");
+        window.history.pushState({}, "", url.toString());
+    };
+
+    const handleUpdateSuccess = () => {
+        refetchVideos();
+        setSelectedVideo(null);
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        setSelectedVideo(null);
+    };
 
     return (
         <>
@@ -108,12 +128,13 @@ export default function VideoManagementDashboard() {
                     isLoading={isVideosFetching || isVideosLoading}
                     error={videosError}
                     onVideoSelect={setSelectedVideo}
-                    onRefresh={refetchVideos}
+                    onRefresh={handleRefresh}
+                    onUpdateSuccess={handleUpdateSuccess}
                     currentPage={currentPage}
                     totalPages={totalPages}
                     totalItems={totalVideos}
                     pageSize={pageSize}
-                    onPageChange={setCurrentPage}
+                    onPageChange={handlePageChange}
                     onPageSizeChange={setPageSize}
                 />
 

@@ -84,7 +84,7 @@ export const SharePanel = ({ video }: { video: Video }) => {
 
     return (
         <div className="flex flex-col gap-4 p-4">
-            <p className="text-sm text-gray-300">Chia sẻ video &quot;{video.title}&quot; qua:</p>
+            <p className="text-sm text-gray-300 mb-2">Share video &quot;{video.title}&quot; on:</p>
 
             <div className="grid grid-cols-3 gap-4">
                 <FacebookShareButton url={videoUrl}>
@@ -118,16 +118,6 @@ export const SharePanel = ({ video }: { video: Video }) => {
                         <span className="text-sm">Email</span>
                     </div>
                 </EmailShareButton>
-
-                <div
-                    onClick={() => alert("Embed tính năng chưa hỗ trợ")}
-                    className="flex flex-col items-center gap-2 cursor-pointer hover:bg-white/10 p-3 rounded-lg transition-colors"
-                >
-                    <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center">
-                        <span className="text-xl">💻</span>
-                    </div>
-                    <span className="text-sm">Embed</span>
-                </div>
 
                 <div
                     onClick={handleCopy}

@@ -25,14 +25,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         );
     }
 
-    // if (session.user?.role !== "admin") {
-    //     return (
-    //         <RedirectModal
-    //             message="You do not have permission to access the admin dashboard."
-    //             errorType="permission"
-    //         />
-    //     );
-    // }
+    if (session.user?.role !== "ADMIN") {
+        return (
+            <RedirectModal
+                message="You do not have permission to access the admin dashboard."
+                errorType="permission"
+            />
+        );
+    }
 
     return (
         <SidebarProvider>

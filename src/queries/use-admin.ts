@@ -5,6 +5,7 @@ import {
     getNumberOfCreatedTags,
     getNumberOfCreatedVideosToday,
     getTags,
+    getUserGrowth,
     getUsers,
     getUsersOverview,
     getVideos,
@@ -153,5 +154,20 @@ export const useDeleteUserMutation = () => {
                 queryKey: ["admin", "users"],
             });
         },
+    });
+};
+
+type PeriodType = "day" | "week" | "month";
+export const useGetUserGrowthQuery = ({
+    periodType = "month",
+    numPeriod = 3,
+}: {
+    periodType?: PeriodType;
+    numPeriod?: number;
+}) => {
+    return useQuery({
+        queryKey: ["admin", "user-growth", { periodType, numPeriod }],
+        queryFn: () => getUserGrowth(periodType, numPeriod),
+        placeholderData: keepPreviousData,
     });
 };

@@ -11,9 +11,9 @@ import { Video } from "@/types/video.types";
 import { Button } from "@/components/ui/button";
 import Pagination from "@/components/table/pagination";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import VideoTableSkeleton from "@/app/admin/videos/_components/video-table-skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import VideoThumbnail from "@/app/(user)/dashboard/_components/video-table/video-table-thumbnail";
-import VideoTableSkeleton from "@/app/(user)/dashboard/_components/video-table/video-table-skeleton";
 import EditVideoInfoDialog from "@/app/(user)/dashboard/_components/video-table/edit-video-title-dialog";
 import DeleteVideoAlertDialog from "@/app/(user)/dashboard/_components/video-table/video-delete-alert-dialog";
 import {
@@ -31,6 +31,7 @@ interface VideoTableProps {
     error: Error | null;
     onVideoSelect: (videoId: number) => void;
     onRefresh: () => void;
+    onUpdateSuccess?: () => void;
     // Pagination props
     currentPage: number;
     totalPages: number;
@@ -52,6 +53,7 @@ const VideoTable = ({
     pageSize,
     onPageChange,
     onPageSizeChange,
+    onUpdateSuccess = () => {},
 }: VideoTableProps) => {
     return (
         <Card className="bg-zinc-900 border-zinc-800">
@@ -162,8 +164,16 @@ const VideoTable = ({
                                                     >
                                                         <Eye className="w-4 h-4" />
                                                     </Button>
-                                                    <EditVideoInfoDialog video={video} />
-                                                    <DeleteVideoAlertDialog video={video} />
+                                                    <EditVideoInfoDialog
+                                                        video={video}
+                                                        isAdmin={true}
+                                                        onUpdateSuccess={onUpdateSuccess}
+                                                    />
+                                                    <DeleteVideoAlertDialog
+                                                        video={video}
+                                                        isAdmin={true}
+                                                        onRefresh={onRefresh}
+                                                    />
                                                 </div>
                                             </TableCell>
                                         </TableRow>

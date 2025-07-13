@@ -1,242 +1,151 @@
 "use client";
 
-import React from "react";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Users, Video, TrendingUp, TrendingDown } from "lucide-react";
 import {
-    Users,
-    Video,
-    TrendingUp,
-    Flag,
-    ChevronRight,
-    Plus,
-    Eye,
-    // Trash2, CheckCircle,
-    Edit,
-    Trash,
-} from "lucide-react";
-import {
-    BarChart,
-    Bar,
-    Line,
-    LineChart,
     XAxis,
     YAxis,
     CartesianGrid,
     Tooltip,
     Legend,
     ResponsiveContainer,
+    BarChart,
+    Bar,
+    Cell,
+    PieChart,
+    Pie,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-// import {Button} from "@/components/ui/button";
 
-// Mock data for the charts
-const userGrowthData = [
-    { name: "10:00", regularUsers: 2000, driveByUsers: 300 },
-    { name: "12:00", regularUsers: 3000, driveByUsers: 400 },
-    { name: "17:00", regularUsers: 3500, driveByUsers: 450 },
-    { name: "18:00", regularUsers: 4000, driveByUsers: 500 },
-    { name: "19:00", regularUsers: 4500, driveByUsers: 550 },
-    { name: "20:00", regularUsers: 5000, driveByUsers: 600 },
-    { name: "21:00", regularUsers: 5500, driveByUsers: 650 },
-];
+import { Skeleton } from "@/components/ui/skeleton";
+import { USER_STATUS } from "@/constants/user-status";
+import { Card, CardContent } from "@/components/ui/card";
+import { useGetUsersQuery, useGetVideosQuery, useGetUserGrowthQuery } from "@/queries/use-admin";
 
-const contentCreationData = [
-    { name: "16:00", videos: 200 },
-    { name: "18:00", videos: 250 },
-    { name: "17:00", videos: 350 },
-    { name: "18:00", videos: 240 },
-    { name: "19:00", videos: 220 },
-    { name: "20:00", videos: 280 },
-    { name: "21:00", videos: 180 },
-];
-
-const usageByFeatureData = [
-    { name: "Video Upload", value: 35 },
-    { name: "Video Sharing", value: 25 },
-    { name: "Commenting", value: 20 },
-    { name: "Live Stream", value: 15 },
-    { name: "Other Features", value: 5 },
-];
-
-const popularTags = [
-    { name: "#TikTokHacks", videos: "12.5k", growth: "+24%" },
-    { name: "#MusicVideos", videos: "9.3k", growth: "+17%" },
-    { name: "#DanceTrend", videos: "5.7k", growth: "+14%" },
-    { name: "#ShortStories", videos: "2.8k", growth: "-3%" },
-];
-
-const recentVideos = [
-    {
-        id: 1,
-        name: "Future City Concepts",
-        creator: "Victoria Johnson",
-        category: "Technology",
-        status: "Active",
-        views: "4200",
-        publish: "Jan 15, 2025",
-    },
-    {
-        id: 2,
-        name: "Future City Concepts",
-        creator: "Victoria Johnson",
-        category: "Technology",
-        status: "Active",
-        views: "4200",
-        publish: "Jan 15, 2025",
-    },
-    {
-        id: 3,
-        name: "Future City Concepts",
-        creator: "Victoria Johnson",
-        category: "Technology",
-        status: "Active",
-        views: "4200",
-        publish: "Jan 15, 2025",
-    },
-];
-
-const recentActivity = [
-    {
-        type: "user-registered",
-        details: "Username: UserXYZ412",
-        time: "2 minutes ago",
-    },
-    {
-        type: "video-created",
-        details: "Title: Future City Concepts",
-        time: "15 minutes ago",
-    },
-    {
-        type: "content-reported",
-        details: "VideoID: XVD-6273",
-        time: "34 minutes ago",
-    },
-    {
-        type: "trending-tag",
-        details: "#AI #Science gaining popularity",
-        time: "1 hour ago",
-    },
-];
-
-// Donut chart component for Usage by Feature
-type DonutChartData = { name: string; value: number }[];
-const DonutChart = ({ data }: { data: DonutChartData }) => {
-    const COLORS = ["#8884d8", "#9f7aea", "#82ca9d", "#ffc658", "#ff8042"];
-
-    // Calculate the circumference and dash offset for each segment
-    const radius = 60;
-    const circumference = 2 * Math.PI * radius;
-
-    const total = data.reduce((sum: number, item: { value: number }) => sum + item.value, 0);
-    let currentOffset = 0;
-
-    return (
-        <div className="flex justify-center items-center h-64">
-            <div className="relative">
-                <svg width="200" height="200" viewBox="0 0 200 200">
-                    <circle cx="100" cy="100" r="60" fill="white" />
-
-                    {data.map((entry: { value: number }, index: number) => {
-                        const strokeDasharray = (entry.value / total) * circumference;
-                        const strokeDashoffset = currentOffset;
-                        currentOffset -= strokeDasharray;
-
-                        return (
-                            <circle
-                                key={`circle-${index}`}
-                                cx="100"
-                                cy="100"
-                                r="60"
-                                fill="transparent"
-                                stroke={COLORS[index % COLORS.length]}
-                                strokeWidth="30"
-                                strokeDasharray={`${strokeDasharray} ${
-                                    circumference - strokeDasharray
-                                }`}
-                                strokeDashoffset={strokeDashoffset}
-                                transform="rotate(-90 100 100)"
-                                style={{ transition: "stroke-dashoffset 0.3s ease" }}
-                            />
-                        );
-                    })}
-
-                    <circle cx="100" cy="100" r="45" fill="white" />
-                </svg>
-            </div>
-
-            <div className="ml-4">
-                {data.map(
-                    (
-                        entry: {
-                            name:
-                                | string
-                                | number
-                                | bigint
-                                | boolean
-                                | React.ReactElement<
-                                      unknown,
-                                      string | React.JSXElementConstructor<unknown>
-                                  >
-                                | Iterable<React.ReactNode>
-                                | React.ReactPortal
-                                | Promise<
-                                      | string
-                                      | number
-                                      | bigint
-                                      | boolean
-                                      | React.ReactPortal
-                                      | React.ReactElement<
-                                            unknown,
-                                            string | React.JSXElementConstructor<unknown>
-                                        >
-                                      | Iterable<React.ReactNode>
-                                      | null
-                                      | undefined
-                                  >
-                                | null
-                                | undefined;
-                        },
-                        index: number
-                    ) => (
-                        <div key={`legend-${index}`} className="flex items-center mb-1">
-                            <div
-                                className="w-3 h-3 mr-2"
-                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                            />
-                            <span className="text-xs">{entry.name}</span>
-                        </div>
-                    )
-                )}
-            </div>
-        </div>
-    );
-};
-
+// Types
+type PeriodType = "day" | "week" | "month";
 export default function AdminDashboard() {
-    const [activeTimeRange, setActiveTimeRange] = useState("Daily");
+    const [activeTimeRange, setActiveTimeRange] = useState<PeriodType>("day");
+
+    const [utcTime, setUtcTime] = useState("");
+
+    useEffect(() => {
+        const now = new Date().toLocaleString("en-US", {
+            timeZone: "UTC",
+            dateStyle: "full",
+            timeStyle: "long",
+        });
+        setUtcTime(now);
+    }, []);
+
+    const {
+        data: usersData,
+        isLoading: isUsersLoading,
+        isFetching: isUsersFetching,
+        error: usersError,
+    } = useGetUsersQuery({
+        page: 1,
+        pageSize: 5,
+        status: USER_STATUS.ALL,
+    });
+
+    const totalUsers = usersData?.data?.totalElements || 0;
+
+    const {
+        data: videosResponse,
+        isLoading: isVideosLoading,
+        isFetching: isVideosFetching,
+        error: videosError,
+    } = useGetVideosQuery({
+        pageNo: 1,
+        pageSize: 5,
+    });
+
+    const totalVideos = videosResponse?.data.totalElements || 0;
+
+    const {
+        data: growthResponse,
+        isLoading: growthLoading,
+        isError: growthError,
+        error: growthErrorMessage,
+    } = useGetUserGrowthQuery({
+        periodType: activeTimeRange,
+        numPeriod: 3,
+    });
+
+    const growthData = growthResponse?.data;
+
+    const getChartData = () => {
+        if (!growthData) return [];
+
+        const periodLabels = {
+            day: "Previous Day",
+            week: "Previous Week",
+            month: "Previous Month",
+        };
+
+        const currentLabels = {
+            day: "Current Day",
+            week: "Current Week",
+            month: "Current Month",
+        };
+
+        return [
+            {
+                name: periodLabels[activeTimeRange],
+                users: growthData.previousUserCount,
+                type: "previous",
+            },
+            {
+                name: currentLabels[activeTimeRange],
+                users: growthData.followingUserCount,
+                type: "current",
+            },
+        ];
+    };
+
+    const getGrowthIndicator = () => {
+        if (!growthData) return null;
+
+        const isPositive = (growthData.growthPercent ?? 0) > 0;
+        const Icon = isPositive ? TrendingUp : TrendingDown;
+        const colorClass = isPositive ? "text-green-600" : "text-red-600";
+        const bgClass = isPositive ? "bg-green-50" : "bg-red-50";
+
+        return (
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${bgClass}`}>
+                <Icon className={`h-4 w-4 ${colorClass}`} />
+                <span className={`text-sm font-medium ${colorClass}`}>
+                    {isPositive ? "+" : ""}
+                    {(growthData.growthPercent ?? 0).toFixed(1)}%
+                </span>
+            </div>
+        );
+    };
+
+    const formatDate = (dateString: string | null | undefined) => {
+        if (!dateString) return "--";
+        return new Date(dateString).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+    };
+
+    const chartData = getChartData();
+    const pieData = chartData.map((item) => ({
+        name: item.name,
+        value: item.users,
+        color: item.type === "previous" ? "#8884d8" : "#82ca9d",
+    }));
 
     return (
         <>
             {/* Current Date & Time */}
-            <Card className={" "}>
+            <Card className="">
                 <CardContent className="flex justify-between items-center">
                     <div>
                         <div className="text-sm text-gray-500">Current Date & Time (UTC)</div>
-                        <div>
-                            {new Date().toLocaleString("en-US", {
-                                timeZone: "UTC",
-                                dateStyle: "full",
-                                timeStyle: "long",
-                            })}
-                        </div>
+                        <div>{utcTime}</div>
                     </div>
                     <div className="bg-purple-50 px-4 py-2 rounded">
                         <div className="text-purple-600 font-medium">Admin Dashboard</div>
@@ -246,33 +155,94 @@ export default function AdminDashboard() {
             </Card>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 gap-8 mt-8">
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 md:gap-8 mt-8">
                 {/* Users Card */}
-                <Card className={" "}>
+                <Card className="">
                     <CardContent>
                         <div className="flex items-center">
                             <div className="p-2 bg-blue-100 rounded-full w-15 h-15 flex items-center justify-center mb-2 me-6">
                                 <Users className="h-8 w-8 text-blue-500" />
                             </div>
-                            <div className={"flex flex-col"}>
+                            <div className="flex flex-col">
                                 <p className="text-gray-500 mb-2">Total Users</p>
-                                <h1 className="text-3xl font-bold">12,345</h1>
-                                <p className="text-green-600 mt-1">+2.5% vs last week</p>
+                                {isUsersLoading || isUsersFetching ? (
+                                    <Skeleton className="h-8 w-24" />
+                                ) : usersError ? (
+                                    <span className="text-red-500">
+                                        {usersError.message || "Failed to fetch users"}
+                                    </span>
+                                ) : (
+                                    <h1 className="text-3xl font-bold">{totalUsers}</h1>
+                                )}
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className={" "}>
+                {/* Videos Card */}
+                <Card className="">
                     <CardContent>
                         <div className="flex items-center">
-                            <div className="p-2 bg-blue-100 rounded-full w-15 h-15 flex items-center justify-center mb-2 me-6">
-                                <Users className="h-8 w-8 text-purple-500" />
+                            <div className="p-2 bg-purple-200 rounded-full w-15 h-15 flex items-center justify-center mb-2 me-6">
+                                <Video className="h-8 w-8 text-purple-500" fill="currentColor" />
                             </div>
-                            <div className={"flex flex-col"}>
+                            <div className="flex flex-col">
                                 <p className="text-gray-500 mb-2">Total Videos</p>
-                                <h1 className="text-3xl font-bold">87,629</h1>
-                                <p className="text-green-600 mt-1">+6.5% vs last week</p>
+                                {isVideosLoading || isVideosFetching ? (
+                                    <Skeleton className="h-8 w-24" />
+                                ) : videosError ? (
+                                    <span className="text-red-500">
+                                        {videosError.message || "Failed to fetch videos"}
+                                    </span>
+                                ) : (
+                                    <h1 className="text-3xl font-bold">{totalVideos}</h1>
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Growth Rate Card */}
+                <Card className="">
+                    <CardContent>
+                        <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                                <p className="text-gray-500 mb-2">Growth Rate</p>
+                                {growthLoading ? (
+                                    <Skeleton className="h-8 w-20" />
+                                ) : growthError ? (
+                                    <span className="text-red-500 text-sm">Error</span>
+                                ) : (
+                                    <h1 className="text-3xl font-bold">
+                                        {growthData
+                                            ? `${(growthData.growthPercent ?? 0).toFixed(1)}%`
+                                            : "--"}
+                                    </h1>
+                                )}
+                            </div>
+                            {!growthLoading && !growthError && getGrowthIndicator()}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* New Users Card */}
+                <Card className="">
+                    <CardContent>
+                        <div className="flex items-center">
+                            <div className="p-2 bg-green-100 rounded-full w-15 h-15 flex items-center justify-center mb-2 me-6">
+                                <TrendingUp className="h-8 w-8 text-green-600" />
+                            </div>
+                            <div className="flex flex-col">
+                                <p className="text-gray-500 mb-2">New Users</p>
+                                {growthLoading ? (
+                                    <Skeleton className="h-8 w-20" />
+                                ) : growthError ? (
+                                    <span className="text-red-500 text-sm">Error</span>
+                                ) : (
+                                    <h1 className="text-3xl font-bold">
+                                        {growthData ? growthData.followingUserCount : "--"}
+                                    </h1>
+                                )}
                             </div>
                         </div>
                     </CardContent>
@@ -280,287 +250,157 @@ export default function AdminDashboard() {
             </div>
 
             {/* Charts Section */}
-            <div className="py-4 grid grid-cols-2 gap-8 my-4">
+            <div className="py-4 gap-8 my-4">
                 {/* User Growth Chart */}
-                <Card className=" py-6 rounded-md shadow-sm ">
+                <Card className="py-6 rounded-md shadow-sm">
                     <CardContent className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-medium">User Growth</h2>
                         <div className="flex space-x-2">
                             <button
                                 className={`px-2 py-1 text-xs rounded ${
-                                    activeTimeRange === "Daily"
+                                    activeTimeRange === "day"
                                         ? "bg-purple-100 text-purple-600"
-                                        : "bg-gray-100"
+                                        : "bg-gray-100 text-black"
                                 }`}
-                                onClick={() => setActiveTimeRange("Daily")}
+                                onClick={() => setActiveTimeRange("day")}
                             >
                                 Daily
                             </button>
                             <button
                                 className={`px-2 py-1 text-xs rounded ${
-                                    activeTimeRange === "Weekly"
+                                    activeTimeRange === "week"
                                         ? "bg-purple-100 text-purple-600"
-                                        : "bg-gray-100"
+                                        : "bg-gray-100 text-black"
                                 }`}
-                                onClick={() => setActiveTimeRange("Weekly")}
+                                onClick={() => setActiveTimeRange("week")}
                             >
                                 Weekly
                             </button>
                             <button
                                 className={`px-2 py-1 text-xs rounded ${
-                                    activeTimeRange === "Monthly"
+                                    activeTimeRange === "month"
                                         ? "bg-purple-100 text-purple-600"
-                                        : "bg-gray-100"
+                                        : "bg-gray-100 text-black"
                                 }`}
-                                onClick={() => setActiveTimeRange("Monthly")}
+                                onClick={() => setActiveTimeRange("month")}
                             >
                                 Monthly
                             </button>
                         </div>
                     </CardContent>
 
-                    <div className="h-64 px-4">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={userGrowthData}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                                <YAxis axisLine={false} tickLine={false} />
-                                <Tooltip />
-                                <Legend />
-                                <Line
-                                    type="monotone"
-                                    dataKey="regularUsers"
-                                    stroke="#8884d8"
-                                    name="Regular daily use"
-                                    strokeWidth={2}
-                                    dot={{ r: 3 }}
-                                    activeDot={{ r: 5 }}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="driveByUsers"
-                                    stroke="#82ca9d"
-                                    name="Single drop-in use"
-                                    strokeWidth={2}
-                                    dot={{ r: 3 }}
-                                    activeDot={{ r: 5 }}
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </Card>
-
-                {/* Content Creation Chart */}
-                <Card className=" py-4 rounded-md shadow-sm ">
-                    <CardContent className="flex justify-between items-center mb-4 px-8">
-                        <h2 className="text-xl font-medium">Content Creation</h2>
-                        <div className="flex space-x-2">
-                            <button className="px-2 py-1 text-xs rounded bg-purple-100 text-purple-600">
-                                7 Days
-                            </button>
-                            <button className="px-2 py-1 text-xs rounded bg-gray-100">
-                                30 Days
-                            </button>
+                    {growthLoading ? (
+                        <div className="h-64 flex items-center justify-center">
+                            <Skeleton className="h-full w-full" />
                         </div>
-                    </CardContent>
-
-                    <div className="h-64 px-2">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={contentCreationData}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                                <YAxis axisLine={false} tickLine={false} />
-                                <Tooltip />
-                                <Bar
-                                    dataKey="videos"
-                                    name="Video Uploads"
-                                    fill="#a78bfa"
-                                    radius={[4, 4, 0, 0]}
-                                />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
+                    ) : growthError ? (
+                        <div className="h-64 flex items-center justify-center text-red-500">
+                            {growthErrorMessage?.message || "Failed to fetch growth data"}
+                        </div>
+                    ) : (
+                        <div className="h-64 px-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={chartData}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                                    <YAxis axisLine={false} tickLine={false} />
+                                    <Tooltip formatter={(value) => [`${value} users`, "Count"]} />
+                                    <Legend />
+                                    <Bar dataKey="users" radius={[4, 4, 0, 0]}>
+                                        {chartData.map((entry, index) => (
+                                            <Cell
+                                                key={`cell-${index}`}
+                                                fill={
+                                                    entry.type === "previous"
+                                                        ? "#8884d8"
+                                                        : "#82ca9d"
+                                                }
+                                            />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
                 </Card>
             </div>
 
-            {/* More Charts and Tables */}
-            <div className="py-4 grid grid-cols-2 gap-8">
-                {/* Usage by Feature */}
-                <Card className=" p-4 rounded-md shadow-sm ">
-                    <h2 className="font-medium mb-2">AI Usage by Feature</h2>
-                    <DonutChart data={usageByFeatureData} />
-                </Card>
-
-                {/* Popular Tags */}
-                <Card className=" p-4 rounded-md shadow-sm ">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="font-medium">Popular Tags</h2>
-                        <button className="text-blue-500 text-sm">Manage</button>
-                    </div>
-
-                    <div className="space-y-4">
-                        {popularTags.map((tag, index) => (
-                            <div key={index} className="flex justify-between items-center">
-                                <div>
-                                    <div className="font-medium">{tag.name}</div>
-                                    <div className="text-sm text-gray-500">{tag.videos} videos</div>
-                                </div>
-                                <div
-                                    className={`text-sm ${
-                                        tag.growth.startsWith("+")
-                                            ? "text-green-500"
-                                            : "text-red-500"
-                                    }`}
-                                >
-                                    {tag.growth}
-                                </div>
-                            </div>
-                        ))}
-
-                        <button className="w-full bg-purple-500 text-white py-2 rounded-md flex items-center justify-center">
-                            <Plus size={16} />
-                            <span className="ml-1">Add New Tag</span>
-                        </button>
-                    </div>
-                </Card>
-            </div>
-
-            {/* Recent Videos */}
-            <div className="py-4">
-                <Card className=" rounded-md shadow-sm ">
-                    <CardHeader className="flex justify-between items-center border-b">
-                        <CardTitle className="font-medium">Recent Videos</CardTitle>
-                        <button className="cursor-pointer text-blue-500 text-sm flex items-center">
-                            View All
-                            <ChevronRight size={14} />
-                        </button>
-                    </CardHeader>
-
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                {/* Distribution Chart */}
+                <Card className="py-6 rounded-md shadow-sm">
                     <CardContent>
-                        <Table>
-                            <TableHeader className={""}>
-                                <TableRow>
-                                    <TableHead className="w-1/4">VIDEO</TableHead>
-                                    <TableHead className="w-1/7">CREATOR</TableHead>
-                                    <TableHead className="w-1/7">CATEGORY</TableHead>
-                                    <TableHead className="w-1/7">STATUS</TableHead>
-                                    <TableHead className="w-1/7">VIEWS</TableHead>
-                                    <TableHead className="w-1/6">PUBLISHED</TableHead>
-                                    <TableHead className="w-1/9">ACTIONS</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {recentVideos.map((video) => (
-                                    <TableRow key={video.id}>
-                                        <TableCell>
-                                            <div className="flex items-center">
-                                                <div className="h-12 w-12 rounded me-3 bg-gray-200"></div>
-                                                <div>
-                                                    <p className="font-medium">{video.name}</p>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{video.creator}</TableCell>
-                                        <TableCell>{video.category}</TableCell>
-                                        <TableCell>
-                                            <div
-                                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                    video.status === "Active"
-                                                        ? "bg-green-100 text-green-800"
-                                                        : video.status === "Inactive"
-                                                        ? "bg-yellow-100 text-yellow-800"
-                                                        : "bg-red-100 text-red-800"
-                                                }`}
-                                            >
-                                                <div
-                                                    className="h-2 w-2 mr-1 rounded-full ${
-                                                video.status === 'Active' ? 'bg-green-400' :
-                                                video.status === 'Inactive' ? 'bg-yellow-400' :
-                                                'bg-red-400'
-                                              }"
-                                                ></div>
-                                                {video.status}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{video.views}</TableCell>
-                                        <TableCell>{video.publish}</TableCell>
-                                        <TableCell>
-                                            <div className="flex space-x-2">
-                                                <button className="text-blue-600 hover:text-blue-900">
-                                                    <Edit className="h-4 w-4" />
-                                                </button>
-                                                <button className="text-gray-600 hover:text-gray-900">
-                                                    <Eye className="h-4 w-4" />
-                                                </button>
-                                                <button className="text-red-600 hover:text-red-900">
-                                                    <Trash className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                        <h3 className="text-lg font-medium mb-4">User Distribution</h3>
+                        {growthLoading ? (
+                            <div className="h-64 flex items-center justify-center">
+                                <Skeleton className="h-full w-full" />
+                            </div>
+                        ) : growthError ? (
+                            <div className="h-64 flex items-center justify-center text-red-500">
+                                {growthErrorMessage?.message || "Failed to fetch growth data"}
+                            </div>
+                        ) : (
+                            <div className="h-64">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={pieData}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={60}
+                                            outerRadius={100}
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                        >
+                                            {pieData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            formatter={(value) => [`${value} users`, "Count"]}
+                                        />
+                                        <Legend />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
-            </div>
 
-            {/* Recent Activity */}
-            <div className="py-4">
-                <Card className=" rounded-md shadow-sm">
-                    <CardHeader className="flex justify-between items-center border-b">
-                        <h2 className="font-medium">Recent Activity</h2>
-                        <button className="text-blue-500 text-sm flex items-center">
-                            View All
-                            <ChevronRight size={14} />
-                        </button>
-                    </CardHeader>
-
-                    <CardContent className="px-8 space-y-4">
-                        {recentActivity.map((activity, index) => (
-                            <div key={index} className="flex items-start">
-                                <div
-                                    className={`p-2 rounded-full mr-3 ${
-                                        activity.type === "user-registered"
-                                            ? "bg-blue-100"
-                                            : activity.type === "video-created"
-                                            ? "bg-purple-100"
-                                            : activity.type === "content-reported"
-                                            ? "bg-yellow-100"
-                                            : "bg-green-100"
-                                    }`}
-                                >
-                                    {activity.type === "user-registered" && (
-                                        <Users size={16} className="text-blue-500" />
-                                    )}
-                                    {activity.type === "video-created" && (
-                                        <Video size={16} className="text-purple-500" />
-                                    )}
-                                    {activity.type === "content-reported" && (
-                                        <Flag size={16} className="text-yellow-500" />
-                                    )}
-                                    {activity.type === "trending-tag" && (
-                                        <TrendingUp size={16} className="text-green-500" />
-                                    )}
+                {/* Period Information */}
+                <Card className="py-6 rounded-md shadow-sm">
+                    <CardContent>
+                        <h3 className="text-lg font-medium mb-4">Period Information</h3>
+                        {growthLoading ? (
+                            <div className="space-y-4">
+                                <Skeleton className="h-16 w-full" />
+                                <Skeleton className="h-16 w-full" />
+                            </div>
+                        ) : growthError ? (
+                            <div className="text-red-500">
+                                {growthErrorMessage?.message || "Failed to fetch growth data"}
+                            </div>
+                        ) : growthData ? (
+                            <div className="space-y-4">
+                                <div className="p-4 rounded-lg border shadow">
+                                    <p className="text-sm text-gray-400">Period Start</p>
+                                    <p className="font-medium">
+                                        {formatDate(growthData.periodStart)}
+                                    </p>
                                 </div>
-
-                                <div className="flex-1">
-                                    <div className="flex justify-between">
-                                        <div className="font-medium">
-                                            {activity.type === "user-registered" &&
-                                                "New user registered"}
-                                            {activity.type === "video-created" &&
-                                                "New video created"}
-                                            {activity.type === "content-reported" &&
-                                                "Content reported"}
-                                            {activity.type === "trending-tag" && "New trending tag"}
-                                        </div>
-                                        <div className="text-xs text-gray-500">{activity.time}</div>
-                                    </div>
-                                    <div className="text-sm text-gray-500">{activity.details}</div>
+                                <div className="p-4 rounded-lg border shadow">
+                                    <p className="text-sm text-gray-400">Period End</p>
+                                    <p className="font-medium">
+                                        {formatDate(growthData.periodEnd)}
+                                    </p>
+                                </div>
+                                <div className="p-4 rounded-lg border shadow">
+                                    <p className="text-sm text-gray-400">Total Users in Period</p>
+                                    <p className="font-medium">{growthData.totalUser}</p>
                                 </div>
                             </div>
-                        ))}
+                        ) : (
+                            <div className="text-gray-500">No data available</div>
+                        )}
                     </CardContent>
                 </Card>
             </div>

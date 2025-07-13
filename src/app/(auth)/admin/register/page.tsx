@@ -54,6 +54,8 @@ export default function RegisterPage() {
                 email: data.email,
                 password: data.password,
                 username: createUniqueUsername(data.email, "admin"),
+                firstName: "Admin",
+                lastName: "Admin",
                 role: "ADMIN",
             };
 
