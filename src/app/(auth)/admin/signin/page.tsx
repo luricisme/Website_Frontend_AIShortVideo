@@ -74,17 +74,18 @@ export default function LoginPage() {
             });
 
             if (result?.ok) {
-                const session = await getSession();
-                console.log(">>> Fresh session data:", session);
+                // Đợi session được cập nhật hoàn toàn
+                setTimeout(async () => {
+                    const session = await getSession(); // sẽ có role chính xác
+                    console.log(">>> Fresh session data:", session);
 
-                if (session?.user && session.user.role === "ROLE_ADMIN") {
-                    // Lưu thông tin user vào localStorage
-                    localStorage.setItem("user", JSON.stringify(session.user));
-                    router.replace("/admin");
-                } else {
-                    // router user
-                    router.replace("/");
-                }
+                    if (session?.user && session.user.role === "ROLE_ADMIN") {
+                        localStorage.setItem("user", JSON.stringify(session.user));
+                        router.replace("/admin");
+                    } else {
+                        router.replace("/");
+                    }
+                }, 300); // 300–500ms là đủ để session ổn định
             } else {
                 try {
                     if (result?.error && result.error.startsWith("{")) {
