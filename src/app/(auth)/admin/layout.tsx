@@ -12,11 +12,18 @@ export default async function AuthLayout({
 }>) {
     const session = await getServerSession(authOptions);
 
+    console.log("Session in AuthLayout:", session);
+
     // kiểm tra session có tồn tại hay không
     // nếu có redirect về trang home
     if (session && session.accessToken) {
-        // Redirect to home if session exists
-        redirect("/", RedirectType.replace);
+        if (session.user.role === "ROLE_ADMIN") {
+            // Redirect to home if session exists
+            redirect("/admin", RedirectType.replace);
+        } else if (session.user.role === "ROLE_USER") {
+            // Redirect to home if session exists
+            redirect("/", RedirectType.replace);
+        }
     }
 
     return (

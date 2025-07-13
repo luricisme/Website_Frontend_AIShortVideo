@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Search, Edit, Eye, Trash, Bell, CheckCircle } from "lucide-react";
+import { Search, Edit, Eye, Trash, CheckCircle, Video } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,6 +19,8 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { useNumberOfCreatedVideosTodayQuery } from "@/queries/use-admin";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function VideoManagementDashboard() {
     // const [page, setPage] = useState(1);
@@ -64,40 +66,45 @@ export default function VideoManagementDashboard() {
         },
     ];
 
-    return (
-        <div className="py-8 px-10 max-w-full">
-            {/* Header */}
-            <div className="flex justify-between items-center mb-10">
-                <h1 className="text-2xl font-bold">Video Management</h1>
-                <div className="flex items-center space-x-4">
-                    <div className="relative">
-                        <Bell size={25} />
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                            2
-                        </span>
-                    </div>
-                    <div className="flex items-center">
-                        <div className="h-8 w-8 bg-purple-500 rounded-full flex items-center justify-center text-white">
-                            AU
-                        </div>
-                        <span className="ml-2">Admin User</span>
-                    </div>
-                </div>
-            </div>
+    const {
+        data: numberOfCreatedVideosToday,
+        isLoading: isLoadingNumberOfCreatedVideosToday,
+        isError: isErrorNumberOfCreatedVideosToday,
+        error: errorNumberOfCreatedVideosToday,
+    } = useNumberOfCreatedVideosTodayQuery();
 
+    return (
+        <>
             {/* Stats Cards */}
-            <div className="grid grid-cols-3 gap-8 mb-6">
+            <div className="grid lg:grid-cols-2 gap-6 mb-6">
                 {/* New Videos Card */}
                 <Card>
                     <CardContent>
-                        <div className="flex items-center">
-                            <div className="p-2 bg-blue-100 rounded-full w-15 h-15 flex items-center justify-center mb-2 me-6">
-                                <CheckCircle className="h-8 w-8 text-blue-500" />
+                        <div className="flex items-center gap-2">
+                            <div className="flex-shrink-0 p-2 bg-blue-100 rounded-full w-15 h-15 flex items-center justify-center">
+                                <Video
+                                    className="h-8 w-8 text-blue-500"
+                                    strokeWidth={1.5}
+                                    fill="currentColor"
+                                />
                             </div>
                             <div className={"flex flex-col"}>
-                                <p className="text-gray-500 mb-2">New Videos</p>
-                                <h1 className="text-3xl font-bold">152</h1>
-                                <p className="text-green-600 mt-1">+12.5% vs last week</p>
+                                <p className="text-gray-500 mb-2">New Videos Today</p>
+                                <h1 className="text-3xl font-bold">
+                                    {isLoadingNumberOfCreatedVideosToday ? (
+                                        <>
+                                            <Skeleton className="h-8 w-24" />
+                                        </>
+                                    ) : isErrorNumberOfCreatedVideosToday ? (
+                                        <>
+                                            <span className="text-red-500">
+                                                {errorNumberOfCreatedVideosToday.message}
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <> {numberOfCreatedVideosToday?.data}</>
+                                    )}
+                                </h1>
                             </div>
                         </div>
                     </CardContent>
@@ -105,20 +112,19 @@ export default function VideoManagementDashboard() {
 
                 <Card>
                     <CardContent>
-                        <div className="flex items-center">
-                            <div className="p-2 bg-purple-100 rounded-full w-15 h-15 flex items-center justify-center mb-2 me-6">
-                                <CheckCircle className="h-8 w-8 text-purple-500" />
+                        <div className="flex items-center gap-2">
+                            <div className="flex-shrink-0 p-2 bg-green-100 rounded-full w-15 h-15 flex items-center justify-center">
+                                <CheckCircle className="h-8 w-8 text-green-600" />
                             </div>
                             <div className={"flex flex-col"}>
-                                <p className="text-gray-500 mb-2">Active Videos</p>
+                                <p className="text-gray-500 mb-2">Published Videos</p>
                                 <h1 className="text-3xl font-bold">8,427</h1>
-                                <p className="text-green-600 mt-1">+3.7% vs last week</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
+                {/* <Card>
                     <CardContent>
                         <div className="flex items-center">
                             <div className="p-2 bg-red-100 rounded-full w-15 h-15 flex items-center justify-center mb-2 me-6">
@@ -131,7 +137,7 @@ export default function VideoManagementDashboard() {
                             </div>
                         </div>
                     </CardContent>
-                </Card>
+                </Card> */}
             </div>
 
             {/* Filter Section */}
@@ -279,6 +285,6 @@ export default function VideoManagementDashboard() {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </>
     );
 }

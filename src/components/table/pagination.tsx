@@ -8,6 +8,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { useSearchParams } from "next/navigation";
 
 interface PaginationProps {
     currentPage: number;
@@ -21,6 +22,8 @@ interface PaginationProps {
     showFullInfo?: boolean;
     isLoading?: boolean;
     itemType?: string;
+    pageSizeOptions?: number[]; // Optional array of page size options
+    updateUrlQuery?: boolean; // Optional prop to update URL query params
 }
 
 const Pagination = ({
@@ -35,31 +38,85 @@ const Pagination = ({
     showFullInfo = true,
     isLoading = false,
     itemType = "items",
+    pageSizeOptions = [5, 10, 15, 20, 25, 50],
+    updateUrlQuery = false, // Whether to update URL query params on page change
 }: PaginationProps) => {
     // Handle navigation
+    const searchParams = useSearchParams();
+
     const handlePrevious = () => {
         if (isLoading) return;
         onPageChange(Math.max(currentPage - 1, 1));
+
+        // Update URL query if needed
+        if (updateUrlQuery) {
+            handleUpdateUrlQuery(Math.max(currentPage - 1, 1));
+        }
     };
 
     const handleNext = () => {
         if (isLoading) return;
         onPageChange(Math.min(currentPage + 1, totalPages));
+
+        // Update URL query if needed
+        if (updateUrlQuery) {
+            handleUpdateUrlQuery(Math.min(currentPage + 1, totalPages));
+        }
     };
 
     const handleFirst = () => {
         if (isLoading) return;
         onPageChange(1);
+
+        // Update URL query if needed
+        if (updateUrlQuery) {
+            handleUpdateUrlQuery(1);
+        }
     };
 
     const handleLast = () => {
         if (isLoading) return;
         onPageChange(totalPages);
+
+        // Update URL query if needed
+        if (updateUrlQuery) {
+            handleUpdateUrlQuery(totalPages);
+        }
     };
 
     const handlePageChange = (page: number) => {
         if (isLoading) return;
         onPageChange(page);
+
+        if (updateUrlQuery) {
+            handleUpdateUrlQuery(page);
+        }
+    };
+
+    const handleItemsPerPageChange = (newItemsPerPage: number) => {
+        if (isLoading) return;
+        // reset to first page when items per page changes
+        const newPage = 1;
+        onPageChange(newPage);
+        onItemsPerPageChange(newItemsPerPage);
+
+        // Update URL query if needed
+        if (updateUrlQuery) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.set("page", String(newPage));
+            params.set("pageSize", String(newItemsPerPage));
+            // router.replace(`?${params.toString()}`);
+            window.history.pushState(null, "", `?${params.toString()}`); // Update URL without reloading
+        }
+    };
+
+    const handleUpdateUrlQuery = (page: number) => {
+        if (isLoading) return;
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("page", String(page));
+        params.set("pageSize", String(itemsPerPage));
+        // router.replace(`?${params.toString()}`);
+        window.history.pushState(null, "", `?${params.toString()}`); // Update URL without reloading
     };
 
     const getVisiblePages = () => {
@@ -155,19 +212,19 @@ const Pagination = ({
                             </span>
                             <Select
                                 value={String(itemsPerPage)}
-                                onValueChange={(value) => onItemsPerPageChange(Number(value))}
+                                // onValueChange={(value) => onItemsPerPageChange(Number(value))}
+                                onValueChange={(value) => handleItemsPerPageChange(Number(value))}
                                 disabled={isLoading}
                             >
                                 <SelectTrigger className="h-8 w-[65px] text-xs">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="5">5</SelectItem>
-                                    <SelectItem value="10">10</SelectItem>
-                                    <SelectItem value="15">15</SelectItem>
-                                    <SelectItem value="20">20</SelectItem>
-                                    <SelectItem value="25">25</SelectItem>
-                                    <SelectItem value="50">50</SelectItem>
+                                    {pageSizeOptions.map((option) => (
+                                        <SelectItem key={option} value={String(option)}>
+                                            {option}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                             <span className="text-sm text-muted-foreground whitespace-nowrap">

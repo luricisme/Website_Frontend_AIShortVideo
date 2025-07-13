@@ -7,7 +7,6 @@ import {
     Video,
     TrendingUp,
     Flag,
-    Bell,
     ChevronRight,
     Plus,
     Eye,
@@ -225,27 +224,7 @@ export default function AdminDashboard() {
     const [activeTimeRange, setActiveTimeRange] = useState("Daily");
 
     return (
-        <div className="py-8 px-10 max-w-full">
-            {/* Main Content */}
-            {/* Header */}
-            <div className="flex justify-between items-center mb-10">
-                <h1 className="text-2xl font-bold">Overview</h1>
-                <div className="flex items-center space-x-4">
-                    <div className="relative">
-                        <Bell size={25} />
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                            2
-                        </span>
-                    </div>
-                    <div className="flex items-center">
-                        <div className="h-8 w-8 bg-purple-500 rounded-full flex items-center justify-center text-white">
-                            AU
-                        </div>
-                        <span className="ml-2">Admin User</span>
-                    </div>
-                </div>
-            </div>
-
+        <>
             {/* Current Date & Time */}
             <Card className={" "}>
                 <CardContent className="flex justify-between items-center">
@@ -579,6 +558,6 @@ export default function AdminDashboard() {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </>
     );
 }
