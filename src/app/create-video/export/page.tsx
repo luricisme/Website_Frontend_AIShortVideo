@@ -140,7 +140,7 @@ export default function VideoExportPage() {
     const pollRenderStatus = async (id: string) => {
         const pollInterval = setInterval(async () => {
             try {
-                const res = await fetch(`https://api.shotstack.io/stage/render/${id}`, {
+                const res = await fetch(`https://api.shotstack.io/v1/render/${id}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
