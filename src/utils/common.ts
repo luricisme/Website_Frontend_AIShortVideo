@@ -76,3 +76,18 @@ export const formatTimeAgo = (date: string | Date) => {
 
     return "just now";
 };
+
+export const formatDateToMilliseconds = (date: string | Date) => {
+    if (typeof date === "string") {
+        date.trim().replace(" ", "T"); // Ensure the date string is in ISO format
+        const parsedDate = new Date(date);
+        if (isNaN(parsedDate.getTime())) {
+            throw new Error("Invalid date string");
+        }
+        return parsedDate.getTime();
+    } else if (date instanceof Date) {
+        return date.getTime();
+    } else {
+        throw new Error("Input must be a string or Date object");
+    }
+};

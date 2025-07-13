@@ -1,4 +1,11 @@
-import { Eye, Facebook, MessageSquare, PlayCircle, ThumbsUp, Youtube } from "lucide-react";
+import {
+    Eye,
+    // Facebook,
+    MessageSquare,
+    PlayCircle,
+    ThumbsUp,
+    Youtube,
+} from "lucide-react";
 // import { Progress } from "@/components/ui/progress";
 
 import { Video } from "@/types/video.types";
@@ -77,7 +84,9 @@ export const VideoDetailModal = ({ video, onClose }: VideoDetailModalProps) => {
                                     {video.length ? (
                                         <>
                                             {Math.floor(video.length / 60)}:
-                                            {(video.length % 60).toString().padStart(2, "0")}
+                                            {(Math.floor(video.length) % 60)
+                                                .toString()
+                                                .padStart(2, "0")}
                                         </>
                                     ) : (
                                         <span className="text-zinc-500 text-base">--:--</span>
@@ -130,7 +139,7 @@ export const VideoDetailModal = ({ video, onClose }: VideoDetailModalProps) => {
                                 </div>
 
                                 {/* Facebook */}
-                                <div className="bg-zinc-800 p-3 sm:p-4 rounded-lg">
+                                {/* <div className="bg-zinc-800 p-3 sm:p-4 rounded-lg">
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center min-w-0">
                                             <Facebook className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 mr-2 sm:mr-3 shrink-0" />
@@ -138,23 +147,23 @@ export const VideoDetailModal = ({ video, onClose }: VideoDetailModalProps) => {
                                                 Facebook
                                             </span>
                                         </div>
-                                        {/* <span className="text-sm sm:text-base shrink-0">{video.platforms.facebook.toLocaleString()}</span> */}
+                                        <span className="text-sm sm:text-base shrink-0">{video.platforms.facebook.toLocaleString()}</span>
                                         <span className="text-xs sm:text-sm text-zinc-400 shrink-0">
                                             Coming soon
                                         </span>
                                     </div>
-                                    {/* <Progress
+                                    <Progress
                                         value={(video.platforms.facebook / video.viewCnt) * 100}
                                         className="h-2 bg-zinc-700"
                                         indicatorClassName="bg-blue-600"
-                                    /> */}
+                                    />
                                     <div className="text-xs text-zinc-500">
                                         Integration with Facebook Insights
                                     </div>
-                                </div>
+                                </div> */}
 
                                 {/* TikTok */}
-                                <div className="bg-zinc-800 p-3 sm:p-4 rounded-lg">
+                                {/* <div className="bg-zinc-800 p-3 sm:p-4 rounded-lg">
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center min-w-0">
                                             <svg
@@ -168,20 +177,20 @@ export const VideoDetailModal = ({ video, onClose }: VideoDetailModalProps) => {
                                                 TikTok
                                             </span>
                                         </div>
-                                        {/* <span className="text-sm sm:text-base shrink-0">{video.platforms.tiktok.toLocaleString()}</span> */}
+                                        <span className="text-sm sm:text-base shrink-0">{video.platforms.tiktok.toLocaleString()}</span>
                                         <span className="text-xs sm:text-sm text-zinc-400 shrink-0">
                                             Coming soon
                                         </span>
                                     </div>
-                                    {/* <Progress
+                                    <Progress
                                         value={(video.platforms.tiktok / video.viewCnt) * 100}
                                         className="h-2 bg-zinc-700"
                                         indicatorClassName="bg-zinc-300"
-                                    /> */}
+                                    />
                                     <div className="text-xs text-zinc-500">
                                         Integration with TikTok Analytics
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
 

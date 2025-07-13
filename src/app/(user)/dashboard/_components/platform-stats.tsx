@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Youtube, TrendingUp, MessageCircle, Heart, ThumbsDown, Loader2 } from "lucide-react";
 
@@ -9,9 +9,19 @@ const PlatformStats = ({ data, isLoading }) => {
     if (isLoading) {
         return (
             <Card className="bg-zinc-900 border-zinc-800">
-                <CardContent className="flex items-center justify-center p-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
-                    <span className="ml-2 text-zinc-400">Đang tải dữ liệu...</span>
+                <CardHeader>
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                        {/* <Eye className="h-5 w-5" /> */}
+                        <Youtube className="h-5 w-5" />
+                        {/* Thống kê nền tảng */}
+                        Platform Statistics
+                    </CardTitle>
+                    <CardDescription className="text-zinc-400">Platform statistics</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-center h-[300px]">
+                        <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
+                    </div>
                 </CardContent>
             </Card>
         );
@@ -22,7 +32,8 @@ const PlatformStats = ({ data, isLoading }) => {
         return (
             <Card className="bg-zinc-900 border-zinc-800">
                 <CardContent className="flex items-center justify-center p-8">
-                    <span className="text-zinc-400">Không có dữ liệu</span>
+                    {/* <span className="text-zinc-400">Không có dữ liệu</span> */}
+                    <span className="text-zinc-400">No data available</span>
                 </CardContent>
             </Card>
         );
@@ -68,12 +79,12 @@ const PlatformStats = ({ data, isLoading }) => {
     // Format số
     const formatNumber = (num: number | null | undefined) => {
         if (num === undefined || num === null || isNaN(num)) {
-            return '0';
+            return "0";
         }
         if (num >= 1000000) {
-            return (num / 1000000).toFixed(1) + 'M';
+            return (num / 1000000).toFixed(1) + "M";
         } else if (num >= 1000) {
-            return (num / 1000).toFixed(1) + 'K';
+            return (num / 1000).toFixed(1) + "K";
         }
         return num.toLocaleString();
     };
@@ -91,11 +102,10 @@ const PlatformStats = ({ data, isLoading }) => {
                         <div className="flex justify-between mb-1">
                             <span className="flex items-center">
                                 <TrendingUp className="w-4 h-4 me-2" />
-                                Tổng lượt xem
+                                {/* Tổng lượt xem */}
+                                Total Views
                             </span>
-                            <span className="font-medium">
-                                {formatNumber(data.viewCount || 0)}
-                            </span>
+                            <span className="font-medium">{formatNumber(data.viewCount || 0)}</span>
                         </div>
                         <Progress
                             value={calculateProgress(data.viewCount || 0, maxValues.viewCount)}
@@ -109,14 +119,18 @@ const PlatformStats = ({ data, isLoading }) => {
                         <div className="flex justify-between mb-1">
                             <span className="flex items-center">
                                 <MessageCircle className="w-4 h-4 me-2" />
-                                Bình luận
+                                {/* Bình luận */}
+                                Comments
                             </span>
                             <span className="font-medium">
                                 {formatNumber(data.commentCount || 0)}
                             </span>
                         </div>
                         <Progress
-                            value={calculateProgress(data.commentCount || 0, maxValues.commentCount)}
+                            value={calculateProgress(
+                                data.commentCount || 0,
+                                maxValues.commentCount
+                            )}
                             className="h-1 bg-zinc-800"
                             indicatorClassName={currentPlatform.bgColor}
                         />
@@ -127,11 +141,10 @@ const PlatformStats = ({ data, isLoading }) => {
                         <div className="flex justify-between mb-1">
                             <span className="flex items-center">
                                 <Heart className="w-4 h-4 me-2" />
-                                Lượt thích
+                                {/* Lượt thích */}
+                                Likes
                             </span>
-                            <span className="font-medium">
-                                {formatNumber(data.likeCount || 0)}
-                            </span>
+                            <span className="font-medium">{formatNumber(data.likeCount || 0)}</span>
                         </div>
                         <Progress
                             value={calculateProgress(data.likeCount || 0, maxValues.likeCount)}
@@ -145,14 +158,18 @@ const PlatformStats = ({ data, isLoading }) => {
                         <div className="flex justify-between mb-1">
                             <span className="flex items-center">
                                 <ThumbsDown className="w-4 h-4 me-2" />
-                                Lượt không thích
+                                {/* Lượt không thích */}
+                                Dislikes
                             </span>
                             <span className="font-medium">
                                 {formatNumber(data.dislikeCount || 0)}
                             </span>
                         </div>
                         <Progress
-                            value={calculateProgress(data.dislikeCount || 0, maxValues.dislikeCount)}
+                            value={calculateProgress(
+                                data.dislikeCount || 0,
+                                maxValues.dislikeCount
+                            )}
                             className="h-1 bg-zinc-800"
                             indicatorClassName="bg-red-600"
                         />
@@ -162,7 +179,9 @@ const PlatformStats = ({ data, isLoading }) => {
                     <div>
                         <div className="flex justify-between mb-1">
                             <span className="text-sm">
-                                Tỷ lệ tương tác
+                                {/* Tỷ lệ tương tác */}
+                                {/* Tiếng anh */}
+                                Interaction Rate
                             </span>
                             <span className="font-medium">
                                 {(data.interactionPercent || 0).toFixed(1)}%

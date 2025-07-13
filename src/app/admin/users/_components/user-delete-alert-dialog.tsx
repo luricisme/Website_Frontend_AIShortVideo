@@ -2,9 +2,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { Loader2, Trash2 } from "lucide-react";
 
-import { Video } from "@/types/video.types";
 import { Button } from "@/components/ui/button";
-import { useDeleteVideoMutation } from "@/queries/useVideo";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -16,39 +14,31 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { User } from "@/types/user.types";
+import { useDeleteUserMutation } from "@/queries/use-admin";
 
-const DeleteVideoAlertDialog = ({
-    video,
-    isAdmin = false,
-    onRefresh = () => {},
-}: {
-    video: Video;
-    isAdmin?: boolean;
-    onRefresh?: () => void;
-}) => {
+const UserDeleteAlertDialog = ({ user }: { user: User }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const deleteVideoMutation = useDeleteVideoMutation();
+    const deleteUserMutation = useDeleteUserMutation();
+
+    let name = "Unnamed User";
+    if (user.role === "ADMIN") {
+        name = user.email;
+    } else {
+        name = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+    }
 
     const handleDelete = async () => {
         try {
-            await deleteVideoMutation.mutateAsync(video.id);
+            await deleteUserMutation.mutateAsync(user.id || "");
 
-            toast.success(
-                `Video "${video.title || "Untitled Video"}" has been deleted successfully.`
-            );
-
-            if (isAdmin) {
-                console.log(">>> onRefresh:", onRefresh);
-                if (onRefresh && typeof onRefresh === "function") {
-                    onRefresh();
-                }
-            }
+            toast.success(`User "${name}" has been deleted successfully.`);
 
             setIsOpen(false);
         } catch (error) {
-            console.error("Delete video error:", error);
+            console.error("Failed to delete user:", error);
 
-            toast.error("Failed to delete video. Please try again later.");
+            toast.error("Failed to delete user. Please try again later.");
         }
     };
 
@@ -56,13 +46,13 @@ const DeleteVideoAlertDialog = ({
         <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
             <AlertDialogTrigger asChild>
                 <Button
-                    title="Delete video"
+                    title="Delete User"
                     variant="ghost"
                     size="sm"
                     className="text-zinc-400 hover:text-red-400 hover:bg-zinc-800"
-                    disabled={deleteVideoMutation.isPending}
+                    disabled={deleteUserMutation.isPending}
                 >
-                    {deleteVideoMutation.isPending ? (
+                    {deleteUserMutation.isPending ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                         <Trash2 className="w-4 h-4" />
@@ -71,33 +61,32 @@ const DeleteVideoAlertDialog = ({
             </AlertDialogTrigger>
             <AlertDialogContent className="bg-zinc-900 border-zinc-800">
                 <AlertDialogHeader>
-                    <AlertDialogTitle className="text-red-400">Delete Video</AlertDialogTitle>
+                    <AlertDialogTitle className="text-red-400">Delete User</AlertDialogTitle>
                     <AlertDialogDescription className="text-zinc-400">
-                        Are you sure you want to delete{" "}
-                        <strong>&quot;{video.title || "Untitled Video"}&quot;</strong>? This action
-                        cannot be undone and will permanently remove:
+                        Are you sure you want to delete user <strong>&quot;{name}&quot;</strong>?
+                        This action cannot be undone and will permanently remove:
                         <ul className="mt-2 ml-4 list-disc space-y-1">
-                            <li>The video and all its data</li>
-                            <li>All comments and interactions</li>
-                            <li>View statistics and analytics</li>
+                            <li>All user data associated with this account</li>
+                            <li>All user interactions and history</li>
+                            <li>All user-created content</li>
                         </ul>
                         <br />
-                        <span className="text-xs text-zinc-600">Video ID: {video.id}</span>
+                        <span className="text-xs text-zinc-600">User ID: {user.id}</span>
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel
                         className="border-zinc-700 hover:bg-zinc-800"
-                        disabled={deleteVideoMutation.isPending}
+                        disabled={deleteUserMutation.isPending}
                     >
                         Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
                         onClick={handleDelete}
-                        disabled={deleteVideoMutation.isPending}
+                        disabled={deleteUserMutation.isPending}
                         className="bg-red-600 hover:bg-red-700 focus:ring-red-600 text-white"
                     >
-                        {deleteVideoMutation.isPending ? (
+                        {deleteUserMutation.isPending ? (
                             <>
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                 Deleting...
@@ -112,4 +101,4 @@ const DeleteVideoAlertDialog = ({
     );
 };
 
-export default DeleteVideoAlertDialog;
+export default UserDeleteAlertDialog;

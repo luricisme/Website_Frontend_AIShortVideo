@@ -151,7 +151,7 @@ const VideoDetailPreview = ({ video }: { video: Video }) => {
     return (
         <div
             className="w-full rounded-lg overflow-hidden mb-4 bg-zinc-800 relative group
-                       aspect-video sm:aspect-video md:aspect-[4/3] lg:aspect-video"
+                   aspect-[9/16] sm:aspect-[9/16] md:aspect-[3/4] lg:aspect-[9/16]"
             onMouseEnter={() => setShowControls(true)}
             onMouseLeave={() => setShowControls(false)}
         >
@@ -160,7 +160,7 @@ const VideoDetailPreview = ({ video }: { video: Video }) => {
                     <video
                         ref={videoRef}
                         src={videoSource}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                         poster={video.thumbnail || undefined}
                         muted={isMuted}
                         loop

@@ -20,9 +20,9 @@ import {
     usePlatformStatisticQuery,
     useViewsByCategoryQuery,
     useViewStatisticQuery,
-    useTopInteractedVideosQuery // Import query mới
+    useTopInteractedVideosQuery, // Import query mới
 } from "@/queries/useDashboard";
-import {ViewsPieChart} from "@/app/(user)/dashboard/_components/ViewsPieChart";
+import { ViewsPieChart } from "@/app/(user)/dashboard/_components/ViewsPieChart";
 import ViewsByCategoryChart from "@/app/(user)/dashboard/_components/ViewByCategory";
 
 const Dashboard = () => {
@@ -34,40 +34,33 @@ const Dashboard = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
-    const {
-        data: overviewData,
-        isLoading: isOverviewLoading,
-    } = useDashboardOverviewQuery(!!currentUser?.id);
+    const { data: overviewData, isLoading: isOverviewLoading } = useDashboardOverviewQuery(
+        !!currentUser?.id
+    );
 
     console.log(overviewData);
 
-    const {
-        data: platformData,
-        isLoading: isPlatformLoading,
-    } = usePlatformStatisticQuery({
+    const { data: platformData, isLoading: isPlatformLoading } = usePlatformStatisticQuery({
         platform: selectedPlatform,
         enabled: !!currentUser?.id,
     });
 
-    const {
-        data: viewData,
-        isLoading: isViewLoading,
-    } = useViewStatisticQuery(!!currentUser?.id);
+    const { data: viewData, isLoading: isViewLoading } = useViewStatisticQuery(!!currentUser?.id);
 
-    const {
-        data: categoryData,
-        isLoading: isCategoryLoading,
-    } = useViewsByCategoryQuery(1, 10, !!currentUser?.id);
+    const { data: categoryData, isLoading: isCategoryLoading } = useViewsByCategoryQuery(
+        1,
+        10,
+        !!currentUser?.id
+    );
 
     // Query mới cho top interacted videos
-    const {
-        data: topInteractedData,
-        isLoading: isTopInteractedLoading,
-    } = useTopInteractedVideosQuery(0, 10, !!currentUser?.id);
+    const { data: topInteractedData, isLoading: isTopInteractedLoading } =
+        useTopInteractedVideosQuery(0, 10, !!currentUser?.id);
 
     const {
         data: videosResponse,
         isLoading: isVideosLoading,
+        isFetching: isVideosFetching,
         error: videosError,
         refetch: refetchVideos,
     } = useGetVideosByUserIdQuery({
@@ -86,7 +79,6 @@ const Dashboard = () => {
     if (!currentUser || (currentUser && !currentUser.id)) {
         return <UnauthorizedProfile />;
     }
-
 
     // if (videosError && !isVideosLoading) {
     //     return (
@@ -119,10 +111,7 @@ const Dashboard = () => {
             <div className="mx-auto max-w-7xl">
                 <h1 className="text-3xl font-bold mb-6">Content Analytics</h1>
 
-                <StatsOverview
-                    overviewData={overview}
-                    isLoading={isOverviewLoading}
-                />
+                <StatsOverview overviewData={overview} isLoading={isOverviewLoading} />
 
                 <Tabs defaultValue="overview" className="mb-8">
                     <TabsList className="bg-zinc-900 border border-zinc-800 gap-2">
@@ -137,15 +126,9 @@ const Dashboard = () => {
                     <TabsContent value="overview" className="mt-6">
                         {!overviewData && (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                                <PlatformStats
-                                    data={platformData}
-                                    isLoading={isPlatformLoading}
-                                />
+                                <PlatformStats data={platformData} isLoading={isPlatformLoading} />
 
-                                <ViewsPieChart
-                                    data={viewData}
-                                    isLoading={isViewLoading}
-                                />
+                                <ViewsPieChart data={viewData} isLoading={isViewLoading} />
                                 <ViewsByCategoryChart
                                     data={categoryData}
                                     isLoading={isCategoryLoading}
@@ -154,10 +137,7 @@ const Dashboard = () => {
                         )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <ViewsPieChart
-                                data={viewData}
-                                isLoading={isViewLoading}
-                            />
+                            <ViewsPieChart data={viewData} isLoading={isViewLoading} />
                             <ViewsByCategoryChart
                                 data={categoryData}
                                 isLoading={isCategoryLoading}
@@ -192,7 +172,7 @@ const Dashboard = () => {
                                                 video={video}
                                                 onClick={() => {
                                                     // Có thể mở modal hoặc navigate đến video detail
-                                                    window.open(video.videoUrl, '_blank');
+                                                    window.open(video.videoUrl, "_blank");
                                                 }}
                                             />
                                         ))}
@@ -209,7 +189,7 @@ const Dashboard = () => {
                     <TabsContent value="videos" className="mt-6">
                         <VideoTable
                             videos={videos}
-                            isLoading={isVideosLoading}
+                            isLoading={isVideosFetching || isVideosLoading}
                             error={videosError}
                             onVideoSelect={setSelectedVideo}
                             onRefresh={refetchVideos}
@@ -228,7 +208,6 @@ const Dashboard = () => {
                             />
                         )}
                     </TabsContent>
-
                 </Tabs>
             </div>
         </div>

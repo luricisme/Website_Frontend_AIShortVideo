@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Search, X } from "lucide-react";
 import SearchInput from "@/app/(user)/_components/search-input";
+import { formatDateToMilliseconds } from "@/utils/common";
 
 function SearchInputLoading() {
     return (
@@ -140,6 +141,7 @@ const AvatarDropdownMenu = ({
 };
 
 const SearchBar = () => {
+    const router = useRouter();
     const { data: session, status } = useSession();
     const { user, setUser, setFetching, setError, clearUser } = useUserStore((state) => state);
 
@@ -192,6 +194,12 @@ const SearchBar = () => {
 
             case "authenticated":
                 setUser(userInfoData || null);
+
+                if (userInfoData?.role === "ADMIN") {
+                    // If user is admin, redirect to admin dashboard
+                    router.push("/admin");
+                }
+
                 setFetching(false);
                 setError(null);
                 break;
@@ -228,7 +236,11 @@ const SearchBar = () => {
                         </div>
                     ) : user && session?.user ? (
                         <AvatarDropdownMenu
-                            image={user?.avatar ?? session.user.image ?? null}
+                            image={
+                                user?.avatar ??
+                                session.user.image ??
+                                null + `?v=${formatDateToMilliseconds(user?.updatedAt ?? "")}`
+                            }
                             name={user?.username ?? session.user.name ?? null}
                             userId={user?.id}
                         />

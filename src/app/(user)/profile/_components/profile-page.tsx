@@ -17,6 +17,8 @@ import {
     useGetLikedVideosByUserIdQuery,
     useGetVideosByUserIdQuery,
 } from "@/queries/useVideo";
+import { formatDateToMilliseconds } from "@/utils/common";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProfilePageProps {
     activeTab: string;
@@ -47,11 +49,12 @@ const ProfilePage = ({
     const {
         data: videosData,
         isLoading: isVideosLoading,
+        isFetching: isVideosFetching,
         error: videosError,
         refetch: refetchVideos,
     } = useGetVideosByUserIdQuery({
         userId: user.id ?? "",
-        pageNo: myVideosPage - 1, // API uses 0-based indexing
+        pageNo: myVideosPage, // API uses 0-based indexing
         pageSize: myVideosPageSize,
         enabled: !!user.id,
     });
@@ -59,6 +62,7 @@ const ProfilePage = ({
     const {
         data: likedVideosData,
         isLoading: isLikedVideosLoading,
+        isFetching: isLikedVideosFetching,
         error: likedVideosError,
         refetch: refetchLikedVideos,
     } = useGetLikedVideosByUserIdQuery({
@@ -136,6 +140,8 @@ const ProfilePage = ({
     const likedVideos = likedVideosData?.data.items || [];
     const likedVideosPagination = likedVideosData?.data;
 
+    console.log(">>> ProfilePage user avatar:", user?.avatar);
+
     return (
         <div className="min-h-screen text-white mb-10">
             <div className="mx-auto max-w-6xl px-4">
@@ -143,7 +149,11 @@ const ProfilePage = ({
                 <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 mb-8">
                     <Avatar className="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center">
                         <AvatarImage
-                            src={user?.avatar || undefined}
+                            src={
+                                user?.avatar +
+                                    `?v=${formatDateToMilliseconds(user?.updatedAt ?? "")}` ||
+                                undefined
+                            }
                             alt={`${user?.firstName} ${user?.lastName}`}
                         />
                         <AvatarFallback>
@@ -173,7 +183,9 @@ const ProfilePage = ({
                                     <Link href="/dashboard">Dashboard</Link>
                                 </Button>
                             </div>
-                        ) : currentUser && currentUser.id !== user.id ? (
+                        ) : currentUser &&
+                          currentUser.id !== user.id &&
+                          currentUser.role !== "ADMIN" ? (
                             <div className="my-4 flex flex-wrap gap-2">
                                 <Button
                                     size="sm"
@@ -207,7 +219,12 @@ const ProfilePage = ({
                             </div>
                             <div className="text-center">
                                 <div className="font-bold">
-                                    {myVideosPagination?.totalElements || 0}
+                                    {/* {myVideosPagination?.totalElements || 0} */}
+                                    {isVideosFetching || isVideosLoading ? (
+                                        <Skeleton className="h-6 w-6 rounded-2xl" />
+                                    ) : (
+                                        myVideosPagination?.totalElements || 0
+                                    )}
                                 </div>
                                 <div className="text-zinc-400 text-sm">Videos</div>
                             </div>
@@ -306,23 +323,41 @@ const ProfilePage = ({
                     <div className="flex space-x-8">
                         <button
                             onClick={() => onTabChange("my-videos")}
-                            className={`pb-4 text-sm font-medium ${
+                            className={`pb-4 text-sm font-medium flex items-center ${
                                 activeTab === "my-videos"
                                     ? "text-white border-b-2 border-white"
                                     : "text-zinc-400 hover:text-white"
                             }`}
                         >
-                            My Videos ({myVideosPagination?.totalElements || 0})
+                            My Videos
+                            {isVideosLoading || isVideosFetching ? (
+                                <>
+                                    <Skeleton className="h-4 w-4 ml-1 rounded-sm" />
+                                </>
+                            ) : (
+                                <span className="ml-1">
+                                    ({myVideosPagination?.totalElements || 0})
+                                </span>
+                            )}
                         </button>
                         <button
                             onClick={() => onTabChange("liked-videos")}
-                            className={`pb-4 text-sm font-medium ${
+                            className={`pb-4 text-sm font-medium flex items-center ${
                                 activeTab === "liked-videos"
                                     ? "text-white border-b-2 border-white"
                                     : "text-zinc-400 hover:text-white"
                             }`}
                         >
-                            Liked Videos ({likedVideosPagination?.totalElements || 0})
+                            Liked Videos{" "}
+                            {isLikedVideosLoading || isLikedVideosFetching ? (
+                                <>
+                                    <Skeleton className="h-4 w-4 ml-1 rounded-sm" />
+                                </>
+                            ) : (
+                                <span className="ml-1">
+                                    ({likedVideosPagination?.totalElements || 0})
+                                </span>
+                            )}
                         </button>
                     </div>
                 </div>
@@ -346,7 +381,7 @@ const ProfilePage = ({
                                 itemsPerPage={myVideosPageSize}
                                 onItemsPerPageChange={handleMyVideosPageSizeChange}
                                 showFullInfo={false}
-                                isLoading={isVideosLoading}
+                                isLoading={isVideosLoading || isVideosFetching}
                             />
                         )}
                     </div>
@@ -370,7 +405,7 @@ const ProfilePage = ({
                                 itemsPerPage={likedVideosPageSize}
                                 onItemsPerPageChange={handleLikedVideosPageSizeChange}
                                 showFullInfo={false}
-                                isLoading={isLikedVideosLoading}
+                                isLoading={isLikedVideosLoading || isLikedVideosFetching}
                             />
                         )}
                     </div>

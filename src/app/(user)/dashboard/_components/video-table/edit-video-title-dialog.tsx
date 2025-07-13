@@ -7,10 +7,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useUpdateVideoTitleMutation } from "@/queries/useVideo";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
-
-const EditVideoInfoDialog = ({ video }: { video: Video }) => {
+const EditVideoInfoDialog = ({
+    video,
+    isAdmin = false,
+    onUpdateSuccess = () => {},
+}: {
+    video: Video;
+    isAdmin?: boolean;
+    onUpdateSuccess?: () => void;
+}) => {
     const [isOpen, setIsOpen] = useState(false);
     const [title, setTitle] = useState(video.title || "");
     const updateVideoTitleMutation = useUpdateVideoTitleMutation();
@@ -43,6 +59,12 @@ const EditVideoInfoDialog = ({ video }: { video: Video }) => {
             });
 
             toast.success(`Video title updated to "${title.trim()}".`);
+
+            if (isAdmin) {
+                if (onUpdateSuccess && typeof onUpdateSuccess === "function") {
+                    onUpdateSuccess();
+                }
+            }
 
             setIsOpen(false);
         } catch (error) {

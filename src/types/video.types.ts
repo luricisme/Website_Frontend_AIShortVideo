@@ -7,6 +7,11 @@ export const videoTagSchema = z.object({
     tagName: z.string(),
 });
 
+export const tagSchema = z.object({
+    tagName: z.string(),
+    videoCnt: z.number(),
+});
+
 // Video schema
 export const videoSchema = z.object({
     id: z.number(),
@@ -26,6 +31,8 @@ export const videoSchema = z.object({
     status: z.string(),
     user: userSchema,
     tags: z.array(videoTagSchema).optional(),
+    createdAt: z.string().optional().nullable(),
+    updatedAt: z.string().optional().nullable(),
 });
 
 export const createPaginatedSchema = <T extends z.ZodType>(itemSchema: T) =>
@@ -49,6 +56,9 @@ export const videoListByCategoryNameSchema = paginatedVideoListSchema;
 export const videoListBySearchQuerySchema = paginatedVideoListSchema;
 export const videoListByUserIdSchema = paginatedVideoListSchema;
 export const videoTrendingMonthlySchema = paginatedVideoListSchema;
+export const videoListSchema = paginatedVideoListSchema;
+
+export const tagListResponseSchema = createPaginatedSchema(tagSchema);
 
 export const videoLikeStatusResponseSchema = z.object({
     liked: z.boolean(),
@@ -79,6 +89,7 @@ export type VideoTag = z.infer<typeof videoTagSchema>;
 export type Video = z.infer<typeof videoSchema>;
 export type VideoListResponse = z.infer<typeof videoListResponseSchema>;
 export type PaginatedVideoList = z.infer<typeof paginatedVideoListSchema>;
+export type Tag = z.infer<typeof tagSchema>;
 
 export type VideoListByTagName = PaginatedVideoList;
 export type VideoListByCategoryName = PaginatedVideoList;
