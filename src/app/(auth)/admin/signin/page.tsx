@@ -57,6 +57,9 @@ export default function LoginPage() {
         if (status === "authenticated" && sessionData && sessionData.user.role === "ROLE_ADMIN") {
             console.log(">>> Auto-redirecting from LoginPage (no Google code)");
             router.replace("/admin");
+        } else if (status === "authenticated" && sessionData) {
+            // Redirect non-admin users to the home page
+            router.replace("/");
         }
     }, [status, sessionData, router]);
 
@@ -74,10 +77,13 @@ export default function LoginPage() {
                 const session = await getSession();
                 console.log(">>> Fresh session data:", session);
 
-                if (session?.user) {
+                if (session?.user && session.user.role === "ROLE_ADMIN") {
                     // Lưu thông tin user vào localStorage
                     localStorage.setItem("user", JSON.stringify(session.user));
                     router.replace("/admin");
+                } else {
+                    // router user
+                    router.replace("/");
                 }
             } else {
                 try {

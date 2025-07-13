@@ -141,6 +141,7 @@ const AvatarDropdownMenu = ({
 };
 
 const SearchBar = () => {
+    const router = useRouter();
     const { data: session, status } = useSession();
     const { user, setUser, setFetching, setError, clearUser } = useUserStore((state) => state);
 
@@ -193,6 +194,12 @@ const SearchBar = () => {
 
             case "authenticated":
                 setUser(userInfoData || null);
+
+                if (userInfoData?.role === "ADMIN") {
+                    // If user is admin, redirect to admin dashboard
+                    router.push("/admin");
+                }
+
                 setFetching(false);
                 setError(null);
                 break;

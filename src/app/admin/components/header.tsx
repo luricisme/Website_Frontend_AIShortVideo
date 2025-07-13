@@ -64,7 +64,7 @@ const AvatarDropdownMenu = ({
 const Header = () => {
     const { data: session, status } = useSession();
 
-    console.log(">>> Session in Header:", session, status);
+    // console.log(">>> Session in Header:", session, status);
 
     const pathname = usePathname();
 

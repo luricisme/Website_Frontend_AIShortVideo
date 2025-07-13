@@ -60,9 +60,24 @@ export default function LoginPage() {
     useEffect(() => {
         // Chỉ redirect khi authenticated VÀ KHÔNG có googleCode
         // Nếu có googleCode, để GoogleOAuthHandler xử lý redirect
-        if (status === "authenticated" && sessionData && !googleCode) {
+        if (
+            status === "authenticated" &&
+            sessionData &&
+            !googleCode &&
+            sessionData.user &&
+            sessionData.user.role === "ROLE_USER"
+        ) {
             console.log(">>> Auto-redirecting from LoginPage (no Google code)");
             router.replace("/");
+        } else if (
+            status === "authenticated" &&
+            sessionData &&
+            !googleCode &&
+            sessionData.user &&
+            sessionData.user.role === "ROLE_ADMIN"
+        ) {
+            console.log(">>> Auto-redirecting from LoginPage (no Google code, admin)");
+            router.replace("/admin");
         }
     }, [status, sessionData, router, googleCode]);
 
@@ -80,10 +95,14 @@ export default function LoginPage() {
                 const session = await getSession();
                 console.log(">>> Fresh session data:", session);
 
-                if (session?.user) {
+                if (session?.user && session.user.role === "ROLE_USER") {
                     // Lưu thông tin user vào localStorage
                     localStorage.setItem("user", JSON.stringify(session.user));
                     router.replace("/");
+                } else if (session?.user && session.user.role === "ROLE_ADMIN") {
+                    // Lưu thông tin admin vào localStorage
+                    localStorage.setItem("user", JSON.stringify(session.user));
+                    router.replace("/admin");
                 }
             } else {
                 // Thử parse thông tin lỗi từ result.error
