@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from "react";
-import { Search, Edit, Eye, Trash, Bell, CheckCircle } from "lucide-react";
+import React, { useCallback, useMemo } from "react";
+import { Search, CheckCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,261 +11,314 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
+import { useGetUsersOverviewQuery, useGetUsersQuery } from "@/queries/use-admin";
+import UserTable from "@/app/admin/users/_components/user-table";
+import { USER_STATUS } from "@/constants/user-status";
+import useUsersQueryConfig from "@/hooks/use-users-query-config";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useRouter } from "next/navigation";
+import { userSortCriteriaSchema, userSortDirectionSchema, UserStatus } from "@/types/user.types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function UserManagementDashboard() {
-    // const [page, setPage] = useState(1);
-    const [page] = useState(1);
+    const router = useRouter();
+    const queryConfig = useUsersQueryConfig();
 
-    // Mock data for users
-    const users = [
-        {
-            id: 1,
-            name: "Victoria Johnson",
-            email: "vjohnson@example.com",
-            status: "Active",
-            videos: 36,
-            joined: "Jan 15, 2025",
+    const currentPage = queryConfig.page || 1;
+    const pageSize = queryConfig.pageSize || 5;
+    const searchQuery = queryConfig.name || "";
+    const selectedStatus = queryConfig.status || USER_STATUS.ALL;
+    const sortCriteria = queryConfig.sort_criteria || "id";
+    const sortDirection = queryConfig.sort_direction || "asc";
+
+    const queryParams = useMemo(
+        () => ({
+            page: currentPage,
+            pageSize: pageSize,
+            name: searchQuery,
+            status: selectedStatus,
+            sort_criteria: sortCriteria,
+            sort_direction: sortDirection,
+        }),
+        [currentPage, pageSize, searchQuery, selectedStatus, sortCriteria, sortDirection]
+    );
+
+    const {
+        data: usersData,
+        isLoading: isUsersLoading,
+        isFetching: isUsersFetching,
+        error: usersError,
+        refetch: refetchUsers,
+    } = useGetUsersQuery(queryParams);
+
+    const users = usersData?.data?.items || [];
+    const totalUsers = usersData?.data?.totalElements || 0;
+    const totalPages = usersData?.data?.totalPage || 1;
+
+    const {
+        data: usersOverviewData,
+        isLoading: isUsersOverviewLoading,
+        isFetching: isUsersOverviewFetching,
+        error: usersOverviewError,
+    } = useGetUsersOverviewQuery();
+
+    const newUsersToday = usersOverviewData?.data?.numNewUserToday || 0;
+    const activeUsers = usersOverviewData?.data?.numActive || 0;
+    const deactivatedUsers = usersOverviewData?.data?.numInactive || 0;
+
+    const updateURL = useCallback(
+        (updates: Record<string, string | number>) => {
+            const searchParams = new URLSearchParams(window.location.search);
+
+            Object.entries(updates).forEach(([key, value]) => {
+                if (value === "" || value === null || value === undefined) {
+                    searchParams.delete(key);
+                } else {
+                    searchParams.set(key, String(value));
+                }
+            });
+
+            router.push(`?${searchParams.toString()}`);
         },
-        {
-            id: 2,
-            name: "James Wilson",
-            email: "jwilson@example.com",
-            status: "Inactive",
-            videos: 5,
-            joined: "Mar 05, 2025",
+        [router]
+    );
+
+    const debouncedSearch = useDebounce((value: string) => {
+        updateURL({ name: value, page: 1 });
+    }, 400);
+
+    const handleSearchChange = useCallback(
+        (event: React.ChangeEvent<HTMLInputElement>) => {
+            debouncedSearch(event.target.value);
         },
-        {
-            id: 3,
-            name: "Emma Johnson",
-            email: "ejohnson@example.com",
-            status: "Suspended",
-            videos: 3,
-            joined: "Apr 12, 2025",
+        [debouncedSearch]
+    );
+
+    const handleStatusChange = useCallback(
+        (value: UserStatus) => {
+            updateURL({ status: value, page: 1 });
         },
-    ];
+        [updateURL]
+    );
+
+    const handleSortCriteriaChange = useCallback(
+        (value: string) => {
+            updateURL({ sort_criteria: value, page: 1 });
+        },
+        [updateURL]
+    );
+
+    const handleSortDirectionChange = useCallback(
+        (value: string) => {
+            updateURL({ sort_direction: value, page: 1 });
+        },
+        [updateURL]
+    );
+
+    const handlePageChange = useCallback(
+        (page: number) => {
+            updateURL({ page });
+        },
+        [updateURL]
+    );
+
+    const handlePageSizeChange = useCallback(
+        (newPageSize: number) => {
+            updateURL({ pageSize: newPageSize, page: 1 });
+        },
+        [updateURL]
+    );
+
+    const handleClearFilters = useCallback(() => {
+        router.push(window.location.pathname);
+    }, [router]);
 
     return (
-        <div className="py-8 px-10 max-w-full">
-            {/* Header */}
-            <div className="flex justify-between items-center mb-10">
-                <h1 className="text-2xl font-bold">User Management</h1>
-                <div className="flex items-center space-x-4">
-                    <div className="relative">
-                        <Bell size={25} />
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                            2
-                        </span>
-                    </div>
-                    <div className="flex items-center">
-                        <div className="h-8 w-8 bg-purple-500 rounded-full flex items-center justify-center text-white">
-                            AU
-                        </div>
-                        <span className="ml-2">Admin User</span>
-                    </div>
-                </div>
-            </div>
-
+        <>
             {/* Stats Cards */}
-            <div className="grid grid-cols-3 gap-8 mb-6">
-                {/* New Users Card */}
-                <Card>
-                    <CardContent>
-                        <div className="flex items-center">
-                            <div className="p-2 bg-blue-100 rounded-full w-15 h-15 flex items-center justify-center mb-2 me-6">
-                                <CheckCircle className="h-8 w-8 text-blue-500" />
-                            </div>
-                            <div className={"flex flex-col"}>
-                                <p className="text-gray-500 mb-2">New Users</p>
-                                <h1 className="text-3xl font-bold">152</h1>
-                                <p className="text-green-600 mt-1">+12.5% vs last week</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardContent>
-                        <div className="flex items-center">
-                            <div className="p-2 bg-purple-100 rounded-full w-15 h-15 flex items-center justify-center mb-2 me-6">
-                                <CheckCircle className="h-8 w-8 text-purple-500" />
-                            </div>
-                            <div className={"flex flex-col"}>
-                                <p className="text-gray-500 mb-2">Active Users</p>
-                                <h1 className="text-3xl font-bold">8,427</h1>
-                                <p className="text-green-600 mt-1">+3.7% vs last week</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardContent>
-                        <div className="flex items-center">
-                            <div className="p-2 bg-red-100 rounded-full w-15 h-15 flex items-center justify-center mb-2 me-6">
-                                <CheckCircle className="h-8 w-8 text-red-500" />
-                            </div>
-                            <div className={"flex flex-col"}>
-                                <p className="text-gray-500 mb-2">Deactivated</p>
-                                <h1 className="text-3xl font-bold">47</h1>
-                                <p className="text-green-600 mt-1">+2 vs last week</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 flex-wrap">
+                <StatsCard
+                    title="New Users Today"
+                    value={newUsersToday.toLocaleString()}
+                    color="blue"
+                    isLoading={isUsersOverviewLoading || isUsersOverviewFetching}
+                    error={usersOverviewError}
+                />
+                <StatsCard
+                    title="Active Users"
+                    value={activeUsers.toLocaleString()}
+                    isLoading={isUsersOverviewLoading || isUsersOverviewFetching}
+                    error={usersOverviewError}
+                    color="purple"
+                />
+                <StatsCard
+                    title="Deactivated"
+                    value={deactivatedUsers.toLocaleString()}
+                    isLoading={isUsersOverviewLoading || isUsersOverviewFetching}
+                    error={usersOverviewError}
+                    color="red"
+                />
             </div>
 
             {/* Filter Section */}
-            <div>
-                <Card className="mb-6">
-                    <CardHeader>
-                        <CardTitle className={"text-lg"}>User Filters</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-5 gap-4">
-                            <div className={"col-span-2 pe-5"}>
-                                <label className="block text-sm font-medium mb-2">Search</label>
-                                <div className="relative">
-                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                                    <Input placeholder="Video title or reporter" className="pl-8" />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Status</label>
-                                <Select defaultValue="all">
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="All Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Status</SelectItem>
-                                        <SelectItem value="pending">Active</SelectItem>
-                                        <SelectItem value="review">Inactive</SelectItem>
-                                        <SelectItem value="resolved">Suspended</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Sort By</label>
-                                <Select defaultValue="all">
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="All Priorities" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Priorities</SelectItem>
-                                        <SelectItem value="high">Newest</SelectItem>
-                                        <SelectItem value="medium">Oldest</SelectItem>
-                                        <SelectItem value="low">Most Videos</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="flex justify-end mt-4 pt-2">
-                                <Button
-                                    variant="default"
-                                    className="bg-purple-600 hover:bg-purple-700"
-                                >
-                                    Apply Filters
-                                </Button>
+            <Card className="mb-6">
+                <CardHeader>
+                    <CardTitle className="text-lg">User Filters</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div className="lg:col-span-2">
+                            <label className="block text-sm font-medium mb-2">Search</label>
+                            <div className="relative">
+                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                                <Input
+                                    placeholder="Search by name..."
+                                    className="pl-8"
+                                    defaultValue={searchQuery}
+                                    onChange={handleSearchChange}
+                                />
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
-            </div>
 
-            <div className={"py-2 mb-12"}>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-lg">All Users</CardTitle>
-                        <Button
-                            variant="outline"
-                            className="bg-purple-600 text-white hover:bg-purple-700"
-                        >
-                            <CheckCircle className="me-2 h-4 w-4" />
-                            Add New Users
-                        </Button>
-                    </CardHeader>
+                        <FilterSelect
+                            label="Status"
+                            value={selectedStatus}
+                            onValueChange={handleStatusChange}
+                            options={Object.entries(USER_STATUS).map(([key, value]) => ({
+                                key,
+                                value,
+                            }))}
+                            placeholder="All Statuses"
+                        />
 
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-1/3">USER</TableHead>
-                                    <TableHead className="w-1/6">STATUS</TableHead>
-                                    <TableHead className="w-1/8">VIDEOS</TableHead>
-                                    <TableHead className="w-1/6">JOINED</TableHead>
-                                    <TableHead className="w-1/10">ACTIONS</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {users.map((user) => (
-                                    <TableRow key={user.id}>
-                                        <TableCell>
-                                            <div className="flex items-center">
-                                                <div className="h-12 w-12 rounded me-3 bg-gray-200"></div>
-                                                <div>
-                                                    <p className="font-medium">{user.name}</p>
-                                                    <p className="text-xs text-gray-500">
-                                                        {user.email}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div
-                                                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                                                    user.status === "Active"
-                                                        ? "bg-green-100 text-green-800"
-                                                        : user.status === "Inactive"
-                                                        ? "bg-yellow-100 text-yellow-800"
-                                                        : "bg-red-100 text-red-800"
-                                                }`}
-                                            >
-                                                {user.status}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{user.videos}</TableCell>
-                                        <TableCell>{user.joined}</TableCell>
-                                        <TableCell>
-                                            <div className="flex space-x-2">
-                                                <button className="text-blue-600 hover:text-blue-900">
-                                                    <Edit className="h-4 w-4" />
-                                                </button>
-                                                <button className="text-gray-600 hover:text-gray-900">
-                                                    <Eye className="h-4 w-4" />
-                                                </button>
-                                                <button className="text-red-600 hover:text-red-900">
-                                                    <Trash className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                        <FilterSelect
+                            label="Sort By"
+                            value={sortCriteria}
+                            onValueChange={handleSortCriteriaChange}
+                            options={userSortCriteriaSchema.options.map((field) => ({
+                                key: field,
+                                value: field,
+                            }))}
+                            placeholder="Sort Field"
+                        />
 
-                        <div className="flex items-center justify-between mt-4">
-                            <p className="text-sm text-gray-500">
-                                Showing 1 to 4 of 12,345 results
-                            </p>
-                            <div className="flex space-x-2">
-                                <Button variant="outline" size="sm" disabled={page === 1}>
-                                    Previous
-                                </Button>
-                                <Button variant="outline" size="sm">
-                                    Next
-                                </Button>
-                            </div>
+                        <FilterSelect
+                            label="Direction"
+                            value={sortDirection}
+                            onValueChange={handleSortDirectionChange}
+                            options={userSortDirectionSchema.options.map((dir) => ({
+                                key: dir,
+                                value: dir,
+                                label: dir === "asc" ? "Ascending" : "Descending",
+                            }))}
+                            placeholder="Direction"
+                        />
+
+                        <div className="flex items-end">
+                            <Button
+                                variant="destructive"
+                                className="w-full"
+                                onClick={handleClearFilters}
+                            >
+                                Clear Filters
+                            </Button>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* User Table */}
+            <div className="mb-12">
+                <UserTable
+                    users={users}
+                    isLoading={isUsersFetching || isUsersLoading}
+                    error={usersError}
+                    onRefresh={refetchUsers}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={totalUsers}
+                    pageSize={pageSize}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                />
             </div>
-        </div>
+        </>
     );
 }
+
+interface StatsCardProps {
+    title: string;
+    value: string;
+    color: "blue" | "purple" | "red";
+    isLoading?: boolean;
+    error?: Error | null;
+}
+
+const StatsCard: React.FC<StatsCardProps> = ({ title, value, color, isLoading, error }) => {
+    const colorClasses = {
+        blue: "bg-blue-100 text-blue-500",
+        purple: "bg-purple-100 text-purple-500",
+        red: "bg-red-100 text-red-500",
+    };
+
+    return (
+        <Card>
+            <CardContent className="p-6">
+                <div className="flex items-center">
+                    <div
+                        className={`flex-shrink-0 p-2 rounded-full w-12 h-12 flex items-center justify-center mr-4 ${colorClasses[color]}`}
+                    >
+                        <CheckCircle className="h-6 w-6" />
+                    </div>
+                    {isLoading ? (
+                        <div>
+                            <Skeleton className="h-6 w-24 mb-1" />
+                            <Skeleton className="h-8 w-32" />
+                        </div>
+                    ) : error ? (
+                        <div>
+                            <p className="text-sm text-red-500">Error: {error.message}</p>
+                        </div>
+                    ) : (
+                        <div>
+                            <p className="text-sm text-gray-500 mb-1">{title}</p>
+                            <h3 className="text-2xl font-bold">{value}</h3>
+                        </div>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
+interface FilterSelectProps<T extends string = string> {
+    label: string;
+    value: T;
+    onValueChange: (value: T) => void;
+    options: Array<{ key: string; value: T; label?: string }>;
+    placeholder: string;
+}
+
+const FilterSelect = <T extends string = string>({
+    label,
+    value,
+    onValueChange,
+    options,
+    placeholder,
+}: FilterSelectProps<T>) => (
+    <div>
+        <label className="block text-sm font-medium mb-2">{label}</label>
+        <Select value={value} onValueChange={onValueChange}>
+            <SelectTrigger className="w-full">
+                <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+                {options.map(({ key, value: optionValue, label: optionLabel }) => (
+                    <SelectItem key={key} value={optionValue}>
+                        {optionLabel || optionValue}
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+    </div>
+);

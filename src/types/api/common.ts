@@ -25,6 +25,15 @@ export const apiBasicResponseSchema = z.object({
 // ApiRequest schema (optional, nếu cần validate object bất kỳ)
 export const apiRequestSchema = z.record(z.unknown());
 
+export const createPaginatedSchema = <T extends z.ZodType>(itemSchema: T) =>
+    z.object({
+        pageNo: z.number(),
+        pageSize: z.number(),
+        totalPage: z.number(),
+        totalElements: z.number(),
+        items: z.array(itemSchema),
+    });
+
 // Type aliases
 export type ApiError = z.infer<typeof apiErrorSchema>;
 export type ApiRequest = z.infer<typeof apiRequestSchema>;

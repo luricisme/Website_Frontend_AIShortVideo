@@ -83,7 +83,7 @@ const Header = () => {
     });
 
     const callSignOut = async () => {
-        await signOut({ redirect: false });
+        await signOut({ redirect: true, callbackUrl: "/admin/signin" });
     };
 
     // Handle combined auth and user info states

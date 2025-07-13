@@ -33,6 +33,26 @@ export const followerResponseSchema = z.object({
         .nullable(),
 });
 
+export const userStatusSchema = z.enum(["ALL", "ACTIVE", "INACTIVE", "PENDING", "DELETED"]);
+
+export const userSortCriteriaSchema = z.enum([
+    "id",
+    "firstName",
+    "lastName",
+    "email",
+    "status",
+    "createdAt",
+    "updatedAt",
+]);
+
+export const userSortDirectionSchema = z.enum(["asc", "desc"]);
+
+export const usersOverviewSchema = z.object({
+    numActive: z.number().optional(),
+    numInactive: z.number().optional(),
+    numNewUserToday: z.number().optional(),
+});
+
 export const userSchema = z.object({
     id: z.union([z.number(), z.string()]).optional(), // id can be a number or a string, and is optional
     firstName: z.string().min(1, "First name is required"),
@@ -49,8 +69,15 @@ export const userSchema = z.object({
     twitter: z.string().nullable().optional(),
     followers: followerResponseSchema.optional(),
     followings: followerResponseSchema.optional(),
-    updatedAt: z.string().optional(),
+    updatedAt: z.string().optional().nullable(),
+    createdAt: z.string().optional().nullable(),
+    totalVideo: z.number().optional().nullable(),
+    status: userStatusSchema.optional(),
 });
 
 // Type
 export type User = z.infer<typeof userSchema>;
+export type UserStatus = z.infer<typeof userStatusSchema>;
+export type UserSortCriteria = z.infer<typeof userSortCriteriaSchema>;
+export type UserSortDirection = z.infer<typeof userSortDirectionSchema>;
+export type UsersOverview = z.infer<typeof usersOverviewSchema>;

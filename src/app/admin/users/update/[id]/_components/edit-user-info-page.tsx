@@ -13,25 +13,27 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import { useUpdateAvatarMutation, useUpdateProfileMutation } from "@/queries/use-user-info";
 import toast from "react-hot-toast";
 import { Camera, Upload } from "lucide-react";
+import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 
-interface EditProfilePageProps {
+interface EditUserInfoProps {
     userProfile: UserType | undefined;
-    onCancel: () => void;
     onSuccess: () => void;
     user?: UserType; // Optional user prop for user ID
 }
 
-export default function EditProfilePage({
+export default function EditUserInfo({
     userProfile,
-    onCancel,
     onSuccess,
     user, // Optional user prop for user ID
-}: EditProfilePageProps) {
+}: EditUserInfoProps) {
     const updateProfileMutation = useUpdateProfileMutation({
-        isShowSuccessToast: true,
+        isShowSuccessToast: false, // Disable default success toast
     });
     const updateAvatarMutation = useUpdateAvatarMutation();
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const queryClient = useQueryClient();
 
     const form = useForm<UserType>({
         resolver: zodResolver(userSchema),
@@ -70,6 +72,9 @@ export default function EditProfilePage({
             updateAvatarMutation.mutate(file, {
                 onSuccess: () => {
                     toast.success("Avatar updated successfully");
+                    queryClient.invalidateQueries({
+                        queryKey: ["admin", "users"],
+                    });
                 },
                 onError: (error) => {
                     console.error("Avatar upload failed:", error);
@@ -99,6 +104,10 @@ export default function EditProfilePage({
             {
                 onSuccess: () => {
                     onSuccess();
+                    //refresh the user table
+                    queryClient.invalidateQueries({
+                        queryKey: ["admin", "users"],
+                    });
                 },
             }
         );
@@ -106,14 +115,14 @@ export default function EditProfilePage({
 
     return (
         <div className="min-h-screen text-white mb-10">
-            <div className="max-w-6xl mx-auto p-6">
-                <h1 className="text-2xl font-bold mb-8">Edit Profile</h1>
+            <div className="max-w-6xl mx-auto">
+                <h1 className="text-2xl font-bold mb-8">Edit User Info</h1>
 
                 <div className="bg-zinc-900 rounded-lg p-6">
                     {/* Profile Picture with Upload */}
                     <div className="flex items-center space-x-4 mb-8">
                         <div className="relative group">
-                            <Avatar className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-105">
+                            <Avatar className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-105">
                                 <AvatarImage
                                     src={userProfile?.avatar || undefined}
                                     alt={`${userProfile?.firstName} ${userProfile?.lastName}`}
@@ -387,15 +396,28 @@ export default function EditProfilePage({
 
                             {/* Action Buttons */}
                             <div className="flex justify-end space-x-4">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={onCancel}
-                                    disabled={updateProfileMutation.isPending}
-                                    className="px-6 py-2 border border-zinc-600 rounded-lg hover:bg-zinc-800 transition-colors"
-                                >
-                                    Cancel
-                                </Button>
+                                {updateProfileMutation.isPending ? (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        disabled
+                                        className="px-6 py-2 border border-zinc-600 rounded-lg hover:bg-zinc-800 transition-colors"
+                                    >
+                                        Cancel
+                                    </Button>
+                                ) : (
+                                    <Link href="/admin/users">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            disabled={updateProfileMutation.isPending}
+                                            className="px-6 py-2 border border-zinc-600 rounded-lg hover:bg-zinc-800 transition-colors"
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </Link>
+                                )}
+
                                 <Button
                                     type="submit"
                                     disabled={updateProfileMutation.isPending}

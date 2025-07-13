@@ -16,6 +16,7 @@ import { type RegisterResponse } from "@/schemas/auth/responses";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import LeftSideContent from "@/app/(auth)/admin/_components/left-side-content";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { createUniqueUsername } from "@/utils/common";
 
 // 1. Register Schema
 const registerSchema = z
@@ -52,10 +53,11 @@ export default function RegisterPage() {
             const body = {
                 email: data.email,
                 password: data.password,
+                username: createUniqueUsername(data.email, "admin"),
                 role: "ADMIN",
             };
 
-            const response = await http.post<typeof body, RegisterResponse>("/auth/register", {
+            const response = await http.post<typeof body, RegisterResponse>("/admin/register", {
                 body,
                 requireAuth: false,
             });

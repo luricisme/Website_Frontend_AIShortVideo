@@ -37,7 +37,11 @@ export const useUserProfileQuery = (userId: number | string) => {
     });
 };
 
-export const useUpdateProfileMutation = () => {
+export const useUpdateProfileMutation = ({
+    isShowSuccessToast = true,
+}: {
+    isShowSuccessToast?: boolean
+}) => {
     const queryClient = useQueryClient();
     const { setUser } = useUserStore((state) => state);
 
@@ -51,7 +55,9 @@ export const useUpdateProfileMutation = () => {
         onSuccess: (response) => {
             if (response && response.status === 200) {
                 console.log("Profile updated successfully:", response.data);
-                toast.success("Profile updated successfully!");
+                if (isShowSuccessToast) {
+                    toast.success("Profile updated successfully!");
+                }
 
                 // Update user store
                 setUser(response.data);

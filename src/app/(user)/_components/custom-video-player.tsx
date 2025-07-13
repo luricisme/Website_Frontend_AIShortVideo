@@ -765,7 +765,7 @@ export default function CustomVideoPlayer({
                                 className="rounded-full font-semibold text-[10px] md:text-xs py-0.5 px-2 md:py-1 md:px-3 h-6 md:h-8"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    alert("is following: " + isFollowing);
+                                    // alert("is following: " + isFollowing);
                                     // Handle follow action here
                                     onFollowClick(); // Call the provided callback
                                 }}

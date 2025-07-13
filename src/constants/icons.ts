@@ -36,7 +36,7 @@ export const icons = {
     },
 
     instagram: {
-        svg: "/icon/instagram-icon.svg",
+        svg: "/icon/Instagram-icon.svg",
     },
 
     tiktok: {
