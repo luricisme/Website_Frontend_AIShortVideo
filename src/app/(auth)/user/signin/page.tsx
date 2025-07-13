@@ -92,18 +92,21 @@ export default function LoginPage() {
             });
 
             if (result?.ok) {
-                const session = await getSession();
-                console.log(">>> Fresh session data:", session);
+                // Đợi session được cập nhật hoàn toàn
+                setTimeout(async () => {
+                    const session = await getSession();
+                    console.log(">>> Fresh session data:", session);
 
-                if (session?.user && session.user.role === "ROLE_USER") {
-                    // Lưu thông tin user vào localStorage
-                    localStorage.setItem("user", JSON.stringify(session.user));
-                    router.replace("/");
-                } else if (session?.user && session.user.role === "ROLE_ADMIN") {
-                    // Lưu thông tin admin vào localStorage
-                    localStorage.setItem("user", JSON.stringify(session.user));
-                    router.replace("/admin");
-                }
+                    if (session?.user && session.user.role === "ROLE_USER") {
+                        // Lưu thông tin user vào localStorage
+                        localStorage.setItem("user", JSON.stringify(session.user));
+                        router.replace("/");
+                    } else if (session?.user && session.user.role === "ROLE_ADMIN") {
+                        // Lưu thông tin admin vào localStorage
+                        localStorage.setItem("user", JSON.stringify(session.user));
+                        router.replace("/admin");
+                    }
+                }, 300); // 300–500ms là đủ để session ổn định
             } else {
                 // Thử parse thông tin lỗi từ result.error
                 try {

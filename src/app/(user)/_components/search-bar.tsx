@@ -25,6 +25,7 @@ import {
 import { Search, X } from "lucide-react";
 import SearchInput from "@/app/(user)/_components/search-input";
 import { formatDateToMilliseconds } from "@/utils/common";
+import { envPublic } from "@/constants/env.public";
 
 function SearchInputLoading() {
     return (
@@ -99,7 +100,10 @@ const AvatarDropdownMenu = ({
     const handleLogout = async () => {
         try {
             clearUser();
-            await signOut({ redirect: false });
+            await signOut({
+                redirect: true,
+                callbackUrl: `${envPublic.NEXT_PUBLIC_URL}/user/signin`,
+            });
             router.refresh();
             toast.success("Logged out successfully");
         } catch (error) {
@@ -141,7 +145,6 @@ const AvatarDropdownMenu = ({
 };
 
 const SearchBar = () => {
-    const router = useRouter();
     const { data: session, status } = useSession();
     const { user, setUser, setFetching, setError, clearUser } = useUserStore((state) => state);
 
@@ -194,12 +197,6 @@ const SearchBar = () => {
 
             case "authenticated":
                 setUser(userInfoData || null);
-
-                if (userInfoData?.role === "ADMIN") {
-                    // If user is admin, redirect to admin dashboard
-                    router.push("/admin");
-                }
-
                 setFetching(false);
                 setError(null);
                 break;
