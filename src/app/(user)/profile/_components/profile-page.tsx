@@ -54,7 +54,7 @@ const ProfilePage = ({
         refetch: refetchVideos,
     } = useGetVideosByUserIdQuery({
         userId: user.id ?? "",
-        pageNo: myVideosPage - 1, // API uses 0-based indexing
+        pageNo: myVideosPage, // API uses 0-based indexing
         pageSize: myVideosPageSize,
         enabled: !!user.id,
     });
@@ -219,7 +219,12 @@ const ProfilePage = ({
                             </div>
                             <div className="text-center">
                                 <div className="font-bold">
-                                    {myVideosPagination?.totalElements || 0}
+                                    {/* {myVideosPagination?.totalElements || 0} */}
+                                    {isVideosFetching || isVideosLoading ? (
+                                        <Skeleton className="h-6 w-6 rounded-2xl" />
+                                    ) : (
+                                        myVideosPagination?.totalElements || 0
+                                    )}
                                 </div>
                                 <div className="text-zinc-400 text-sm">Videos</div>
                             </div>

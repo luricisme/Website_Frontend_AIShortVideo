@@ -1,6 +1,10 @@
-import { AlertCircle, 
-    // BarChart3, 
-    Eye, RefreshCw, PlayCircle } from "lucide-react";
+import {
+    AlertCircle,
+    // BarChart3,
+    Eye,
+    RefreshCw,
+    PlayCircle,
+} from "lucide-react";
 // import Link from "next/link";
 
 import { Video } from "@/types/video.types";
@@ -106,7 +110,7 @@ const VideoTable = ({
                                             <div className="flex items-center space-x-3">
                                                 <VideoThumbnail video={video} />
                                                 <div className="flex flex-col">
-                                                    <span className="truncate max-w-[150px] text-sm font-medium">
+                                                    <span className="truncate max-w-[100px] md:max-w-[150px] lg:max-w-[250px] text-sm font-medium">
                                                         {video.title || "Untitled Video"}
                                                     </span>
                                                 </div>
