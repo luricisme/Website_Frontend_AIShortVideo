@@ -31,6 +31,8 @@ export const videoSchema = z.object({
     status: z.string(),
     user: userSchema,
     tags: z.array(videoTagSchema).optional(),
+    createdAt: z.string().optional().nullable(),
+    updatedAt: z.string().optional().nullable(),
 });
 
 export const createPaginatedSchema = <T extends z.ZodType>(itemSchema: T) =>
@@ -54,6 +56,7 @@ export const videoListByCategoryNameSchema = paginatedVideoListSchema;
 export const videoListBySearchQuerySchema = paginatedVideoListSchema;
 export const videoListByUserIdSchema = paginatedVideoListSchema;
 export const videoTrendingMonthlySchema = paginatedVideoListSchema;
+export const videoListSchema = paginatedVideoListSchema;
 
 export const tagListResponseSchema = createPaginatedSchema(tagSchema);
 

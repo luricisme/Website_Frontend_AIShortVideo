@@ -3,19 +3,18 @@
 import { z } from "zod";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { getSession, signIn, useSession } from "next-auth/react";
-import React, { Suspense, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { getSession, signIn, useSession } from "next-auth/react";
 import { LoaderCircle, LockKeyhole, LogIn, Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { InputWithIcon } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { GoogleLoginButton, LeftSideContent } from "@/app/(auth)/user/_components";
+import LeftSideContent from "@/app/(auth)/admin/_components/left-side-content";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import GoogleOAuthHandler from "@/app/(auth)/user/_components/google-oauth-handler";
 
 // 1. Login Schema
 const loginSchema = z.object({
@@ -28,9 +27,6 @@ type LoginType = z.infer<typeof loginSchema>;
 export default function LoginPage() {
     const router = useRouter();
     const { data: sessionData, status } = useSession();
-
-    const searchParams = useSearchParams();
-    const googleCode = searchParams.get("google_code");
 
     const [isLoading, setIsLoading] = React.useState(false);
 
@@ -58,13 +54,11 @@ export default function LoginPage() {
     }, []);
 
     useEffect(() => {
-        // Chỉ redirect khi authenticated VÀ KHÔNG có googleCode
-        // Nếu có googleCode, để GoogleOAuthHandler xử lý redirect
-        if (status === "authenticated" && sessionData && !googleCode) {
+        if (status === "authenticated" && sessionData && sessionData.user.role === "ROLE_ADMIN") {
             console.log(">>> Auto-redirecting from LoginPage (no Google code)");
-            router.replace("/");
+            router.replace("/admin");
         }
-    }, [status, sessionData, router, googleCode]);
+    }, [status, sessionData, router]);
 
     const onSubmit = async (data: LoginType) => {
         console.log(data);
@@ -73,7 +67,7 @@ export default function LoginPage() {
             const result = await signIn("credentials", {
                 email: data.email,
                 password: data.password,
-                redirect: false, // Prevent automatic redirect
+                redirect: false,
             });
 
             if (result?.ok) {
@@ -83,16 +77,14 @@ export default function LoginPage() {
                 if (session?.user) {
                     // Lưu thông tin user vào localStorage
                     localStorage.setItem("user", JSON.stringify(session.user));
-                    router.replace("/");
+                    router.replace("/admin");
                 }
             } else {
-                // Thử parse thông tin lỗi từ result.error
                 try {
                     if (result?.error && result.error.startsWith("{")) {
                         const errorData = JSON.parse(result.error);
                         toast.error(errorData.message || "Login failed. Please try again.");
                     } else {
-                        // Fallback nếu không parse được
                         if (result?.error === "CredentialsSignin") {
                             toast.error("Email or password is incorrect.");
                         } else {
@@ -100,7 +92,6 @@ export default function LoginPage() {
                         }
                     }
                 } catch (error) {
-                    // Nếu không parse được, hiển thị lỗi mặc định
                     console.error("Error parsing login error:", error);
                     toast.error(result?.error || "Login failed. Please try again.");
                 }
@@ -112,19 +103,6 @@ export default function LoginPage() {
             setIsLoading(false);
         }
     };
-
-    // Nếu có googleCode và chưa có session, hiển thị GoogleOAuthHandler
-    if (googleCode && googleCode.length > 0 && status !== "authenticated") {
-        console.log(">>> Rendering GoogleOAuthHandler");
-        return <GoogleOAuthHandler />;
-    }
-
-    // Nếu có googleCode và đã có session, vẫn hiển thị GoogleOAuthHandler
-    // để nó xử lý countdown và redirect
-    if (googleCode && googleCode.length > 0) {
-        console.log(">>> Rendering GoogleOAuthHandler (with session)");
-        return <GoogleOAuthHandler />;
-    }
 
     return (
         <>
@@ -233,29 +211,10 @@ export default function LoginPage() {
                                 </form>
                             </Form>
 
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-700"></div>
-                                </div>
-                                <div className="relative flex justify-center text-xs sm:text-sm">
-                                    <span className="px-2 text-gray-400 bg-[#1E1E1E] font-medium">
-                                        or
-                                    </span>
-                                </div>
-                            </div>
-
-                            <Suspense
-                                fallback={
-                                    <LoaderCircle className="animate-spin h-5 w-5 text-gray-800 mx-auto" />
-                                }
-                            >
-                                <GoogleLoginButton isDisabled={isLoading} />
-                            </Suspense>
-
                             <div className="text-center text-xs sm:text-sm">
                                 <span className="text-[#786E6E]">Don&apos;t have an account? </span>
                                 <Link
-                                    href={"/user/register"}
+                                    href={"/admin/register"}
                                     className={`text-white hover:underline font-medium ${
                                         form.formState.isSubmitting || isLoading
                                             ? "pointer-events-none opacity-60"

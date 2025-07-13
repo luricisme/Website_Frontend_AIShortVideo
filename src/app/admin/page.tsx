@@ -230,7 +230,13 @@ export default function AdminDashboard() {
                 <CardContent className="flex justify-between items-center">
                     <div>
                         <div className="text-sm text-gray-500">Current Date & Time (UTC)</div>
-                        <div>2025-05-20 01:17:03</div>
+                        <div>
+                            {new Date().toLocaleString("en-US", {
+                                timeZone: "UTC",
+                                dateStyle: "full",
+                                timeStyle: "long",
+                            })}
+                        </div>
                     </div>
                     <div className="bg-purple-50 px-4 py-2 rounded">
                         <div className="text-purple-600 font-medium">Admin Dashboard</div>
