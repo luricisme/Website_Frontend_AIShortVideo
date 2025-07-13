@@ -30,7 +30,7 @@ import {envPublic} from "@/constants/env.public";
 // Voice types with descriptions organized by language
 const VOICE_TYPES = {
     Vietnamese: [
-        { value: 'vi-VN-HoaiMyNeural', label: 'Hoai My (Female)', description: 'Northern accent, natural, suitable for news reading' },
+        { value: 'vi-VN-HoaiMyNeural', label: 'Hoài My (Female)', description: 'Northern accent, natural, suitable for news reading' },
         { value: 'vi-VN-NamMinhNeural', label: 'Nam Minh (Male)', description: 'Northern accent, warm and deep' },
     ],
     English: [
@@ -65,6 +65,8 @@ export default function AudioPage() {
 
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+    const recordedChunksRef = useRef<Blob[]>([]);
+    const processingRef = useRef(false);
 
     useEffect(() => {
         const storedData = localStorage.getItem('videoScriptData');
@@ -266,12 +268,35 @@ export default function AudioPage() {
         router.push('/create-video/image');
     };
 
+
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const handleStart = () => {
+        console.log("Start clicked");
+        if (intervalRef.current) return;
+
+        intervalRef.current = setInterval(() => {
+            setRecordingTime(prev => {
+                console.log("Tick:", prev + 1);
+                return prev + 1;
+            });
+        }, 1000);
+    };
+
+    const handleStop = () => {
+        console.log("Stop clicked");
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+    };
+
     const handleRecording = async () => {
         if (audioData.isRecording) {
             // Stop recording
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
             }
+            handleStop();
 
             updateAudioData({ isRecording: false });
 
@@ -280,6 +305,8 @@ export default function AudioPage() {
                 recordingIntervalRef.current = null;
             }
 
+            console.log("isRecording:", audioData.isRecording);
+            console.log("mediaRecorder:", mediaRecorder?.state);
             setRecordingTime(0);
         } else {
             // Start recording
@@ -287,11 +314,14 @@ export default function AudioPage() {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const recorder = new MediaRecorder(stream);
 
-                // Reset recorded chunks
+                // Reset recorded chunks TRƯỚC KHI bắt đầu record
                 setRecordedChunks([]);
+                recordedChunksRef.current = [];
+                processingRef.current = false; // Reset processing flag
 
                 recorder.ondataavailable = (event) => {
                     if (event.data.size > 0) {
+                        recordedChunksRef.current.push(event.data);
                         setRecordedChunks(prev => [...prev, event.data]);
                     }
                 };
@@ -300,8 +330,11 @@ export default function AudioPage() {
                     // Stop all tracks to release microphone
                     stream.getTracks().forEach(track => track.stop());
 
-                    // Process recorded audio
-                    await processRecordedAudio();
+                    // Chỉ process một lần và sử dụng ref để lấy data
+                    if (!processingRef.current) {
+                        processingRef.current = true;
+                        await processRecordedAudio();
+                    }
                 };
 
                 recorder.start();
@@ -310,8 +343,16 @@ export default function AudioPage() {
                 updateAudioData({ isRecording: true });
                 setRecordingTime(0);
 
+                handleStart();
+                // Bắt đầu đếm thời gian NGAY SAU KHI set recording state
                 recordingIntervalRef.current = setInterval(() => {
-                    setRecordingTime(prev => prev + 1);
+                    console.log("Interval running");
+
+                    setRecordingTime((prev) => {
+                        const newTime = prev + 1;
+                        console.log('Time:', newTime);
+                        return newTime;
+                    });
                 }, 1000);
 
             } catch (error) {
@@ -322,14 +363,20 @@ export default function AudioPage() {
     };
 
     const processRecordedAudio = async () => {
-        if (recordedChunks.length === 0) return;
+        // Sử dụng ref để lấy chunks thay vì state
+        const chunks = recordedChunksRef.current;
+
+        if (chunks.length === 0) {
+            console.log('No recorded chunks available');
+            return;
+        }
 
         // Generate consistent temp file ID
         const tempFileId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
         try {
             // Create blob from recorded chunks
-            const audioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
+            const audioBlob = new Blob(chunks, { type: 'audio/wav' });
 
             // Create file from blob
             const audioFile = new File([audioBlob], `recording_${Date.now()}.wav`, {
@@ -361,8 +408,9 @@ export default function AudioPage() {
                 )
             );
 
-            // Clear recorded chunks
+            // Clear recorded chunks after successful processing
             setRecordedChunks([]);
+            recordedChunksRef.current = [];
 
             alert('Recording saved successfully!');
 
@@ -381,7 +429,6 @@ export default function AudioPage() {
             });
         }
     };
-
 
     const handleGenerateAudio = async () => {
         if (!audioData.voiceType) {
@@ -808,7 +855,8 @@ export default function AudioPage() {
                                             <Mic className={`w-12 h-12 ${audioData.isRecording ? 'text-red-500' : 'text-gray-400'}`} />
                                         </div>
                                     </div>
-
+                                    {/*<Button onClick={handleStart}>Start</Button>*/}
+                                    {/*<Button onClick={handleStop}>Stop</Button>*/}
                                     {audioData.isRecording && (
                                         <div className="text-center">
                                             <div className="text-red-500 font-medium text-lg mb-2">
@@ -829,12 +877,12 @@ export default function AudioPage() {
                                         >
                                             {audioData.isRecording ? (
                                                 <>
-                                                    <Square className="w-4 h-4 mr-2" />
+                                                    <Square className="w-4 h-4" />
                                                     Stop Recording
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Mic className="w-4 h-4 mr-2" />
+                                                    <Mic className="w-4 h-4" />
                                                     Start Recording
                                                 </>
                                             )}
@@ -894,7 +942,7 @@ export default function AudioPage() {
                                                                         audioFile.type === 'uploaded' ? 'bg-green-100 text-green-700' :
                                                                             'bg-orange-100 text-orange-700'
                                                             }`}>
-                                                                {uploadingFiles.has(audioFile.id) ? 'Đang upload...' :
+                                                                {uploadingFiles.has(audioFile.id) ? 'Uploading...' :
                                                                     audioFile.type === 'generated' ? 'Generated' :
                                                                         audioFile.type === 'uploaded' ? 'Uploaded' : 'Recorded'}
                                                             </span>
