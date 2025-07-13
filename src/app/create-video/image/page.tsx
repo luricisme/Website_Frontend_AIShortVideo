@@ -148,7 +148,7 @@ export default function ImagesPage() {
                             </div>
                         )}
 
-                        <div className="flex justify-center mb-6">
+                        <div className="flex justify-center mb-2">
                             <Button
                                 onClick={handleImageGeneration}
                                 disabled={isGenerating || !canGenerateImages}
@@ -156,12 +156,12 @@ export default function ImagesPage() {
                             >
                                 {isGenerating ? (
                                     <>
-                                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
                                         Generating images...
                                     </>
                                 ) : (
                                     <>
-                                        <ImagePlus className="w-4 h-4 mr-2" />
+                                        <ImagePlus className="w-4 h-4" />
                                         {generatedImages.length > 0
                                             ? "Regenerate images"
                                             : "Generate images from script"}
@@ -169,6 +169,10 @@ export default function ImagesPage() {
                                 )}
                             </Button>
                         </div>
+                        <p className={"text-center text-sm text-neutral-400"}>
+                            Generation time is about 60s
+                        </p>
+
 
                         {!canGenerateImages && (
                             <div className="text-center text-gray-500 mb-6">
