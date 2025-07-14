@@ -71,7 +71,7 @@ const UserTable = ({
         <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader>
                 <CardTitle className="text-lg font-semibold flex items-center justify-between">
-                    <span className="uppercase">All videos</span>
+                    <span className="uppercase">All Users</span>
                     {error && (
                         <Button variant="outline" size="sm" onClick={onRefresh} className="ml-4">
                             <RefreshCw className="h-4 w-4 mr-2" />
