@@ -82,10 +82,11 @@ export default function LoginPage() {
                     if (session?.user && session.user.role === "ROLE_ADMIN") {
                         localStorage.setItem("user", JSON.stringify(session.user));
                         router.replace("/admin");
+                        router.refresh(); // Refresh to ensure the session is updated in the client
                     } else {
                         router.replace("/");
                     }
-                }, 300); // 300–500ms là đủ để session ổn định
+                }, 1000); // 300–500ms là đủ để session ổn định
             } else {
                 try {
                     if (result?.error && result.error.startsWith("{")) {
