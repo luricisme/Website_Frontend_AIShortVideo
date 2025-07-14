@@ -144,7 +144,7 @@ export default function VideoExportPage() {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-api-key': process.env.NEXT_PUBLIC_SHOTSTACK_API_KEY || 'aZdNfmHr7uXO8xnoMPnG9k8vbASkHLHIwMjM6fjH'
+                        'x-api-key': process.env.NEXT_PUBLIC_SHOTSTACK_API_KEY!
                     }
                 });
 
@@ -164,7 +164,6 @@ export default function VideoExportPage() {
                     if (status.status === 'done') {
                         setIsRendering(false);
                         clearInterval(pollInterval);
-                        // Automatically save video data after rendering is complete
                         await saveVideoData(status.url!);
                     } else if (status.status === 'failed') {
                         setIsRendering(false);
