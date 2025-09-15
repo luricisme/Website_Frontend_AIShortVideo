@@ -144,7 +144,7 @@ export default function VideoExportPage() {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-api-key': process.env.NEXT_PUBLIC_SHOTSTACK_API_KEY || 'w76ZEcDIsfbFvVAKRTGFE87F0KHiJj6rawLWIVpo'
+                        'x-api-key': process.env.NEXT_PUBLIC_SHOTSTACK_API_KEY || 'a1FAiFBzflMDQNDqJQ1G7hxkHgjZtwSjb0SyJJw7'
                     }
                 });
 
