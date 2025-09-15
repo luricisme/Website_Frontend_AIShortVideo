@@ -231,7 +231,7 @@ export async function POST(req: NextRequest) {
         console.log("Sending Shotstack payload:", JSON.stringify(payload, null, 2));
 
         // Send request to Shotstack
-        const response = await fetch('https://api.shotstack.io/v1/render', {
+        const response = await fetch('https://api.shotstack.io/stage/render', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
